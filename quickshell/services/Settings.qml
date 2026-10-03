@@ -29,9 +29,9 @@ Singleton {
         { id: "borders", tab: "custom", label: "Вікна й межі", icon: "border_style", kind: "own", what: "Відступи між вікнами, рамки, заокруглення" },
         { id: "mouse", tab: "devices", label: "Мишка", icon: "mouse", kind: "own", what: "Швидкість, прискорення, природне прокручування, режим для лівої руки" },
         { id: "kb-layout", tab: "devices", parent: "keyboard", label: "Мова та розкладка", icon: "keyboard", kind: "own", what: "Мови та клавіша перемикання розкладок" },
-        { id: "kb-rgb", tab: "devices", parent: "keyboard", label: "Підсвітка", icon: "keyboard", kind: "app", tool: "OpenRGB", cmd: ["openrgb"], classes: ["openrgb"] },
+        { id: "kb-rgb", tab: "devices", parent: "keyboard", label: "Підсвітка", icon: "keyboard", kind: "app", tool: "OpenRGB", cmd: ["openrgb"], classes: ["openrgb", "org.openrgb.openrgb"] },
         { id: "printers", tab: "devices", label: "Принтери", icon: "print", kind: "app", tool: "system-config-printer", cmd: ["system-config-printer"], classes: ["system-config-printer"] },
-        { id: "tablet", tab: "devices", label: "Графічний планшет", icon: "draw", kind: "app", tool: "OpenTabletDriver", cmd: ["otd-gui"], classes: [] },
+        { id: "tablet", tab: "devices", label: "Графічний планшет", icon: "draw", kind: "app", tool: "OpenTabletDriver", cmd: ["otd-gui"], classes: ["opentabletdriver.ux"] },
     ]
     readonly property var groups: ({ keyboard: { label: "Клавіатура", icon: "keyboard" } })
 
@@ -128,7 +128,11 @@ Singleton {
     Connections {
         target: Hyprland
         function onRawEvent(ev) {
-            if (ev.name === "activespecial") {
+            // Hyprland перечитав конфіг (напр. Apply у nwg-displays) або змінились монітори —
+            // правила вікон могли пересунути програму під панель, тож розставляємо заново
+            if (["configreloaded", "monitoradded", "monitorremoved"].includes(ev.name)) {
+                if (root.shown) relayout.restart()
+            } else if (ev.name === "activespecial") {
                 const [ws, mon] = ev.data.split(",")
                 root.shown = ws === "special:settings"
                 if (root.shown) { root.monitorName = mon; root.layout() }
@@ -154,6 +158,8 @@ Singleton {
             }
         }
     }
+
+    Timer { id: relayout; interval: 400; onTriggered: root.layout() }
 
     FileView {
         id: store
