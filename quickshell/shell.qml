@@ -7,10 +7,21 @@ import "services"
 import "bar"
 import "popups"
 import "notifications"
+import "settings"
 
 // Unia Breathe — корінь оболонки.
 ShellRoot {
     // qs -c unia ipc call popups toggle cal|media|power|ws|nc
+    // qs -c unia ipc call settings toggle | open <id>
+    IpcHandler {
+        target: "settings"
+        function toggle(): void { Settings.toggle() }
+        function open(id: string): void { Settings.open(id) }
+    }
+
+    SettingsPanel {}
+    SettingsPage {}
+
     IpcHandler {
         target: "popups"
         function toggle(name: string): void { Popups.request(name) }

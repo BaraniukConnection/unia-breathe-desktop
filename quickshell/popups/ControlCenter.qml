@@ -108,13 +108,23 @@ Glass {
                     columns: 3
                     spacing: 4
                     Repeater {
-                        model: 6
-                        Rectangle {   // місця для закріплених налаштувань (етап 5)
+                        model: 6      // закріплені налаштування (права кнопка в панелі налаштувань)
+                        Rectangle {
+                            required property int index
+                            readonly property var it: Settings.find(Settings.pins[index] ?? "")
                             width: 36; height: 36; radius: 18
-                            color: Theme.pane
+                            color: it && pinArea.containsMouse ? Qt.rgba(1, 1, 1, 0.22) : it ? Theme.paneHover : Theme.pane
                             border.width: 1
                             border.color: Theme.paneLine
-                            Icon { anchors.centerIn: parent; name: "push_pin"; font.pixelSize: 18; color: Theme.inkMuted; opacity: 0.6 }
+                            Icon { anchors.centerIn: parent; name: parent.it ? parent.it.icon : "push_pin"; font.pixelSize: 18; color: parent.it ? Theme.ink : Theme.inkMuted; opacity: parent.it ? 1 : 0.6 }
+                            MouseArea {
+                                id: pinArea
+                                anchors.fill: parent
+                                enabled: !!parent.it
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: { Popups.close(); Settings.open(parent.it.id) }
+                            }
                         }
                     }
                 }
@@ -328,7 +338,6 @@ Glass {
                 height: 36
                 width: setRow.implicitWidth + 28
                 hovered: setArea.containsMouse
-                opacity: 0.55               // налаштування з'являться на етапі 5
                 Row {
                     id: setRow
                     anchors.centerIn: parent
@@ -336,7 +345,7 @@ Glass {
                     Icon { name: "settings"; anchors.verticalCenter: parent.verticalCenter }
                     Label { text: "Відкрити налаштування"; size: 13; weight: Font.Bold; anchors.verticalCenter: parent.verticalCenter }
                 }
-                MouseArea { id: setArea; anchors.fill: parent; hoverEnabled: true }
+                MouseArea { id: setArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { Popups.close(); Settings.open() } }
             }
         }
     }

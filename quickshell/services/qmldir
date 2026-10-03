@@ -8,3 +8,4 @@ singleton Events 1.0 Events.qml
 singleton Notifs 1.0 Notifs.qml
 singleton Power 1.0 Power.qml
 singleton Scenarios 1.0 Scenarios.qml
+singleton Settings 1.0 Settings.qml

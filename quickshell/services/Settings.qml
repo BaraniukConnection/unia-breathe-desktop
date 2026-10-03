@@ -1,0 +1,164 @@
+pragma Singleton
+import QtQuick
+import Quickshell
+import Quickshell.Io
+import Quickshell.Hyprland
+
+// Налаштування: спецворкспейс special:settings, панель категорій зліва, програма праворуч.
+// Клік по категорії показує її програму (запускає, якщо треба) і ховає попередню в special:unia-stash.
+Singleton {
+    id: root
+
+    readonly property var tabs: [
+        { id: "main", label: "Основні" },
+        { id: "custom", label: "Кастомізація" },
+        { id: "devices", label: "Девайси" },
+    ]
+    // kind "app" — готова програма (classes — класи її вікна; порожньо — перше нове вікно),
+    // kind "own" — власна сторінка оболонки
+    readonly property var items: [
+        { id: "net", tab: "main", label: "Інтернет", icon: "wifi", kind: "app", tool: "Редактор мереж", cmd: ["nm-connection-editor"], classes: ["nm-connection-editor"] },
+        { id: "bt", tab: "main", label: "Блютуз", icon: "bluetooth", kind: "app", tool: "Overskride", cmd: ["flatpak", "run", "io.github.kaii_lb.Overskride"], classes: ["io.github.kaii_lb.overskride"] },
+        { id: "time", tab: "main", label: "Час і дата", icon: "schedule", kind: "own", what: "Часовий пояс, синхронізація часу, 24-годинний формат" },
+        { id: "sound", tab: "main", label: "Звук", icon: "volume_up", kind: "app", tool: "pavucontrol", cmd: ["pavucontrol"], classes: ["pavucontrol", "org.pulseaudio.pavucontrol"] },
+        { id: "display", tab: "main", label: "Дисплей", icon: "monitor", kind: "app", tool: "nwg-displays", cmd: ["nwg-displays"], classes: ["nwg-displays"] },
+        { id: "layout", tab: "main", label: "Розкладка", icon: "keyboard", kind: "own", what: "Мови та клавіша перемикання розкладок" },
+        { id: "wall", tab: "custom", label: "Шпалери", icon: "wallpaper", kind: "app", tool: "Waypaper", cmd: ["waypaper"], classes: ["waypaper"] },
+        { id: "colors", tab: "custom", label: "Кольори", icon: "palette", kind: "app", tool: "nwg-look", cmd: ["nwg-look"], classes: ["nwg-look"] },
+        { id: "opacity", tab: "custom", label: "Прозорість", icon: "opacity", kind: "own", what: "Прозорість вікон і сила розмиття" },
+        { id: "borders", tab: "custom", label: "Вікна й межі", icon: "border_style", kind: "own", what: "Відступи між вікнами, рамки, заокруглення" },
+        { id: "mouse", tab: "devices", label: "Мишка", icon: "mouse", kind: "own", what: "Швидкість, прискорення, природне прокручування, режим для лівої руки" },
+        { id: "kb-layout", tab: "devices", parent: "keyboard", label: "Мова та розкладка", icon: "keyboard", kind: "own", what: "Мови та клавіша перемикання розкладок" },
+        { id: "kb-rgb", tab: "devices", parent: "keyboard", label: "Підсвітка", icon: "keyboard", kind: "app", tool: "OpenRGB", cmd: ["openrgb"], classes: ["openrgb"] },
+        { id: "printers", tab: "devices", label: "Принтери", icon: "print", kind: "app", tool: "system-config-printer", cmd: ["system-config-printer"], classes: ["system-config-printer"] },
+        { id: "tablet", tab: "devices", label: "Графічний планшет", icon: "draw", kind: "app", tool: "OpenTabletDriver", cmd: ["otd-gui"], classes: [] },
+    ]
+    readonly property var groups: ({ keyboard: { label: "Клавіатура", icon: "keyboard" } })
+
+    property string tab: "main"
+    property string sel: "net"
+    readonly property var current: find(sel)
+    property bool shown: false                 // спецворкспейс settings зараз видно
+    property string monitorName: ""           // на якому моніторі його показано
+    property var addrs: ({})                   // id → адреса вікна програми
+    property var pending: null                 // { id, classes, until } — чекаємо на нове вікно
+    property var pins: []                      // закріплені в панелі керування (до 6)
+
+    function find(id) { return items.find(i => i.id === id) ?? null }
+
+    // ---------- відкриття / закриття ----------
+    function toggle() { Hyprland.dispatch("togglespecialworkspace settings") }
+    function open(id) {
+        if (id) select(id)
+        if (!shown) toggle()
+    }
+    function close() { if (shown) toggle() }
+
+    // ---------- геометрія: панель 304 px зліва, програма — решта ----------
+    readonly property int panelW: 304
+    function area() {
+        const m = Hyprland.monitors.values.find(m => m.name === monitorName) ?? Hyprland.focusedMonitor
+        if (!m) return null
+        const w = m.width / m.scale, h = m.height / m.scale
+        const top = 72, side = 20, bottom = 20
+        return { x: m.x + side, y: m.y + top, h: h - top - bottom,
+                 toolX: m.x + side + panelW + 10, toolW: w - 2 * side - panelW - 10 }
+    }
+    function place(sel, x, y, w, h) {
+        Hyprland.dispatch(`movetoworkspacesilent special:settings,${sel}`)
+        Hyprland.dispatch(`setfloating ${sel}`)
+        Hyprland.dispatch(`resizewindowpixel exact ${Math.round(w)} ${Math.round(h)},${sel}`)
+        Hyprland.dispatch(`movewindowpixel exact ${Math.round(x)} ${Math.round(y)},${sel}`)
+    }
+    function layout() {
+        const a = area()
+        if (!a) return
+        place("title:^(Unia · Налаштування)$", a.x, a.y, panelW, a.h)
+        const it = current
+        if (!it) return
+        if (it.kind === "own") place("title:^(Unia · Сторінка)$", a.toolX, a.y, a.toolW, a.h)
+        else if (addrs[it.id]) {
+            place(`address:${addrs[it.id]}`, a.toolX, a.y, a.toolW, a.h)
+            Hyprland.dispatch(`focuswindow address:${addrs[it.id]}`)
+        }
+    }
+
+    // ---------- вибір категорії ----------
+    function select(id) {
+        const it = find(id)
+        if (!it) return
+        const prev = current
+        if (prev && prev.id !== id && prev.kind === "app" && addrs[prev.id])
+            Hyprland.dispatch(`movetoworkspacesilent special:unia-stash,address:${addrs[prev.id]}`)
+        sel = id
+        tab = it.tab
+        if (it.kind === "app" && !addrs[id]) adoptOrLaunch(it)
+        layout()
+    }
+
+    function adoptOrLaunch(it) {
+        // уже відкрита деінде? забираємо її вікно
+        const c = clients.find(c => it.classes.includes(c.class.toLowerCase()))
+        if (c) { setAddr(it.id, c.address.replace(/^0x/, "")); return }
+        pending = { id: it.id, classes: it.classes, until: Date.now() + 30000 }
+        Quickshell.execDetached(it.cmd)
+    }
+    function setAddr(id, a) {
+        const m = Object.assign({}, addrs)
+        m[id] = "0x" + a
+        addrs = m
+    }
+
+    // ---------- закріплення в панелі керування ----------
+    function togglePin(id) {
+        const p = pins.includes(id) ? pins.filter(x => x !== id) : [...pins, id].slice(0, 6)
+        pins = p
+        store.setText(JSON.stringify({ pins: p }, null, 2))
+    }
+
+    // ---------- стан Hyprland ----------
+    property var clients: []                   // [{ address, class }] — оновлюємо через hyprctl
+    Process {
+        id: clientsProc
+        command: ["hyprctl", "clients", "-j"]
+        stdout: StdioCollector { onStreamFinished: { try { root.clients = JSON.parse(text) } catch (e) {} } }
+    }
+    Component.onCompleted: clientsProc.running = true
+
+    Connections {
+        target: Hyprland
+        function onRawEvent(ev) {
+            if (ev.name === "activespecial") {
+                const [ws, mon] = ev.data.split(",")
+                root.shown = ws === "special:settings"
+                if (root.shown) { root.monitorName = mon; root.layout() }
+            } else if (ev.name === "openwindow") {
+                const [addr, ws, cls, ...t] = ev.data.split(",")
+                clientsProc.running = true
+                // власні вікна (панель, сторінка) з'являються вже після select() — розставляємо ще раз
+                if (t.join(",").startsWith("Unia · ")) { root.layout(); return }
+                const p = root.pending
+                // своє вікно впізнаємо за класом; запасний варіант — перше нове вікно на спецворкспейсі
+                if (p && Date.now() < p.until && (p.classes.includes(cls.toLowerCase()) || ws === "special:settings" && !cls.startsWith("org.quickshell"))) {
+                    root.pending = null
+                    root.setAddr(p.id, addr)
+                    if (root.sel === p.id) root.layout()
+                    else Hyprland.dispatch(`movetoworkspacesilent special:unia-stash,address:0x${addr}`)
+                }
+            } else if (ev.name === "closewindow") {
+                const a = "0x" + ev.data
+                const m = Object.assign({}, root.addrs)
+                for (const k in m) if (m[k] === a) delete m[k]
+                root.addrs = m
+                clientsProc.running = true
+            }
+        }
+    }
+
+    FileView {
+        id: store
+        path: Quickshell.env("HOME") + "/.config/unia-breathe/settings.json"
+        printErrors: false
+        onLoaded: { try { root.pins = JSON.parse(text()).pins ?? [] } catch (e) {} }
+    }
+}
