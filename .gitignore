@@ -1,0 +1,2 @@
+# локальні секрети й кеш (адреса Google Calendar тощо) живуть у ~/.config/unia-breathe, не тут
+*.url
