@@ -14,6 +14,10 @@ Scope {
     readonly property bool menuOpen: Popups.isOpen("menu", screen)
     property bool peek: false
     onMenuOpenChanged: if (!menuOpen) hide.restart()
+    // зсув доку вниз (126 — повністю схований); анімуємо окремо, щоб видимість вікна не залежала від анімації y
+    property real offset: 126
+    onShownChanged: { slide.to = shown ? 0 : 126; slide.restart() }
+    NumberAnimation { id: slide; target: root; property: "offset"; duration: 220; easing.type: Easing.OutCubic }
     readonly property bool shown: peek || menuOpen
     readonly property alias window: win
 
@@ -40,7 +44,7 @@ Scope {
     PanelWindow {
         id: win
         screen: root.screen
-        visible: root.shown || slide.running
+        visible: root.shown || root.offset < 126
         WlrLayershell.namespace: "unia-dock"
         exclusionMode: ExclusionMode.Ignore
         anchors.bottom: true
@@ -57,8 +61,7 @@ Scope {
             id: body
             width: parent.width
             height: parent.height
-            y: root.shown ? 0 : 126          // сталою, а не height — інакше цикл прив'язок із видимістю вікна
-            Behavior on y { NumberAnimation { id: slide; duration: 220; easing.type: Easing.OutCubic } }
+            y: root.offset
 
             Row {
                 id: favs
