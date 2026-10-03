@@ -11,6 +11,7 @@ Column {
     readonly property alias grid: grid
     readonly property bool empty: root.group.tiles.length === 0
     spacing: 8
+    opacity: root.panel.dragFolder === root.group.id ? 0.35 : 1
 
     function startEdit() { edit.text = root.group.name; edit.visible = true; edit.forceActiveFocus(); edit.selectAll() }
 
@@ -25,11 +26,35 @@ Column {
             size: 13
             weight: Font.Bold
             muted: true
-            MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.IBeamCursor
-                onClicked: root.startEdit()
+        }
+        MouseArea {
+            id: head
+            anchors.fill: parent
+            anchors.rightMargin: 34                  // не заходимо на кнопку ⋯
+            visible: !edit.visible
+            hoverEnabled: true
+            preventStealing: true
+            cursorShape: dragging ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+            property point start
+            property bool dragging: false
+            onPressed: m => { start = Qt.point(m.x, m.y); dragging = false }
+            onPositionChanged: m => {
+                if (!pressed) return
+                const p = mapToItem(root.panel, m.x, m.y)
+                if (!dragging && Math.hypot(m.x - start.x, m.y - start.y) > 6) { dragging = true; root.panel.beginFolderDrag(root.group, p) }
+                else if (dragging) root.panel.moveFolderDrag(p)
             }
+            onReleased: m => { if (dragging) { root.panel.endFolderDrag(mapToItem(root.panel, m.x, m.y)); dragging = false } }
+            onCanceled: if (dragging) { root.panel.cancelFolderDrag(); dragging = false }
+            onClicked: if (!dragging) root.startEdit()
+        }
+        Icon {   // підказка, що за заголовок можна тягнути
+            visible: head.containsMouse && !edit.visible
+            x: title.implicitWidth + 8
+            anchors.verticalCenter: parent.verticalCenter
+            name: "drag_indicator"
+            font.pixelSize: 16
+            color: Theme.inkMuted
         }
         // меню папки: ⋯ праворуч у заголовку
         IconButton {
@@ -78,11 +103,11 @@ Column {
         // місце, куди впаде плитка, яку тягнуть
         Rectangle {
             readonly property var s: root.panel.dropSlot
-            visible: !!s && s.group === root.group.id
-            x: s ? s.x * 56 : 0
-            y: s ? s.y * 56 : 0
-            width: s ? Menu.sizes[s.size][0] * 56 - 8 : 0
-            height: s ? Menu.sizes[s.size][1] * 56 - 8 : 0
+            visible: !!s && !!s.size && s.group === root.group.id
+            x: visible ? s.x * 56 : 0
+            y: visible ? s.y * 56 : 0
+            width: visible ? Menu.sizes[s.size][0] * 56 - 8 : 0
+            height: visible ? Menu.sizes[s.size][1] * 56 - 8 : 0
             radius: Theme.radiusTile
             color: "transparent"
             border.width: 2

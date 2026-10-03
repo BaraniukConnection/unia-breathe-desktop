@@ -57,7 +57,7 @@ Scope {
             id: body
             width: parent.width
             height: parent.height
-            y: root.shown ? 0 : height
+            y: root.shown ? 0 : 126          // сталою, а не height — інакше цикл прив'язок із видимістю вікна
             Behavior on y { NumberAnimation { id: slide; duration: 220; easing.type: Easing.OutCubic } }
 
             Row {

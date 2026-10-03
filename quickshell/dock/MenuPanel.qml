@@ -75,6 +75,45 @@ Glass {
     }
     function cancelDrag() { dragTile = ""; dragData = null; dropSlot = null }
 
+    // ---------- перетягування папок ----------
+    property string dragFolder: ""
+    property string dragFolderName: ""
+    property var folderDrop: null           // { col, index, x, y } — куди стане папка і де намалювати лінію
+
+    function beginFolderDrag(g, p) { dragFolder = g.id; dragFolderName = g.name; moveFolderDrag(p) }
+    function moveFolderDrag(p) {
+        folderGhost.x = p.x - 20
+        folderGhost.y = p.y - 18
+        folderDrop = folderTarget(p)
+    }
+    function endFolderDrag(p) {
+        const t = folderTarget(p)
+        if (t) Menu.placeFolder(dragFolder, t.col, t.index)
+        cancelFolderDrag()
+    }
+    function cancelFolderDrag() { dragFolder = ""; folderDrop = null }
+    function folderTarget(p) {
+        // колонка — за x; на вузькому екрані одна видима колонка, яка насправді — дві підряд
+        const c0 = cols.mapToItem(root, 0, 0)
+        const vcol = ncols === 2 && p.x > c0.x + colW + 16 ? 1 : 0
+        const visible = folderItems().filter(f => f.group.id !== dragFolder)
+            .map(f => ({ f: f, top: f.mapToItem(root, 0, 0).y, x: f.mapToItem(root, 0, 0).x }))
+            .filter(o => ncols === 1 || (o.x > c0.x + colW + 16 ? 1 : 0) === vcol)
+            .sort((a, b) => a.top - b.top)
+        let i = visible.findIndex(o => p.y < o.top + o.f.height / 2)
+        if (i < 0) i = visible.length
+        const lineY = i < visible.length ? visible[i].top - 10 : visible.length ? visible[visible.length - 1].top + visible[visible.length - 1].f.height + 10 : p.y
+        const lineX = c0.x + vcol * (colW + 32)
+        if (ncols === 2) {
+            const others = Menu.data.columns[vcol].filter(g => g.id !== dragFolder)
+            // індекс серед папок саме цієї колонки (видимих — усі папки колонки, у тому ж порядку)
+            return { col: vcol, index: i, x: lineX, y: lineY, n: others.length }
+        }
+        // одна видима колонка: позиція в загальному списку → (колонка, позиція)
+        const c0len = Menu.data.columns[0].filter(g => g.id !== dragFolder).length
+        return i <= c0len ? { col: 0, index: i, x: lineX, y: lineY } : { col: 1, index: i - c0len, x: lineX, y: lineY }
+    }
+
     // ---------- контекстне меню ----------
     property var menuItems: []
     function tileMenu(tile, p) {
@@ -165,7 +204,7 @@ Glass {
             visible: root.query === "" && root.view === "tiles"
             contentHeight: cols.implicitHeight + 16
             clip: true
-            interactive: root.dragTile === ""
+            interactive: root.dragTile === "" && root.dragFolder === ""
             boundsBehavior: Flickable.StopAtBounds
             Row {
                 id: cols
@@ -354,6 +393,35 @@ Glass {
                     }
                 }
             }
+        }
+    }
+
+    // лінія, куди стане папка, і «привид» з її назвою
+    Rectangle {
+        visible: root.dragFolder !== "" && !!root.folderDrop
+        z: 49
+        x: root.folderDrop ? root.folderDrop.x : 0
+        y: root.folderDrop ? root.folderDrop.y - 2 : 0
+        width: root.colW
+        height: 4
+        radius: 2
+        color: Theme.accent
+    }
+    Glass {
+        id: folderGhost
+        visible: root.dragFolder !== ""
+        z: 50
+        color: Qt.rgba(8 / 255, 30 / 255, 25 / 255, 0.94)
+        border.color: Theme.accent
+        radius: 18
+        width: fgRow.implicitWidth + 28
+        height: 36
+        Row {
+            id: fgRow
+            anchors.centerIn: parent
+            spacing: 8
+            Icon { name: "folder"; color: Theme.accent; font.pixelSize: 18; anchors.verticalCenter: parent.verticalCenter }
+            Label { text: root.dragFolderName; weight: Font.Bold; anchors.verticalCenter: parent.verticalCenter }
         }
     }
 

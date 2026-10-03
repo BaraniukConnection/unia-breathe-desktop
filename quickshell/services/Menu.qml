@@ -210,6 +210,15 @@ Singleton {
         }
         commit(d)
     }
+    // поставити папку в колонку col на позицію index (index — серед решти папок колонки)
+    function placeFolder(id, col, index) {
+        const d = clone()
+        let g = null
+        d.columns = d.columns.map(c => c.filter(x => { if (x.id === id) { g = x; return false } return true }))
+        if (!g) return
+        d.columns[col].splice(Math.max(0, Math.min(index, d.columns[col].length)), 0, g)
+        commit(d)
+    }
     function reset() { data = seed(); saveTimer.restart() }
 
     // ---------- збереження ----------
