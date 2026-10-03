@@ -1,0 +1,253 @@
+#!/usr/bin/env python3
+"""Сценарії робочих столів Unia Breathe: зберегти розкладку вікон і відкрити її знову.
+
+  unia-scenario list            — усі сценарії у JSON (для оболонки)
+  unia-scenario save <назва>    — зберегти вікна з видимих робочих столів
+  unia-scenario load <назва>    — відкрити програми й розкласти як було
+  unia-scenario delete <назва>  — видалити сценарій
+
+Сценарії лежать у ~/.config/hypr/scenarios/<назва>.json — поле "cmd"
+можна правити вручну, якщо програма має запускатись інакше.
+Який сценарій відкрито на якому столі — ~/.cache/unia-breathe/scenario-state.json.
+"""
+import configparser, glob, json, os, shlex, subprocess, sys, time
+from pathlib import Path
+
+DIR = Path.home() / ".config/hypr/scenarios"
+STATE = Path.home() / ".cache/unia-breathe/scenario-state.json"
+APP_DIRS = [
+    "~/.local/share/applications", "/usr/share/applications",
+    "~/.local/share/flatpak/exports/share/applications",
+    "/var/lib/flatpak/exports/share/applications",
+    "/var/lib/snapd/desktop/applications",
+]
+TIMEOUT = 120  # секунд на запуск однієї програми (Android Studio повільна)
+
+
+def hypr(*args):
+    return subprocess.run(["hyprctl", *args], capture_output=True, text=True).stdout.strip()
+
+
+def hj(what):
+    return json.loads(hypr("-j", what))
+
+
+def ws_ref(ws):
+    """Посилання на робочий стіл для dispatch: номер або name:<назва>."""
+    return str(ws["id"]) if ws["id"] > 0 else f"name:{ws['name']}"
+
+
+def dispatch(*args):
+    return hypr("dispatch", *args)
+
+
+def notify(text):
+    subprocess.run(["notify-send", "-a", "Сценарії", "-i", "view-grid", "Сценарії", text])
+
+
+def mark(workspaces, name):
+    """Запам'ятати, що на цих столах відкрито сценарій name (None — прибрати позначку)."""
+    try:
+        state = json.loads(STATE.read_text())
+    except (OSError, ValueError):
+        state = {}
+    for ws in workspaces:
+        state[ws] = name
+    state = {k: v for k, v in state.items() if v}
+    STATE.parent.mkdir(parents=True, exist_ok=True)
+    STATE.write_text(json.dumps(state, ensure_ascii=False))
+
+
+# ---------- команда запуску за класом вікна ----------
+
+def desktop_cmd(cls):
+    for d in APP_DIRS:
+        for f in glob.glob(os.path.join(os.path.expanduser(d), "*.desktop")):
+            cp = configparser.ConfigParser(interpolation=None, strict=False)
+            try:
+                cp.read(f, encoding="utf-8")
+                e = cp["Desktop Entry"]
+            except Exception:
+                continue
+            name = Path(f).stem
+            if cls.lower() in (e.get("StartupWMClass", "").lower(), name.lower()):
+                args = [a for a in shlex.split(e.get("Exec", ""))
+                        if not a.startswith("%") and not a.startswith("@@")]
+                if args:
+                    return shlex.join(args)
+    return None
+
+
+def proc_cmd(pid):
+    try:
+        info = Path(f"/proc/{pid}/root/.flatpak-info").read_text()
+        for line in info.splitlines():
+            if line.startswith("name="):
+                return f"flatpak run {line[5:]}"
+    except OSError:
+        pass
+    try:
+        args = Path(f"/proc/{pid}/cmdline").read_bytes().split(b"\0")
+        return shlex.join(a.decode() for a in args if a)
+    except OSError:
+        return None
+
+
+# ---------- збереження ----------
+
+def save(name):
+    mons = hj("monitors")
+    visible = {m["activeWorkspace"]["id"]: (ws_ref(m["activeWorkspace"]), m["name"]) for m in mons}
+    wins = []
+    for c in hj("clients"):
+        ws = c["workspace"]["id"]
+        if ws not in visible or not c["mapped"] or c["hidden"]:
+            continue
+        wins.append({
+            "class": c["class"],
+            "title": c["title"],
+            "cmd": desktop_cmd(c["class"]) or proc_cmd(c["pid"]),
+            "workspace": visible[ws][0],
+            "monitor": visible[ws][1],
+            "floating": c["floating"],
+            "at": c["at"],
+            "size": c["size"],
+        })
+    DIR.mkdir(parents=True, exist_ok=True)
+    (DIR / f"{name}.json").write_text(json.dumps({"windows": wins}, ensure_ascii=False, indent=2))
+    mark({w["workspace"] for w in wins}, name)
+    notify(f"Збережено «{name}»: {len(wins)} вікон")
+
+
+# ---------- відновлення ----------
+
+def split_tree(wins):
+    """Розбиває прямокутники вікон на бінарне дерево розрізів (як у dwindle)."""
+    if len(wins) == 1:
+        return wins[0]
+    for axis, d in ((0, "r"), (1, "d")):
+        for cut in sorted({w["at"][axis] + w["size"][axis] for w in wins}):
+            a = [w for w in wins if w["at"][axis] + w["size"][axis] <= cut + 2]
+            b = [w for w in wins if w["at"][axis] >= cut - 2]
+            if a and b and len(a) + len(b) == len(wins):
+                ext = lambda g: max(w["at"][axis] + w["size"][axis] for w in g) - min(w["at"][axis] for w in g)
+                ratio = 2 * ext(a) / (ext(a) + ext(b))
+                return {"dir": d, "ratio": max(0.1, min(1.9, ratio)),
+                        "a": split_tree(a), "b": split_tree(b)}
+    # не вдалось розрізати — просто по черзі праворуч
+    return {"dir": "r", "ratio": 1.0, "a": wins[0], "b": split_tree(wins[1:])}
+
+
+def first_leaf(t):
+    return t if "class" in t else first_leaf(t["a"])
+
+
+class Opener:
+    def __init__(self):
+        self.claimed = set()
+
+    def open(self, w, tiled):
+        """Відкриває вікно (або забирає вже відкрите) на поточний робочий стіл, повертає адресу."""
+        cls = w["class"].lower()
+        existing = [c for c in hj("clients")
+                    if c["class"].lower() == cls and c["address"] not in self.claimed]
+        if existing:
+            addr = existing[0]["address"]
+            if existing[0]["floating"] and tiled:
+                dispatch("settiled", f"address:{addr}")
+            dispatch("movetoworkspace", f"{ws_ref(hj('activeworkspace'))},address:{addr}")
+        else:
+            before = {c["address"] for c in hj("clients")}
+            if not w.get("cmd"):
+                notify(f"Не знаю, як запустити {w['class']}")
+                return None
+            dispatch("exec", w["cmd"])
+            addr, end = None, time.time() + TIMEOUT
+            while time.time() < end and not addr:
+                time.sleep(0.3)
+                for c in hj("clients"):
+                    if (c["address"] not in before and c["class"].lower() == cls
+                            and c["mapped"] and (not tiled or not c["floating"])):
+                        addr = c["address"]
+            if not addr:
+                notify(f"{w['class']} не відкрився за {TIMEOUT} с")
+                return None
+        self.claimed.add(addr)
+        return addr
+
+    def build(self, t, anchor):
+        """anchor — вже відкрите вікно, що зараз займає всю область дерева t."""
+        if "class" in t:
+            return
+        dispatch("focuswindow", f"address:{anchor}")
+        dispatch("layoutmsg", "preselect", t["dir"])
+        b = self.open(first_leaf(t["b"]), tiled=True)
+        if b:
+            dispatch("layoutmsg", "splitratio", f"{t['ratio']:.3f}", "exact")
+            self.build(t["b"], b)
+        self.build(t["a"], anchor)
+
+
+def load(name):
+    wins = json.loads((DIR / f"{name}.json").read_text())["windows"]
+    follow = hypr("getoption", "input:follow_mouse", "-j")
+    follow = json.loads(follow).get("int", 1) if follow else 1
+    hypr("keyword", "input:follow_mouse", "0")  # щоб рух миші не збивав фокус
+    notify(f"Відкриваю «{name}»…")
+    op = Opener()
+    try:
+        by_ws = {}
+        for w in wins:
+            by_ws.setdefault((w["workspace"], w["monitor"]), []).append(w)
+        for (ws, mon), group in by_ws.items():
+            dispatch("focusmonitor", mon)
+            dispatch("workspace", ws)
+            dispatch("moveworkspacetomonitor", ws, mon)
+            tiled = [w for w in group if not w["floating"]]
+            if tiled:
+                tree = split_tree(tiled)
+                first = op.open(first_leaf(tree), tiled=True)
+                if first:
+                    op.build(tree, first)
+            for w in (w for w in group if w["floating"]):
+                addr = op.open(w, tiled=False)
+                if addr:
+                    dispatch("setfloating", f"address:{addr}")
+                    dispatch("resizewindowpixel", f"exact {w['size'][0]} {w['size'][1]},address:{addr}")
+                    dispatch("movewindowpixel", f"exact {w['at'][0]} {w['at'][1]},address:{addr}")
+    finally:
+        hypr("keyword", "input:follow_mouse", str(follow))
+    mark({w["workspace"] for w in wins}, name)
+    notify(f"«{name}» готово")
+
+
+# ---------- для оболонки ----------
+
+def list_all():
+    out = []
+    for p in sorted(DIR.glob("*.json"), key=lambda p: p.stem.lower()) if DIR.exists() else []:
+        try:
+            wins = json.loads(p.read_text())["windows"]
+        except (OSError, ValueError, KeyError):
+            continue
+        out.append({"name": p.stem, "windows": [{k: w[k] for k in ("class", "workspace", "monitor", "floating", "at", "size")} for w in wins]})
+    print(json.dumps(out, ensure_ascii=False))
+
+
+def delete(name):
+    (DIR / f"{name}.json").unlink(missing_ok=True)
+    try:
+        state = json.loads(STATE.read_text())
+        mark([k for k, v in state.items() if v == name], None)
+    except (OSError, ValueError):
+        pass
+
+
+if __name__ == "__main__":
+    cmd, arg = (sys.argv + ["", ""])[1:3]
+    if cmd == "list":
+        list_all()
+    elif cmd in ("save", "load", "delete") and arg:
+        {"save": save, "load": load, "delete": delete}[cmd](arg.replace("/", "-"))
+    else:
+        print(__doc__)

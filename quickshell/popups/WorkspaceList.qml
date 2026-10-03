@@ -4,8 +4,8 @@ import Quickshell.Hyprland
 import "../theme"
 import "../services"
 
-// Відкриті столи — окремий ряд для кожного монітора, «+» відкриває новий стіл саме на ньому.
-// Сценарії додаються на етапі 4.
+// «Столи та сценарії»: відкриті столи — окремий ряд для кожного монітора («+» — новий стіл саме на ньому),
+// нижче — сценарії.
 Glass {
     id: root
     required property var screen
@@ -17,6 +17,7 @@ Glass {
         id: col
         x: 12; y: 12
         width: parent.width - 24
+        spacing: 12
         Section {
             width: parent.width
             Item { width: parent.width; height: 40; Label { anchors.verticalCenter: parent.verticalCenter; text: "Відкриті столи"; weight: Font.Bold } }
@@ -85,5 +86,6 @@ Glass {
                 }
             }
         }
+        ScenarioSection { width: parent.width; screen: root.screen }
     }
 }

@@ -17,17 +17,13 @@ PanelWindow {
     implicitHeight: Theme.top + Theme.bubbleHeight
     exclusiveZone: Theme.top + Theme.bubbleHeight
     color: "transparent"
-    // поки відкрита панель — уся смуга ловить кліки (клік повз бульбашки закриває), інакше лише бульбашки
-    mask: Popups.current !== "" ? whole : bubbles
-    Region { id: whole; item: background }
-    Region {
-        id: bubbles
+    // кліки ловлять лише бульбашки; клік повз них (і повз панель) закриває панель через focus grab у shell.qml
+    mask: Region {
         Region { item: left }
         Region { item: clock }
         Region { item: media }
         Region { item: right }
     }
-    MouseArea { id: background; anchors.fill: parent; onClicked: Popups.close() }
 
     Connections {
         target: Popups
@@ -43,6 +39,7 @@ PanelWindow {
         x: Theme.edge
         y: Theme.top
         spacing: Theme.gap
+        ScenarioBubble { screen: bar.screen }
         WorkspaceBubble { id: ws; screen: bar.screen }
     }
 

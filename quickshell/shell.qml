@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 import "services"
 import "bar"
 import "popups"
@@ -16,12 +17,21 @@ ShellRoot {
     }
 
     Variants {
+        id: bars
         model: Quickshell.screens
         Bar {}
     }
     Variants {
+        id: layers
         model: Quickshell.screens
         PopupLayer {}
+    }
+
+    // Поки відкрита панель: смуги й панель лишаються клікабельними, клік будь-де ще — закриває її
+    HyprlandFocusGrab {
+        active: Popups.current !== ""
+        windows: [...bars.instances, ...layers.instances.filter(l => l.visible)]
+        onCleared: Popups.close()
     }
     Variants {
         model: Quickshell.screens

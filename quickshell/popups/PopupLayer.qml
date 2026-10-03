@@ -4,18 +4,17 @@ import Quickshell.Wayland
 import "../theme"
 import "../services"
 
-// Шар під смугою для спливаючих вікон. Клік повз вікно або Esc закриває його.
+// Шар під смугою для спливаючих вікон. Ловить кліки лише в межах самого вікна;
+// клік деінде закриває його через focus grab (shell.qml), Esc — з клавіатури.
 PanelWindow {
     id: pl
     required property var modelData
     screen: modelData
-    // шар з'являється на всіх моніторах: клік будь-де повз панель її закриває; вміст — лише на «своєму» моніторі
-    visible: Popups.current !== ""
-    readonly property bool home: Popups.screen === modelData
+    visible: Popups.current !== "" && Popups.screen === modelData
 
     WlrLayershell.namespace: "unia-popup"
     WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: home ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true; bottom: true; left: true; right: true }
     margins.top: Theme.top + Theme.bubbleHeight
@@ -24,7 +23,7 @@ PanelWindow {
     readonly property real y0: 10
     function centred(w) { return Math.max(Theme.edge, Math.min(width - w - Theme.edge, Popups.anchorCenter - w / 2)) }
 
-    MouseArea { anchors.fill: parent; onClicked: Popups.close() }
+    mask: Region { item: loader.item }
 
     Item {
         anchors.fill: parent
@@ -33,7 +32,7 @@ PanelWindow {
 
         Loader {
             id: loader
-            active: pl.visible && pl.home
+            active: pl.visible
             sourceComponent: {
                 switch (Popups.current) {
                 case "cal": return calendar
