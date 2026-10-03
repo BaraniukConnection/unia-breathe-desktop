@@ -8,21 +8,23 @@ import Quickshell.Hyprland
 Singleton {
     id: root
     property string name: ""
-    readonly property var codes: ({ "English (US)": "us", "Ukrainian": "ua" })
-    readonly property string code: codes[name] ?? name.slice(0, 2).toLowerCase()
+    property string code: ""                 // код активної розкладки зі списку kb_layout (us, ua, de…)
     readonly property var names: ({ "English (US)": "English (US)", "Ukrainian": "Українська" })
     readonly property string label: names[name] ?? name
 
     function next() { switcher.running = true }
 
     Process {
+        id: query
         running: true
         command: ["hyprctl", "devices", "-j"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const kbs = JSON.parse(text).keyboards
                 const k = kbs.find(k => k.main) ?? kbs[0]
-                if (k) root.name = k.active_keymap
+                if (!k) return
+                root.name = k.active_keymap
+                root.code = (k.layout.split(",")[k.active_layout_index] ?? k.active_keymap.slice(0, 2)).toLowerCase()
             }
         }
     }
@@ -31,7 +33,7 @@ Singleton {
     Connections {
         target: Hyprland
         function onRawEvent(ev) {
-            if (ev.name === "activelayout") root.name = ev.data.split(",").slice(1).join(",")
+            if (ev.name === "activelayout") query.running = true
         }
     }
 }

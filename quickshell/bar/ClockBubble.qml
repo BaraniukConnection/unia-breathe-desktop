@@ -25,7 +25,7 @@ Bubble {
         }
         Label {
             anchors.verticalCenter: parent.verticalCenter
-            text: Qt.formatTime(clock.date, "HH:mm")
+            text: Qt.formatTime(clock.date, Prefs.data.clock24 !== false ? "HH:mm" : "h:mm AP")
             size: 15
             weight: Font.ExtraBold
         }

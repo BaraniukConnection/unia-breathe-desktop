@@ -4,6 +4,7 @@ set -euo pipefail
 REPO="$(cd "$(dirname "$0")" && pwd)"
 
 mkdir -p ~/.config/quickshell ~/.config/unia-breathe
+touch ~/.config/unia-breathe/hyprland.conf                # згенерований налаштуваннями; має існувати для source
 ln -sfn "$REPO/quickshell" ~/.config/quickshell/unia      # запуск: qs -c unia
 mkdir -p ~/.local/bin
 for f in "$REPO"/bin/*; do ln -sfn "$f" ~/.local/bin/"$(basename "$f")"; done

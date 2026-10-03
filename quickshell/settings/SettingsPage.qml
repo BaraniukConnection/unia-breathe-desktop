@@ -2,8 +2,9 @@ import QtQuick
 import Quickshell
 import "../theme"
 import "../services"
+import "pages"
 
-// Власна сторінка налаштування (праворуч від панелі). Поки — опис того, що тут з'явиться на етапі 6.
+// Власна сторінка налаштування (праворуч від панелі): час, розкладка, прозорість, вікна, мишка.
 FloatingWindow {
     id: win
     title: "Unia · Сторінка"
@@ -12,35 +13,29 @@ FloatingWindow {
     implicitWidth: 900
     implicitHeight: 800
 
+    Component { id: pTime; TimePage {} }
+    Component { id: pLayout; LayoutPage {} }
+    Component { id: pOpacity; OpacityPage {} }
+    Component { id: pBorders; BordersPage {} }
+    Component { id: pMouse; MousePage {} }
+
     Glass {
         anchors.fill: parent
         radius: 26
 
-        Column {
-            anchors.centerIn: parent
-            width: Math.min(parent.width - 80, 480)
-            spacing: 14
-            Rectangle {
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: 88; height: 88; radius: 28
-                color: Theme.pane
-                border.width: 1
-                border.color: Theme.paneLine
-                Icon { anchors.centerIn: parent; name: Settings.current ? Settings.current.icon : ""; font.pixelSize: 44; color: Theme.accent }
-            }
-            Label { anchors.horizontalCenter: parent.horizontalCenter; text: Settings.current ? Settings.current.label : ""; size: 22; weight: Font.ExtraBold }
-            Label {
-                width: parent.width
-                horizontalAlignment: Text.AlignHCenter
-                wrapMode: Text.Wrap
-                text: Settings.current ? Settings.current.what ?? "" : ""
-                muted: true
-            }
-            Label {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: "Сторінка з'явиться на етапі 6"
-                size: 12
-                muted: true
+        Loader {
+            anchors.fill: parent
+            anchors.margins: 6
+            active: win.visible
+            sourceComponent: {
+                switch (Settings.sel) {
+                case "time": return pTime
+                case "layout": case "kb-layout": return pLayout
+                case "opacity": return pOpacity
+                case "borders": return pBorders
+                case "mouse": return pMouse
+                }
+                return null
             }
         }
     }

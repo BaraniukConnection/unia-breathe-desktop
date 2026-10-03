@@ -42,7 +42,7 @@ Singleton {
     property string monitorName: ""           // на якому моніторі його показано
     property var addrs: ({})                   // id → адреса вікна програми
     property var pending: null                 // { id, classes, until } — чекаємо на нове вікно
-    property var pins: []                      // закріплені в панелі керування (до 6)
+    readonly property var pins: Prefs.data.pins ?? []      // закріплені в панелі керування (до 6)
 
     function find(id) { return items.find(i => i.id === id) ?? null }
 
@@ -111,9 +111,7 @@ Singleton {
 
     // ---------- закріплення в панелі керування ----------
     function togglePin(id) {
-        const p = pins.includes(id) ? pins.filter(x => x !== id) : [...pins, id].slice(0, 6)
-        pins = p
-        store.setText(JSON.stringify({ pins: p }, null, 2))
+        Prefs.set("pins", pins.includes(id) ? pins.filter(x => x !== id) : [...pins, id].slice(0, 6))
     }
 
     // ---------- стан Hyprland ----------
@@ -161,10 +159,4 @@ Singleton {
 
     Timer { id: relayout; interval: 400; onTriggered: root.layout() }
 
-    FileView {
-        id: store
-        path: Quickshell.env("HOME") + "/.config/unia-breathe/settings.json"
-        printErrors: false
-        onLoaded: { try { root.pins = JSON.parse(text()).pins ?? [] } catch (e) {} }
-    }
 }
