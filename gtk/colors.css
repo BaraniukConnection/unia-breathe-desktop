@@ -1,0 +1,25 @@
+/* Unia Breathe — палітра для GTK. Назви кольорів libadwaita; adw-gtk3 (GTK3) їх теж розуміє. */
+@define-color accent_color #13eca4;
+@define-color accent_bg_color #10b981;
+@define-color accent_fg_color #04231a;
+@define-color destructive_bg_color #f26464;
+@define-color success_color #13eca4;
+@define-color warning_color #f59e0b;
+@define-color error_color #f26464;
+
+@define-color window_bg_color #0b2a26;
+@define-color window_fg_color #eaf6f0;
+@define-color view_bg_color #0e302b;
+@define-color view_fg_color #eaf6f0;
+@define-color headerbar_bg_color #0b2a26;
+@define-color headerbar_fg_color #eaf6f0;
+@define-color headerbar_backdrop_color #0b2a26;
+@define-color sidebar_bg_color #09241f;
+@define-color sidebar_fg_color #eaf6f0;
+@define-color sidebar_backdrop_color #09241f;
+@define-color card_bg_color rgba(255, 255, 255, 0.06);
+@define-color card_fg_color #eaf6f0;
+@define-color dialog_bg_color #0f332d;
+@define-color dialog_fg_color #eaf6f0;
+@define-color popover_bg_color #0f332d;
+@define-color popover_fg_color #eaf6f0;

@@ -9,7 +9,9 @@ Bubble {
     id: root
     required property var screen
     readonly property var monitor: Hyprland.monitorFor(screen)
-    readonly property int number: monitor && monitor.activeWorkspace ? monitor.activeWorkspace.id : 0
+    readonly property var ws: monitor ? monitor.activeWorkspace : null
+    // звичайний стіл — номер; іменований (id < 0) — його назва
+    readonly property string number: !ws ? "" : ws.id > 0 ? String(ws.id) : ws.name
     popup: "ws"
     popupScreen: screen
     active: Popups.isOpen("ws", screen)
@@ -24,11 +26,12 @@ Bubble {
         spacing: 10
         Label { text: "Стіл"; size: 13; muted: true; anchors.verticalCenter: parent.verticalCenter }
         Pill {
-            width: 32
+            width: Math.max(32, numLabel.implicitWidth + 20)
             on: root.active
             hovered: root.hovered
             anchors.verticalCenter: parent.verticalCenter
             Label {
+                id: numLabel
                 anchors.centerIn: parent
                 text: root.number
                 weight: Font.Bold

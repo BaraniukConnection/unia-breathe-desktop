@@ -1,0 +1,46 @@
+/* Thunar: скляне тло (розмиття дає Hyprland), світлий текст */
+.thunar,
+.thunar .sidebar,
+.thunar .sidebar treeview,
+.thunar .view,
+.thunar scrolledwindow,
+.thunar viewport,
+.thunar statusbar,
+.thunar toolbar,
+.thunar menubar,
+.thunar headerbar,
+.thunar .standard-view {
+    background-color: rgba(8, 30, 25, 0.55);
+}
+
+.thunar,
+.thunar label,
+.thunar .view,
+.thunar .sidebar,
+.thunar treeview,
+.thunar toolbar,
+.thunar toolbar button,
+.thunar menubar > menuitem,
+.thunar statusbar,
+.thunar entry,
+.thunar image {
+    color: #eaf6f0;
+}
+
+.thunar .view:selected,
+.thunar .sidebar treeview:selected {
+    background-color: #10b981;
+    color: #04231a;
+    border-radius: 10px;
+}
+.thunar .view:hover,
+.thunar toolbar button:hover,
+.thunar menubar > menuitem:hover { background-color: rgba(255, 255, 255, 0.15); }
+
+.thunar entry,
+.thunar .path-bar button {
+    background-color: rgba(255, 255, 255, 0.09);
+    color: #eaf6f0;
+    border-color: rgba(255, 255, 255, 0.14);
+    border-radius: 10px;
+}
