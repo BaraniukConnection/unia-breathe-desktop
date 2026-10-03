@@ -12,8 +12,9 @@ Bubble {
     visible: Media.player !== null
     padLeft: 6
     padRight: 6
+    popup: "media"
+    popupScreen: screen
     active: Popups.isOpen("media", screen)
-    onClicked: Popups.toggle("media", screen, root)
 
     Row {
         height: parent.height

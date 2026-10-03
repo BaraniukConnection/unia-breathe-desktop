@@ -12,19 +12,13 @@ Glass {
     height: col.implicitHeight + 12
     property string armed: ""
 
-    readonly property var items: [
-        { id: "off", label: "Вимкнути", icon: "power_settings_new", confirm: true, cmd: ["systemctl", "poweroff"] },
-        { id: "reboot", label: "Перезавантажити", icon: "restart_alt", confirm: true, cmd: ["systemctl", "reboot"] },
-        { id: "sleep", label: "Сон", icon: "bedtime", confirm: false, cmd: ["systemctl", "suspend"] },
-        { id: "logout", label: "Вийти з сеансу", icon: "logout", confirm: true, cmd: ["sh", "-c", "systemctl --user stop hyprland-session.target; hyprctl dispatch exit"] },
-    ]
 
     Column {
         id: col
         x: 6; y: 6
         width: parent.width - 12
         Repeater {
-            model: root.items
+            model: Power.items
             Rectangle {
                 required property var modelData
                 readonly property bool isArmed: root.armed === modelData.id
@@ -47,7 +41,7 @@ Glass {
                     onClicked: {
                         if (modelData.confirm && !isArmed) { root.armed = modelData.id; return }
                         Popups.close()
-                        Quickshell.execDetached(modelData.cmd)
+                        Power.run(modelData)
                     }
                 }
             }

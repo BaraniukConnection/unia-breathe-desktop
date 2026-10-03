@@ -10,9 +10,9 @@ Bubble {
     required property var screen
     readonly property var monitor: Hyprland.monitorFor(screen)
     readonly property int number: monitor && monitor.activeWorkspace ? monitor.activeWorkspace.id : 0
+    popup: "ws"
+    popupScreen: screen
     active: Popups.isOpen("ws", screen)
-
-    onClicked: Popups.toggle("ws", screen, root)
     onWheel: w => {
         if (Math.abs(w.angleDelta.y) < 60) return
         Hyprland.dispatch(`focusmonitor ${monitor.name}`)

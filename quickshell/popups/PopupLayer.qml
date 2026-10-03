@@ -9,11 +9,13 @@ PanelWindow {
     id: pl
     required property var modelData
     screen: modelData
-    visible: Popups.current !== "" && Popups.screen === modelData
+    // шар з'являється на всіх моніторах: клік будь-де повз панель її закриває; вміст — лише на «своєму» моніторі
+    visible: Popups.current !== ""
+    readonly property bool home: Popups.screen === modelData
 
     WlrLayershell.namespace: "unia-popup"
     WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+    WlrLayershell.keyboardFocus: home ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true; bottom: true; left: true; right: true }
     margins.top: Theme.top + Theme.bubbleHeight
@@ -31,13 +33,14 @@ PanelWindow {
 
         Loader {
             id: loader
-            active: pl.visible
+            active: pl.visible && pl.home
             sourceComponent: {
                 switch (Popups.current) {
                 case "cal": return calendar
                 case "media": return mediaCenter
                 case "power": return powerMenu
                 case "ws": return wsList
+                case "nc": return controlCenter
                 }
                 return null
             }
@@ -53,5 +56,6 @@ PanelWindow {
     Component { id: calendar; Calendar { x: pl.centred(width) } }
     Component { id: mediaCenter; MediaCenter { x: Math.min(pl.width - width - Theme.edge, Popups.anchorLeft) } }
     Component { id: powerMenu; PowerMenu { x: Popups.anchorRight - width } }
+    Component { id: controlCenter; ControlCenter { x: pl.width - width - Theme.edge } }
     Component { id: wsList; WorkspaceList { screen: pl.screen; x: Theme.edge } }
 }

@@ -17,18 +17,23 @@ PanelWindow {
     implicitHeight: Theme.top + Theme.bubbleHeight
     exclusiveZone: Theme.top + Theme.bubbleHeight
     color: "transparent"
-    mask: Region {
+    // поки відкрита панель — уся смуга ловить кліки (клік повз бульбашки закриває), інакше лише бульбашки
+    mask: Popups.current !== "" ? whole : bubbles
+    Region { id: whole; item: background }
+    Region {
+        id: bubbles
         Region { item: left }
         Region { item: clock }
         Region { item: media }
         Region { item: right }
     }
+    MouseArea { id: background; anchors.fill: parent; onClicked: Popups.close() }
 
     Connections {
         target: Popups
         function onRequest(name) {
             if (!Hyprland.focusedMonitor || Hyprland.focusedMonitor.name !== bar.screen.name) return
-            const item = { ws: ws, cal: clock, media: media, power: power }[name]
+            const item = { ws: ws, cal: clock, media: media, power: power, nc: status }[name]
             if (item && item.visible) Popups.toggle(name, bar.screen, item)
         }
     }
@@ -63,15 +68,18 @@ PanelWindow {
         spacing: Theme.gap
         StatusBubble { id: status; screen: bar.screen; compact: bar.compact }
         RoundBubble {
-            icon: Bell.dnd ? "notifications_off" : "notifications"
-            badge: Bell.count > 0
-            onClicked: Bell.toggle()
+            icon: Notifs.dnd ? "notifications_off" : "notifications"
+            badge: Notifs.count > 0
+            popup: "nc"
+            popupScreen: bar.screen
+            active: Popups.isOpen("nc", bar.screen)
         }
         RoundBubble {
             id: power
             icon: "power_settings_new"
+            popup: "power"
+            popupScreen: bar.screen
             active: Popups.isOpen("power", bar.screen)
-            onClicked: Popups.toggle("power", bar.screen, power)
         }
     }
 

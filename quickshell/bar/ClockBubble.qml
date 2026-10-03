@@ -9,8 +9,9 @@ Bubble {
     required property var screen
     padLeft: 18
     padRight: 18
+    popup: "cal"
+    popupScreen: screen
     active: Popups.isOpen("cal", screen)
-    onClicked: Popups.toggle("cal", screen, root)
 
     SystemClock { id: clock; precision: SystemClock.Minutes }
 

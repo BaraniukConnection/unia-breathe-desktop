@@ -10,7 +10,9 @@ Bubble {
     property bool compact: false
     property var hint: null                      // сегмент під курсором (для підказки)
     padLeft: 6
-    onClicked: Bell.toggle()                     // етап 3: власна панель керування
+    popup: "nc"
+    popupScreen: screen
+    active: Popups.isOpen("nc", screen)
 
     component Seg: Pill {
         id: seg
@@ -43,7 +45,7 @@ Bubble {
             hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
             onContainsMouseChanged: root.hint = containsMouse ? seg : (root.hint === seg ? null : root.hint)
-            onClicked: Bell.toggle()
+            onClicked: Popups.toggle("nc", root.screen, root)
             onWheel: w => root.wheelOn(seg.kind, w)
         }
     }
