@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Wayland
 import "../theme"
 import "../services"
+import "../dock"
 
 // Шар під смугою для спливаючих вікон. Ловить кліки лише в межах самого вікна;
 // клік деінде закриває його через focus grab (shell.qml), Esc — з клавіатури.
@@ -42,14 +43,23 @@ PanelWindow {
                 case "power": return powerMenu
                 case "ws": return wsList
                 case "nc": return controlCenter
+                case "menu": return menuPanel
                 }
                 return null
             }
-            onLoaded: { item.opacity = 0; item.y = pl.y0 - 8; appear.restart() }
+            // меню програм виїжджає знизу (над доком), решта — згори
+            readonly property bool fromBottom: Popups.current === "menu"
+            property real targetY: 0
+            onLoaded: {
+                targetY = fromBottom ? pl.height - 124 - item.height : pl.y0
+                item.opacity = 0
+                item.y = targetY + (fromBottom ? 12 : -8)
+                appear.restart()
+            }
             ParallelAnimation {
                 id: appear
                 NumberAnimation { target: loader.item; property: "opacity"; to: 1; duration: 180; easing.type: Easing.OutCubic }
-                NumberAnimation { target: loader.item; property: "y"; to: pl.y0; duration: 180; easing.type: Easing.OutCubic }
+                NumberAnimation { target: loader.item; property: "y"; to: loader.targetY; duration: 180; easing.type: Easing.OutCubic }
             }
         }
     }
@@ -57,6 +67,7 @@ PanelWindow {
     Component { id: calendar; Calendar { x: pl.centred(width) } }
     Component { id: mediaCenter; MediaCenter { x: Math.min(pl.width - width - Theme.edge, Popups.anchorLeft) } }
     Component { id: powerMenu; PowerMenu { x: Popups.anchorRight - width } }
+    Component { id: menuPanel; MenuPanel { screen: pl.screen; maxWidth: pl.width - 40; maxHeight: pl.height - 124 - 20; x: (pl.width - width) / 2 } }
     Component { id: controlCenter; ControlCenter { x: pl.width - width - Theme.edge } }
     Component { id: wsList; WorkspaceList { screen: pl.screen; x: Theme.edge } }
 }
