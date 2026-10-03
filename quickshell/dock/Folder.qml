@@ -9,7 +9,10 @@ Column {
     required property var group
     required property var panel
     readonly property alias grid: grid
+    readonly property bool empty: root.group.tiles.length === 0
     spacing: 8
+
+    function startEdit() { edit.text = root.group.name; edit.visible = true; edit.forceActiveFocus(); edit.selectAll() }
 
     Item {
         width: grid.width
@@ -25,8 +28,18 @@ Column {
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.IBeamCursor
-                onClicked: { edit.text = root.group.name; edit.visible = true; edit.forceActiveFocus(); edit.selectAll() }
+                onClicked: root.startEdit()
             }
+        }
+        // меню папки: ⋯ праворуч у заголовку
+        IconButton {
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            implicitWidth: 28; implicitHeight: 28
+            iconSize: 18
+            icon: "more_horiz"
+            muted: true
+            onClicked: root.panel.folderMenu(root.group, mapToItem(root.panel, 0, height))
         }
         TextField {
             id: edit
@@ -50,6 +63,17 @@ Column {
         readonly property var groupId: root.group.id
         width: Menu.cols * 48 + (Menu.cols - 1) * 8
         height: Math.max(1, Menu.rowsOf(root.group.tiles)) * 56 - 8
+
+        // порожня папка: підказка й рамка, куди класти плитки
+        Rectangle {
+            visible: root.empty
+            anchors.fill: parent
+            radius: Theme.radiusTile
+            color: "transparent"
+            border.width: 1
+            border.color: Theme.paneLine
+            Label { anchors.centerIn: parent; text: "Перетягни сюди плитки"; size: 12; muted: true }
+        }
 
         // місце, куди впаде плитка, яку тягнуть
         Rectangle {

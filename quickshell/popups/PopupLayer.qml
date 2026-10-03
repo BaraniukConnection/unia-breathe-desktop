@@ -33,41 +33,43 @@ PanelWindow {
         focus: true
         Keys.onEscapePressed: Popups.close()
 
-        Loader {
-            id: loader
-            active: pl.open
-            sourceComponent: {
-                switch (Popups.current) {
-                case "cal": return calendar
-                case "media": return mediaCenter
-                case "power": return powerMenu
-                case "ws": return wsList
-                case "nc": return controlCenter
-                case "menu": return menuPanel
+        // обгортка лише трохи «виїжджає» при появі; де стоїть саме вікно — задає його компонент нижче
+        Item {
+            id: wrap
+            width: parent.width
+            height: parent.height
+            Loader {
+                id: loader
+                active: pl.open
+                sourceComponent: {
+                    switch (Popups.current) {
+                    case "cal": return calendar
+                    case "media": return mediaCenter
+                    case "power": return powerMenu
+                    case "ws": return wsList
+                    case "nc": return controlCenter
+                    case "menu": return menuPanel
+                    }
+                    return null
                 }
-                return null
-            }
-            // меню програм виїжджає знизу (над доком), решта — згори
-            readonly property bool fromBottom: Popups.current === "menu"
-            property real targetY: 0
-            onLoaded: {
-                targetY = fromBottom ? pl.height - 124 - item.height : pl.y0
-                item.opacity = 0
-                item.y = targetY + (fromBottom ? 12 : -8)
-                appear.restart()
+                onLoaded: {
+                    wrap.opacity = 0
+                    wrap.y = Popups.current === "menu" ? 12 : -8      // меню — знизу, решта — згори
+                    appear.restart()
+                }
             }
             ParallelAnimation {
                 id: appear
-                NumberAnimation { target: loader.item; property: "opacity"; to: 1; duration: 180; easing.type: Easing.OutCubic }
-                NumberAnimation { target: loader.item; property: "y"; to: loader.targetY; duration: 180; easing.type: Easing.OutCubic }
+                NumberAnimation { target: wrap; property: "opacity"; to: 1; duration: 180; easing.type: Easing.OutCubic }
+                NumberAnimation { target: wrap; property: "y"; to: 0; duration: 180; easing.type: Easing.OutCubic }
             }
         }
     }
 
-    Component { id: calendar; Calendar { x: pl.centred(width) } }
-    Component { id: mediaCenter; MediaCenter { x: Math.min(pl.width - width - Theme.edge, Popups.anchorLeft) } }
-    Component { id: powerMenu; PowerMenu { x: Popups.anchorRight - width } }
-    Component { id: menuPanel; MenuPanel { screen: pl.screen; maxWidth: pl.width - 40; maxHeight: pl.height - 124 - 20; x: (pl.width - width) / 2 } }
-    Component { id: controlCenter; ControlCenter { x: pl.width - width - Theme.edge } }
-    Component { id: wsList; WorkspaceList { screen: pl.screen; x: Theme.edge } }
+    Component { id: calendar; Calendar { x: pl.centred(width); y: pl.y0 } }
+    Component { id: mediaCenter; MediaCenter { x: Math.min(pl.width - width - Theme.edge, Popups.anchorLeft); y: pl.y0 } }
+    Component { id: powerMenu; PowerMenu { x: Popups.anchorRight - width; y: pl.y0 } }
+    Component { id: menuPanel; MenuPanel { screen: pl.screen; maxWidth: pl.width - 40; maxHeight: pl.height - 124 - 20; x: (pl.width - width) / 2; y: pl.height - 124 - height } }
+    Component { id: controlCenter; ControlCenter { x: pl.width - width - Theme.edge; y: pl.y0 } }
+    Component { id: wsList; WorkspaceList { screen: pl.screen; x: Theme.edge; y: pl.y0 } }
 }

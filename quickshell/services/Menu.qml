@@ -71,7 +71,6 @@ Singleton {
     function all() { return [].concat(...data.columns) }        // усі папки одним списком
     function groups(d) { return [].concat(...d.columns) }
     function commit(d) {
-        d.columns = d.columns.map(c => c.filter(g => g.tiles.length || g.misc))
         data = d
         saveTimer.restart()
     }
@@ -177,6 +176,39 @@ Singleton {
         else return false
         commit(d)
         return true
+    }
+    // папки: створити (у коротшу колонку), видалити (плитки — в «Інше»), перемістити
+    function addFolder() {
+        const d = clone()
+        const height = c => c.reduce((h, g) => h + Math.max(1, rowsOf(g.tiles)) + 1, 0)
+        const col = d.columns.length > 1 && height(d.columns[1]) < height(d.columns[0]) ? 1 : 0
+        const g = { id: uid(), name: "Нова папка", tiles: [] }
+        d.columns[col].push(g)
+        commit(d)
+        return g.id
+    }
+    function deleteFolder(id) {
+        const d = clone(), g = groups(d).find(g => g.id === id), m = groups(d).find(g => g.misc)
+        if (!g || g.misc) return
+        for (const t of g.tiles) { t.size = "small"; Object.assign(t, freeSlot(m.tiles, "small")); m.tiles.push(t) }
+        d.columns = d.columns.map(c => c.filter(x => x !== g))
+        commit(d)
+    }
+    function moveFolder(id, dir) {        // dir: -1 вгору, 1 вниз, "other" — в іншу колонку
+        const d = clone()
+        const ci = d.columns.findIndex(c => c.some(g => g.id === id))
+        if (ci < 0) return
+        const col = d.columns[ci], i = col.findIndex(g => g.id === id)
+        if (dir === "other") {
+            if (d.columns.length < 2) return
+            const [g] = col.splice(i, 1)
+            d.columns[1 - ci].push(g)
+        } else {
+            const j = i + dir
+            if (j < 0 || j >= col.length) return;
+            [col[i], col[j]] = [col[j], col[i]]
+        }
+        commit(d)
     }
     function reset() { data = seed(); saveTimer.restart() }
 

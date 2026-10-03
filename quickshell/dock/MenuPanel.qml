@@ -90,6 +90,28 @@ Glass {
             items.push({ label: "Прибрати в «Інше»", icon: "move_down", run: () => Menu.toMisc(tile.id) })
         openMenu(items, p)
     }
+    function folderMenu(g, p) {
+        const items = [{ label: "Перейменувати", icon: "edit", run: () => { const f = folderItems().find(f => f.group.id === g.id); if (f) f.startEdit() } },
+                       { label: "Вище", icon: "arrow_upward", run: () => Menu.moveFolder(g.id, -1) },
+                       { label: "Нижче", icon: "arrow_downward", run: () => Menu.moveFolder(g.id, 1) }]
+        if (root.ncols === 2) items.push({ label: "В іншу колонку", icon: "swap_horiz", run: () => Menu.moveFolder(g.id, "other") })
+        if (!g.misc) items.push({ label: g.tiles.length ? "Видалити (плитки — в «Інше»)" : "Видалити папку", icon: "delete", run: () => Menu.deleteFolder(g.id) })
+        openMenu(items, p)
+    }
+    function folderItems() { return folders.map(g => g ? g.parent : null).filter(f => f && f.group) }
+    function newFolder() {
+        view = "tiles"
+        search.text = ""
+        const id = Menu.addFolder()
+        // папка з'явиться після перемальовування — тоді й відкриваємо поле назви
+        Qt.callLater(() => {
+            const f = folderItems().find(f => f.group.id === id)
+            if (!f) return
+            const y = f.mapToItem(cols, 0, 0).y
+            tilesView.contentY = Math.max(0, Math.min(tilesView.contentHeight - tilesView.height, y - 40))
+            f.startEdit()
+        })
+    }
     function favItem(app) {
         const on = Menu.data.favs.includes(app)
         return { label: on ? "Прибрати з доку" : "Додати до доку", icon: "star", run: () => { if (!Menu.toggleFav(app)) toast.show("У доці вже п'ять програм — спершу прибери одну") } }
@@ -265,6 +287,25 @@ Glass {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 12
         Pill {
+            id: newBtn
+            anchors.verticalCenter: parent.verticalCenter
+            width: newRow.implicitWidth + 24
+            height: 36
+            color: newArea.containsMouse ? Theme.paneHover : "transparent"
+            border.width: 0
+            visible: root.view === "tiles" && root.query === ""
+            Row {
+                id: newRow
+                anchors.centerIn: parent
+                spacing: 6
+                Icon { name: "create_new_folder"; color: Theme.inkMuted; font.pixelSize: 18; anchors.verticalCenter: parent.verticalCenter }
+                Label { text: "Нова папка"; size: 13; anchors.verticalCenter: parent.verticalCenter }
+            }
+            MouseArea { id: newArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.newFolder() }
+        }
+        Pill {
+            anchors.left: newBtn.right
+            anchors.leftMargin: 4
             anchors.verticalCenter: parent.verticalCenter
             width: resetRow.implicitWidth + 24
             height: 36

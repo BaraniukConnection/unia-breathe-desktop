@@ -38,11 +38,11 @@ Item {
     AppIcon {
         app: root.tile.app
         implicitSize: root.small ? 36 : root.tile.size === "large" ? 72 : 44
-        x: root.small || root.live === "" ? (root.width - width) / 2 : 12
-        y: root.small ? (root.height - height) / 2 : root.live === "" ? (root.height - height) / 2 - 8 : 12
+        x: (root.width - width) / 2
+        y: root.small ? (root.height - height) / 2 : (root.height - height) / 2 - 8
         width: implicitSize
         height: implicitSize
-        visible: root.live === "" || root.tile.size !== "medium"
+        visible: root.live === ""          // «жива» плитка показує вміст без іконки, щоб іконка його не перекривала
     }
     Label {
         visible: !root.small
@@ -63,13 +63,13 @@ Item {
         x: 12; y: 10
         width: root.width - 24
         Label { text: Qt.locale("uk_UA").toString(clock.date, "dddd"); size: 11; muted: true; weight: Font.Bold }
-        Label { text: clock.date.getDate(); size: root.tile.size === "medium" ? 30 : 40; weight: Font.ExtraBold }
+        Label { text: clock.date.getDate(); size: root.tile.size === "large" ? 40 : 28; weight: Font.ExtraBold }
         Label { width: parent.width; visible: root.tile.size !== "medium"; text: Events.next ? Events.next.title : "Подій немає"; size: 12; muted: true; elide: Text.ElideRight }
     }
     Column {
         visible: root.live === "clock"
         x: 12; y: 12
-        Label { text: Qt.formatTime(clock.date, "HH:mm"); size: root.tile.size === "medium" ? 26 : 40; weight: Font.ExtraBold }
+        Label { text: Qt.formatTime(clock.date, Prefs.data.clock24 !== false ? "HH:mm" : "h:mm AP"); size: root.tile.size === "large" ? 40 : 26; weight: Font.ExtraBold }
         Label { text: Qt.locale("uk_UA").toString(clock.date, "d MMM"); size: 12; muted: true }
     }
     Item {
