@@ -15,13 +15,14 @@ PanelWindow {
              && Popups.current !== "nc"
 
     WlrLayershell.namespace: "unia-toast"
-    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.layer: WlrLayer.Top
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true; right: true }
     margins { top: Theme.top + Theme.bubbleHeight + 12; right: Theme.edge }
     implicitWidth: 380
     implicitHeight: Math.max(1, stack.implicitHeight)
     color: "transparent"
+    mask: Region { item: stack }        // область кліків росте разом із картками
 
     Column {
         id: stack

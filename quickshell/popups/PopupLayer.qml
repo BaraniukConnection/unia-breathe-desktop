@@ -10,7 +10,8 @@ PanelWindow {
     id: pl
     required property var modelData
     screen: modelData
-    visible: Popups.current !== "" && Popups.screen === modelData
+    // шар існує завжди: focus grab має знати про нього заздалегідь, інакше клік у панелі вважається «повз»
+    readonly property bool open: Popups.current !== "" && Popups.screen === modelData
 
     WlrLayershell.namespace: "unia-popup"
     WlrLayershell.layer: WlrLayer.Overlay
@@ -23,7 +24,8 @@ PanelWindow {
     readonly property real y0: 10
     function centred(w) { return Math.max(Theme.edge, Math.min(width - w - Theme.edge, Popups.anchorCenter - w / 2)) }
 
-    mask: Region { item: loader.item }
+    mask: Region { item: pl.open && loader.item ? loader.item : nothing }
+    Item { id: nothing }
 
     Item {
         anchors.fill: parent
@@ -32,7 +34,7 @@ PanelWindow {
 
         Loader {
             id: loader
-            active: pl.visible
+            active: pl.open
             sourceComponent: {
                 switch (Popups.current) {
                 case "cal": return calendar

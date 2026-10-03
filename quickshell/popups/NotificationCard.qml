@@ -31,10 +31,11 @@ Rectangle {
         spacing: 12
 
         ClippingRectangle {
+            id: iconBox
             width: 32; height: 32; radius: 10
             color: Theme.paneHover
-            readonly property string src: root.n.image || Notifs.icon(root.n)
-            Image { id: pic; anchors.fill: parent; source: parent.src; fillMode: Image.PreserveAspectCrop; sourceSize: Qt.size(64, 64) }
+            readonly property string src: root.n.image || Notifs.icon(root.n) || ""
+            Image { id: pic; anchors.fill: parent; source: iconBox.src; fillMode: Image.PreserveAspectCrop; sourceSize: Qt.size(64, 64) }
             Icon { anchors.centerIn: parent; name: "notifications"; font.pixelSize: 18; visible: pic.status !== Image.Ready }
         }
 

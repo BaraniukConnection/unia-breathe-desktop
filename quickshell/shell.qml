@@ -1,3 +1,4 @@
+//@ pragma IconTheme Mint-Breeze-Calm-Green-Icons
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -30,7 +31,7 @@ ShellRoot {
     // Поки відкрита панель: смуги й панель лишаються клікабельними, клік будь-де ще — закриває її
     HyprlandFocusGrab {
         active: Popups.current !== ""
-        windows: [...bars.instances, ...layers.instances.filter(l => l.visible)]
+        windows: [...bars.instances, ...layers.instances]
         onCleared: Popups.close()
     }
     Variants {

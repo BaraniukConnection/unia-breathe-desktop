@@ -15,11 +15,12 @@ Singleton {
         history = history.filter(e => e.n !== n)
         toasts = toasts.filter(e => e.n !== n)
     }
-    function hideToast(e) { toasts = toasts.filter(x => x !== e) }
+    // записи приходять у делегати копіями, тож порівнюємо за самим сповіщенням
+    function hideToast(e) { toasts = toasts.filter(x => x.n !== e.n) }
     function dismiss(e) { e.n.dismiss() }               // далі спрацює closed → remove
     function clear() { for (const e of history.slice()) e.n.dismiss() }
     function activate(e) {
-        const def = e.n.actions.find(a => a.identifier === "default")
+        const def = Array.from(e.n.actions).find(a => a.identifier === "default")
         if (def) def.invoke()
         else if (e.n.desktopEntry) {
             const app = DesktopEntries.byId(e.n.desktopEntry)
@@ -28,9 +29,9 @@ Singleton {
         hideToast(e)
     }
     function icon(n) {
-        if (n.appIcon) return n.appIcon.startsWith("/") || n.appIcon.startsWith("file:") ? n.appIcon : Quickshell.iconPath(n.appIcon, true)
+        if (n.appIcon) return n.appIcon.startsWith("/") || n.appIcon.startsWith("file:") ? n.appIcon : Quickshell.iconPath(n.appIcon, true) || ""
         const app = n.desktopEntry ? DesktopEntries.byId(n.desktopEntry) : DesktopEntries.heuristicLookup(n.appName)
-        return app ? Quickshell.iconPath(app.icon, true) : ""
+        return app ? Quickshell.iconPath(app.icon, true) || "" : ""
     }
 
     NotificationServer {
