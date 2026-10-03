@@ -1,0 +1,2240 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Unia Breathe</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400..800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@0..1&icon_names=add,alarm,aspect_ratio,bedtime,bluetooth,bluetooth_disabled,border_style,brush,calculate,calendar_month,chat_bubble,check,checklist,chevron_right,close,code,contacts,description,do_not_disturb_on,drag_handle,draw,folder,folder_zip,format_list_bulleted,grid_view,hard_drive,headphones,keyboard,lightbulb,logout,mail,map,menu_book,mic,monitor,monitor_heart,mouse,movie,music_note,notifications,notifications_off,opacity,palette,partly_cloudy_day,pause,photo_camera,photo_library,play_arrow,power_settings_new,print,public,push_pin,restart_alt,save,scanner,schedule,settings,skip_next,skip_previous,slideshow,smart_toy,speaker,sports_esports,star,storefront,terminal,videocam,volume_off,volume_up,wallpaper,wifi,wifi_off&display=block">
+<style>
+/* Layout: a full-window wallpaper; a dock of five round favourites with an arrow button sits at the bottom centre.
+   Pressing the arrow raises a frosted-glass panel above the dock: scroll rail on the left, folders of tiles in
+   two columns, a tiles / all-programs switch in the bottom-right corner. Top left: two separate bubbles (scenario,
+   workspace) that open one window with the open workspaces and the saved scenarios. Mock windows tile the desktop
+   between the bubbles and the dock. Top centre: the clock bubble (opens the calendar) and, a little further to its
+   right, the media bubble (opens the media centre). Top right: the status bubble (layout, volume, Bluetooth, Wi-Fi),
+   the bell and the power button; the first two open the notification and control panel. Settings: a narrow panel of
+   buttons in the middle of the desktop and, as a separate window to its right, the program the chosen button opens.
+   Desktop only, one dark glass look. */
+:root {
+  --base: #0b2a26;                         /* behind the wallpaper */
+  --ink: #eaf6f0;
+  --ink-muted: #bfe3d5;
+  --accent: #10b981;
+  --on-accent: #04231a;
+  --glass: rgba(8, 30, 25, .35);           /* every frosted surface: panel, bubbles, windows */
+  --glass-strong: rgba(8, 30, 25, .62);    /* menus, toast */
+  --pane: rgba(255, 255, 255, .09);        /* wide, medium and large tiles */
+  --pane-hover: rgba(255, 255, 255, .15);
+  --pane-line: rgba(255, 255, 255, .14);
+  --blur: blur(30px) saturate(160%) brightness(.84);   /* the slight dimming keeps text readable at 35 % */
+  --shadow: 0 18px 48px rgba(0, 0, 0, .38);
+  --shadow-s: 0 6px 16px rgba(0, 0, 0, .35);
+  --mark-mint: #13eca4;
+  --mark-blue: #5b9bff;
+  --mark-amber: #f59e0b;
+  --mark-red: #f26464;
+  --mark-purple: #b57bf9;
+  --mark-emerald: #10b981;
+  --mark-pink: #f06fae;
+  --mark-slate: #9aa9bd;
+  --font: Manrope, Roboto, system-ui, sans-serif;
+  --u: 48px;    /* one small tile */
+  --g: 8px;     /* gap between tiles */
+  --gc: 8;      /* small-tile columns per folder */
+  --gw: calc(var(--gc) * var(--u) + (var(--gc) - 1) * var(--g));
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0; overflow: hidden; background: var(--base); color: var(--ink);
+  font: 400 14px/20px var(--font);
+  -webkit-user-select: none; user-select: none;
+}
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.ms {
+  font-family: 'Material Symbols Outlined'; font-weight: 400; font-style: normal;
+  font-size: 22px; line-height: 1; width: 1em; height: 1em; flex: none;
+  display: inline-block; overflow: hidden; white-space: nowrap; letter-spacing: normal;
+  text-transform: none; direction: ltr; font-feature-settings: 'liga';
+  font-variation-settings: 'FILL' 1; -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Stage ---------- */
+.stage { position: relative; height: 100%; overflow: hidden; }
+.wall { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+/* ---------- Dock: favourites + arrow ---------- */
+.dock {
+  position: absolute; left: 50%; bottom: 20px; z-index: 12; transform: translateX(-50%);
+  width: 376px; height: 106px; transition: height .25s ease;
+}
+.favs {
+  position: absolute; left: 50%; top: 0; transform: translateX(-50%);
+  display: flex; gap: 14px; transition: top .25s ease;
+}
+.fav {
+  width: 64px; height: 64px; flex: none; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+  display: grid; place-items: center; background: var(--mark); color: var(--on-accent);
+  box-shadow: var(--shadow-s); transition: width .25s ease, height .25s ease, transform .12s ease;
+}
+.fav .ms { font-size: 30px; transition: font-size .25s ease; }
+.fav:hover { transform: translateY(-3px); }
+.fav:active { transform: scale(.94); }
+.fav.empty {
+  background: var(--glass); box-shadow: inset 0 0 0 1px var(--pane-line); cursor: default;
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+}
+.fav.empty:hover, .fav.empty:active { transform: none; }
+.arrow {
+  position: absolute; left: 50%; top: 78px; transform: translateX(-50%);
+  width: 88px; height: 28px; padding: 0; border: 0; border-radius: 9999px; cursor: pointer;
+  display: grid; place-items: center; background: var(--glass); color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--pane-line), var(--shadow-s);
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+  transition: top .25s ease, background .16s ease;
+}
+.arrow:hover { background: rgba(8, 30, 25, .55); }
+.arrow svg { width: 22px; height: 22px; transition: transform .25s ease; }
+.stage.open .dock { height: 92px; }
+.stage.open .arrow { top: 0; }
+.stage.open .arrow svg { transform: rotate(180deg); }
+.stage.open .favs { top: 40px; }
+.stage.open .fav { width: 52px; height: 52px; }
+.stage.open .fav .ms { font-size: 26px; }
+
+/* ---------- Panel ---------- */
+.panel {
+  position: absolute; left: 50%; bottom: 124px; z-index: 10; transform: translateX(-50%);
+  height: min(580px, calc(100% - 144px)); width: max-content;
+  display: flex; flex-direction: column; overflow: hidden;
+  background: var(--glass); border-radius: 28px;
+  box-shadow: inset 0 0 0 1px var(--pane-line), var(--shadow);
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+  animation: rise .22s ease;
+}
+@keyframes rise { from { opacity: 0; transform: translateX(-50%) translateY(14px) scale(.98); } }
+.panel-main { display: flex; flex: 1; min-height: 0; }
+
+/* Scroll rail: a line with a dot at each end, the thumb rides on it. */
+.rail { position: relative; width: 28px; flex: none; margin: 22px 0 6px; cursor: pointer; touch-action: none; }
+.rail::before { content: ""; position: absolute; left: 13px; top: 4px; bottom: 4px; width: 2px; border-radius: 2px; background: var(--pane-line); }
+.rail-dot { position: absolute; left: 10px; width: 8px; height: 8px; border-radius: 50%; background: var(--ink-muted); opacity: .7; }
+.rail-dot.top { top: 0; }
+.rail-dot.bottom { bottom: 0; }
+.rail-thumb { position: absolute; left: 11px; top: 12px; width: 6px; height: 40px; border-radius: 6px; background: var(--accent); cursor: grab; }
+.rail-thumb::before { content: ""; position: absolute; inset: 0 -8px; }
+
+.scroller { overflow-x: hidden; overflow-y: auto; scrollbar-width: none; width: calc(var(--cols, 2) * (var(--gw) + 24px) + 12px); }
+.scroller::-webkit-scrollbar { display: none; }
+.tiles { display: flex; align-items: flex-start; gap: 24px; padding: 12px 24px 24px 12px; }
+.panel[data-view="apps"] .tiles, .panel[data-view="tiles"] .allapps { display: none; }
+.col { flex: none; width: var(--gw); min-height: 120px; display: flex; flex-direction: column; gap: 24px; }
+
+.panel-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 8px 16px 14px 20px; }
+.quiet {
+  height: 36px; padding: 0 12px 0 8px; border: 0; border-radius: 9999px; background: none; cursor: pointer;
+  display: flex; align-items: center; gap: 8px; color: var(--ink-muted); font: 600 13px/18px var(--font);
+}
+.quiet:hover { background: var(--pane); color: var(--ink); }
+.quiet .ms { font-size: 20px; }
+.seg { display: flex; gap: 4px; padding: 4px; border-radius: 9999px; background: var(--pane); box-shadow: inset 0 0 0 1px var(--pane-line); }
+.seg-btn {
+  height: 32px; padding: 0 16px; border: 0; border-radius: 9999px; background: none; cursor: pointer;
+  font: 600 13px/18px var(--font); color: var(--ink);
+}
+.seg-btn:hover { background: var(--pane); }
+.seg-btn[aria-selected="true"] { background: var(--accent); color: var(--on-accent); }
+
+/* ---------- Folders and tiles ---------- */
+.group-head { display: flex; align-items: center; gap: 4px; height: 40px; margin-bottom: 4px; }
+.group-name {
+  flex: 1; min-width: 0; height: 32px; margin-left: -8px; padding: 0 8px; border: 0; border-radius: 10px;
+  background: transparent; color: var(--ink); font: 700 14px/20px var(--font);
+  -webkit-user-select: text; user-select: text; text-overflow: ellipsis;
+}
+.group-name::placeholder { color: transparent; font-weight: 500; }
+.group:hover .group-name::placeholder, .group-name:focus::placeholder { color: var(--ink-muted); }
+.group-name:hover, .group-name:focus { background: var(--pane); }
+.group-name:focus { outline: 2px solid var(--accent); outline-offset: 0; }
+.group-grip {
+  width: 32px; height: 32px; flex: none; padding: 0; border: 0; border-radius: 10px; background: none; color: var(--ink-muted);
+  display: grid; place-items: center; cursor: grab; touch-action: none; opacity: 0; transition: opacity .16s;
+}
+.group:hover .group-grip, .group-grip:focus-visible { opacity: 1; }
+.group-grip:hover { background: var(--pane); color: var(--ink); }
+
+.grid { position: relative; height: calc(var(--rows) * var(--u) + (var(--rows) - 1) * var(--g)); transition: height .16s ease; }
+.tile {
+  position: absolute;
+  left: calc(var(--x) * (var(--u) + var(--g)));
+  top: calc(var(--y) * (var(--u) + var(--g)));
+  width: calc(var(--w) * var(--u) + (var(--w) - 1) * var(--g));
+  height: calc(var(--h) * var(--u) + (var(--h) - 1) * var(--g));
+  overflow: hidden; cursor: default; border-radius: 18px;
+  background: var(--pane); box-shadow: inset 0 0 0 1px var(--pane-line);
+  transition: left .16s ease, top .16s ease, width .16s ease, height .16s ease, transform .12s ease, background .16s ease;
+}
+.tile:hover { background: var(--pane-hover); }
+.tile:active { transform: scale(.97); }
+.tile:focus-visible { z-index: 2; }
+.tile-front {
+  position: absolute; inset: 0; padding: 10px; display: flex; flex-direction: column;
+  justify-content: space-between; align-items: flex-start; transition: transform .4s ease;
+}
+.chip {
+  width: 40px; height: 40px; flex: none; border-radius: 12px; display: grid; place-items: center;
+  background: var(--mark); color: var(--on-accent);
+}
+.chip .ms { font-size: 24px; }
+.chip-s { width: 28px; height: 28px; border-radius: 8px; }
+.chip-s .ms { font-size: 18px; }
+.tile-label { max-width: 100%; font: 600 12px/16px var(--font); overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Small tiles are the bare app icon: no glass pane. */
+.tile[data-size="small"], .tile[data-size="small"]:hover { background: none; box-shadow: none; border-radius: 14px; }
+.tile[data-size="small"] .tile-front { padding: 0; }
+.tile[data-size="small"] .chip { width: 100%; height: 100%; border-radius: 14px; }
+.tile[data-size="small"] .chip .ms { font-size: 26px; }
+.tile[data-size="small"] .tile-label { display: none; }
+.tile[data-size="wide"] .chip { width: 48px; height: 48px; border-radius: 14px; }
+.tile[data-size="wide"] .chip .ms { font-size: 28px; }
+.tile[data-size="large"] { border-radius: 22px; }
+.tile[data-size="large"] .tile-front { padding: 16px; }
+.tile[data-size="large"] .chip { width: 72px; height: 72px; border-radius: 20px; }
+.tile[data-size="large"] .chip .ms { font-size: 40px; }
+.tile[data-size="large"] .tile-label { font: 700 16px/22px var(--font); }
+
+/* Live face slides in from below while the icon face leaves upwards. */
+.tile-live {
+  position: absolute; inset: 0; padding: 10px 12px; display: none; flex-direction: column; justify-content: flex-end; gap: 2px;
+  transform: translateY(101%); transition: transform .4s ease;
+}
+.tile.live .tile-live { display: flex; }
+.tile.live-show .tile-live { transform: none; }
+.tile.live-show .tile-front { transform: translateY(-101%); }
+.tile.live-static .tile-live, .tile.live-static .tile-front { transition: none; }
+.lv-app { position: absolute; top: 10px; right: 10px; color: var(--ink-muted); }
+.lv-app .ms { font-size: 18px; }
+.lv-over { font: 700 11px/14px var(--font); letter-spacing: 1.2px; text-transform: uppercase; color: var(--ink-muted); }
+.lv-big { font: 800 28px/32px var(--font); letter-spacing: -.5px; font-variant-numeric: tabular-nums; }
+.lv-cap { font: 500 12px/16px var(--font); color: var(--ink-muted); }
+.lv-text { font: 500 12px/16px var(--font); overflow: hidden; }
+.tile[data-size="wide"] .lv-big { font-size: 36px; line-height: 40px; }
+.tile[data-size="wide"] .lv-text { font-size: 14px; line-height: 20px; }
+.tile[data-size="large"] .tile-live { padding: 16px; gap: 6px; }
+.tile[data-size="large"] .lv-big { font-size: 64px; line-height: 68px; letter-spacing: -1.5px; }
+.tile[data-size="large"] .lv-cap { font-size: 14px; line-height: 20px; }
+.tile[data-size="large"] .lv-text { font: 600 18px/26px var(--font); }
+.pic { position: absolute; inset: 0; }
+.pic-0 { background: radial-gradient(circle at 72% 30%, #f59e0b 0 13%, transparent 14%), linear-gradient(162deg, transparent 63%, #10b981 63.5%), linear-gradient(198deg, transparent 70%, #047857 70.5%), linear-gradient(#3b82f6, #a9ccff); }
+.pic-1 { background: radial-gradient(circle at 26% 28%, #e6f2ec 0 9%, transparent 10%), linear-gradient(170deg, transparent 66%, #a855f7 66.5%), linear-gradient(196deg, transparent 74%, #6d28d9 74.5%), linear-gradient(#10221c, #233a6b); }
+.pic-2 { background: radial-gradient(circle at 50% 58%, #ef4444 0 16%, transparent 17%), linear-gradient(transparent 58%, #3b82f6 58.5%, #1d4ed8), linear-gradient(#f59e0b, #ec4899); }
+
+/* Drag states */
+.tile.is-slot, .tile.is-slot:hover { background: transparent; box-shadow: none; outline: 2px dashed var(--accent); outline-offset: -2px; transition: none; transform: none; }
+.tile.is-slot > * { visibility: hidden; }
+.tile.ghost {
+  position: fixed; z-index: 50; margin: 0; pointer-events: none; transition: none; transform: scale(1.04);
+  box-shadow: inset 0 0 0 1px var(--pane-line), var(--shadow-s);
+  background: rgba(40, 72, 62, .6); -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+}
+.tile.ghost[data-size="small"] { background: none; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: var(--shadow-s); }
+.tile.flash { box-shadow: 0 0 0 2px var(--accent); }
+body.dragging, body.dragging * { cursor: grabbing !important; }
+
+.tiles.collapsed .grid { display: none; }
+.tiles.collapsed .col { gap: 8px; }
+.tiles.collapsed .group-head { margin: 0; padding: 0 4px 0 16px; height: 44px; border-radius: 12px; background: var(--pane); box-shadow: inset 0 0 0 1px var(--pane-line); }
+.tiles.collapsed .group-name::placeholder { color: var(--ink-muted); }
+.tiles.collapsed .group-grip { opacity: 1; }
+.group.is-slot .group-head { background: transparent; box-shadow: none; outline: 2px dashed var(--accent); outline-offset: -2px; }
+.group.is-slot .group-head > * { visibility: hidden; }
+.group-ghost {
+  position: fixed; z-index: 50; pointer-events: none; height: 44px; padding: 0 16px; border-radius: 12px;
+  display: flex; align-items: center; font: 700 14px/20px var(--font);
+  background: rgba(40, 72, 62, .6); box-shadow: inset 0 0 0 1px var(--pane-line), var(--shadow-s);
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+}
+
+/* ---------- All programs ---------- */
+.allapps { padding: 12px 24px 24px 12px; }
+.allapps-in { columns: 4 190px; column-gap: 16px; }
+.letter { padding: 10px 8px 4px; font: 700 13px/18px var(--font); letter-spacing: 1.6px; text-transform: uppercase; color: var(--ink-muted); break-after: avoid; }
+.app-row {
+  width: 100%; height: 48px; padding: 0 8px; border: 0; border-radius: 12px; background: none; cursor: default;
+  display: flex; align-items: center; gap: 12px; text-align: left; break-inside: avoid;
+}
+.app-row:hover { background: var(--pane); }
+.app-text { min-width: 0; display: flex; flex-direction: column; }
+.app-name { font: 600 14px/18px var(--font); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app-where { font: 500 12px/16px var(--font); color: var(--ink-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- Workspace and scenario bubbles ---------- */
+.wsbar { position: absolute; left: 20px; top: 16px; z-index: 14; display: flex; gap: 10px; }
+.bubble {
+  height: 44px; padding: 0 6px 0 16px; border: 0; border-radius: 9999px; cursor: pointer;
+  display: flex; align-items: center; gap: 10px; background: var(--glass); color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--pane-line), var(--shadow-s);
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+}
+.bubble-label { font: 600 13px/18px var(--font); color: var(--ink-muted); }
+.bubble-val {
+  height: 32px; min-width: 32px; padding: 0 14px; border-radius: 9999px; overflow: hidden;
+  display: grid; place-items: center; background: var(--pane-hover); box-shadow: inset 0 0 0 1px var(--pane-line);
+  font: 700 14px/20px var(--font); font-variant-numeric: tabular-nums; transition: background .16s ease, color .16s ease;
+}
+.bubble-val.round { padding: 0; width: 32px; }
+.bubble-val > span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.bubble-val .mod { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.bubble:hover .bubble-val { background: rgba(255, 255, 255, .22); }
+.bubble[aria-expanded="true"] .bubble-val { background: var(--accent); color: var(--on-accent); box-shadow: none; }
+.bubble[aria-expanded="true"] .bubble-val .mod { background: var(--on-accent); }
+
+.wswin {
+  position: absolute; left: 20px; top: 70px; z-index: 14; width: 384px; padding: 12px; border-radius: 26px;
+  display: flex; flex-direction: column; gap: 12px; background: var(--glass);
+  box-shadow: inset 0 0 0 1px var(--pane-line), var(--shadow);
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+  animation: drop .2s ease;
+}
+@keyframes drop { from { opacity: 0; transform: translateY(-10px) scale(.98); } }
+.sec { padding: 8px 14px 8px; border-radius: 18px; background: var(--pane); box-shadow: inset 0 0 0 1px var(--pane-line); }
+.sec-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 40px; }
+.sec-head h2 { margin: 0; font: 700 14px/20px var(--font); }
+.sec-head .quiet { margin-right: -8px; }
+.hscroll { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; padding: 4px 2px 6px; }
+.hscroll::-webkit-scrollbar { display: none; }
+.ws-row { display: flex; gap: 10px; }
+.ws-dot {
+  width: 40px; height: 40px; flex: none; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+  display: grid; place-items: center; background: var(--pane-hover); box-shadow: inset 0 0 0 1px var(--pane-line);
+  font: 700 14px/20px var(--font); font-variant-numeric: tabular-nums;
+}
+.ws-dot:hover { background: rgba(255, 255, 255, .22); }
+.ws-dot.on { background: var(--accent); color: var(--on-accent); box-shadow: none; }
+.ws-dot.add { background: none; box-shadow: none; border: 1px dashed var(--ink-muted); color: var(--ink-muted); }
+.ws-dot.add .ms { font-size: 20px; }
+.sc-grid { display: grid; grid-template-rows: repeat(2, 96px); grid-auto-flow: column; grid-auto-columns: 96px; gap: 10px; }
+.sc-card {
+  padding: 10px; border: 0; border-radius: 18px; cursor: pointer; text-align: left; min-width: 0;
+  display: flex; flex-direction: column; justify-content: space-between;
+  background: var(--pane-hover); box-shadow: inset 0 0 0 1px var(--pane-line);
+}
+.sc-card:hover { background: rgba(255, 255, 255, .22); }
+.sc-card.on { box-shadow: inset 0 0 0 2px var(--accent); }
+.sc-prev { position: relative; height: 46px; border-radius: 8px; background: rgba(0, 0, 0, .24); overflow: hidden; }
+.sc-prev i { position: absolute; border-radius: 3px; background: var(--mark); }
+.sc-name { font: 700 13px/16px var(--font); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.save-form { display: flex; gap: 8px; margin: 2px 0 8px; }
+.save-form input {
+  flex: 1; min-width: 0; height: 36px; padding: 0 14px; border: 0; border-radius: 9999px;
+  background: rgba(0, 0, 0, .26); box-shadow: inset 0 0 0 1px var(--pane-line); color: var(--ink);
+  font: 600 13px/18px var(--font); -webkit-user-select: text; user-select: text;
+}
+.save-form input:focus { outline: 2px solid var(--accent); outline-offset: 0; }
+.solid { height: 36px; padding: 0 16px; border: 0; border-radius: 9999px; cursor: pointer; background: var(--accent); color: var(--on-accent); font: 700 13px/18px var(--font); }
+.hrail { position: relative; height: 20px; margin: 2px 2px 0; cursor: pointer; touch-action: none; }
+.hrail::before { content: ""; position: absolute; left: 4px; right: 4px; top: 9px; height: 2px; border-radius: 2px; background: var(--pane-line); }
+.hrail .rail-dot { left: auto; top: 6px; }
+.hrail .rail-dot.a { left: 0; }
+.hrail .rail-dot.b { right: 0; }
+.hrail .rail-thumb { left: 12px; top: 7px; width: 40px; height: 6px; }
+.hrail .rail-thumb::before { inset: -8px 0; }
+
+/* ---------- Clock + calendar, media centre ---------- */
+.topc { position: absolute; left: 50%; top: 16px; z-index: 14; transform: translateX(-50%); }
+.clockb { padding: 0 18px; gap: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.clock-date { font: 600 14px/20px var(--font); color: var(--ink-muted); }
+.clock-time { font: 800 15px/20px var(--font); }
+.clockb[aria-expanded="true"] { box-shadow: inset 0 0 0 2px var(--accent), var(--shadow-s); }
+.calwin, .medwin {
+  position: absolute; top: 54px; padding: 12px; border-radius: 26px; display: flex; flex-direction: column; gap: 12px;
+  background: var(--glass); box-shadow: inset 0 0 0 1px var(--pane-line), var(--shadow);
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); animation: drop .2s ease;
+}
+.calwin { left: calc(50% - 164px); width: 328px; }
+.sec-head h2::first-letter { text-transform: uppercase; }
+.cal-nav { display: flex; gap: 2px; margin-right: -8px; }
+.icon-btn { width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--ink-muted); display: grid; place-items: center; cursor: pointer; }
+.icon-btn:hover { background: var(--pane-hover); color: var(--ink); }
+.icon-btn.back .ms { transform: rotate(180deg); }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; padding-bottom: 6px; font-variant-numeric: tabular-nums; }
+.dow { height: 24px; display: grid; place-items: center; font: 700 11px/14px var(--font); letter-spacing: .6px; text-transform: uppercase; color: var(--ink-muted); }
+.day { position: relative; width: 36px; height: 36px; justify-self: center; display: grid; place-items: center; border-radius: 50%; font: 600 13px/18px var(--font); }
+.day.other { opacity: .36; }
+.day.today { background: var(--accent); color: var(--on-accent); text-shadow: none; font-weight: 800; }
+.day.ev::after { content: ""; position: absolute; bottom: 4px; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
+.day.today.ev::after { background: var(--on-accent); }
+.next { display: flex; flex-direction: column; gap: 2px; padding: 10px 18px; border-radius: 26px; background: var(--pane); box-shadow: inset 0 0 0 1px var(--pane-line); }
+.next-main { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; min-width: 0; }
+.next-over { font: 700 11px/14px var(--font); letter-spacing: 1.2px; text-transform: uppercase; color: var(--ink-muted); white-space: nowrap; }
+.next-title { min-width: 0; font: 700 14px/20px var(--font); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.next-when { flex: none; font: 600 13px/18px var(--font); color: var(--ink-muted); font-variant-numeric: tabular-nums; text-align: right; }
+
+.mwrap { position: absolute; left: calc(100% + 18px); top: 0; }   /* a little wider than the 10px between scenario and workspace */
+.mbub { padding: 0 6px; gap: 8px; cursor: default; }
+.m-main { height: 100%; padding: 0; border: 0; background: none; cursor: pointer; display: flex; align-items: center; gap: 10px; color: inherit; text-shadow: inherit; }
+.m-cover { position: relative; width: 32px; height: 32px; flex: none; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 1px var(--pane-line); }
+.mq { display: block; overflow: hidden; white-space: nowrap; }
+.mq > span { display: inline-block; }
+.mq.clip { -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 10px, #000 calc(100% - 14px), transparent); mask-image: linear-gradient(90deg, transparent 0, #000 10px, #000 calc(100% - 14px), transparent); }
+.mq.clip > span { padding-left: 10px; }   /* the first letter rests clear of the fade */
+@keyframes marq { 0%, 14% { transform: translateX(0); } 86%, 100% { transform: translateX(var(--shift)); } }
+#mText { width: 172px; font: 600 13px/18px var(--font); text-align: left; }
+.m-ctl { display: flex; align-items: center; gap: 2px; padding: 2px; border-radius: 9999px; background: var(--pane-hover); box-shadow: inset 0 0 0 1px var(--pane-line); }
+.m-btn { width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--ink); display: grid; place-items: center; cursor: pointer; }
+.m-btn:hover { background: rgba(255, 255, 255, .2); }
+.m-btn .ms { font-size: 20px; }
+.m-src, .m-source { display: flex; align-items: center; gap: 8px; font: 600 12px/16px var(--font); white-space: nowrap; }
+.m-src {
+  position: absolute; left: 50%; top: 50px; height: 28px; padding: 0 12px 0 6px; border-radius: 9999px; pointer-events: none;
+  background: var(--glass); box-shadow: inset 0 0 0 1px var(--pane-line), var(--shadow-s);
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+  opacity: 0; transform: translateX(-50%) translateY(-4px); transition: opacity .16s ease, transform .16s ease;
+}
+.mwrap:hover .m-src { opacity: 1; transform: translateX(-50%); }
+.mwrap.open .m-src { display: none; }
+.m-src .chip, .m-source .chip { width: 20px; height: 20px; border-radius: 6px; }
+.m-src .chip .ms, .m-source .chip .ms { font-size: 14px; }
+.medwin { left: 0; width: 300px; }
+.medwin .sec { display: flex; flex-direction: column; gap: 10px; padding: 12px; }
+.m-name { text-align: center; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+#mwTitle { font: 700 15px/20px var(--font); }
+.m-artist { font: 500 13px/18px var(--font); color: var(--ink-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.m-art { position: relative; height: 190px; border-radius: 16px; overflow: hidden; box-shadow: inset 0 0 0 1px var(--pane-line); }
+.m-ctl.big { justify-content: center; gap: 14px; padding: 4px; }
+.m-ctl.big .m-btn { width: 40px; height: 40px; }
+.m-ctl.big .m-btn .ms { font-size: 26px; }
+.m-ctl.big .m-btn.play { background: var(--accent); color: var(--on-accent); }
+.m-source { align-self: center; height: 30px; padding: 0 14px 0 6px; border-radius: 9999px; background: var(--pane-hover); box-shadow: inset 0 0 0 1px var(--pane-line); }
+.pic-3 { background: radial-gradient(circle at 30% 70%, #13eca4 0 18%, transparent 19%), radial-gradient(circle at 68% 34%, #f59e0b 0 12%, transparent 13%), linear-gradient(135deg, #0b3b3c, #3b82f6); }
+
+/* Text on 35 % glass sits over the wallpaper, so it carries a soft shadow; accent and icon fills do not. */
+.panel, .bubble, .wswin, .calwin, .medwin, .win, .m-src { text-shadow: 0 1px 2px rgba(0, 0, 0, .34); }
+.chip, .fav, .solid, .ws-dot.on, .seg-btn[aria-selected="true"], .bubble[aria-expanded="true"] .bubble-val, .m-btn.play { text-shadow: none; }
+
+/* ---------- Status bubble, bell, power and their panel ---------- */
+.sysbar { position: absolute; right: 20px; top: 16px; z-index: 14; display: flex; gap: 10px; }
+.stat { padding: 0 6px; gap: 4px; }
+.st {
+  height: 32px; padding: 0 10px; border-radius: 9999px; display: flex; align-items: center; gap: 6px; white-space: nowrap;
+  background: var(--pane-hover); box-shadow: inset 0 0 0 1px var(--pane-line); font: 700 13px/18px var(--font); font-variant-numeric: tabular-nums;
+}
+.st:hover { background: rgba(255, 255, 255, .22); }
+.st .ms { font-size: 18px; }
+.st-label { max-width: 96px; overflow: hidden; text-overflow: ellipsis; }
+.st.off { color: var(--ink-muted); }
+.bubble.round { position: relative; width: 44px; padding: 0; justify-content: center; }
+.bell-star { position: absolute; top: 5px; right: 6px; font-size: 14px; color: var(--accent); text-shadow: none; }
+.stat[aria-expanded="true"], #bellBtn[aria-expanded="true"] { box-shadow: inset 0 0 0 2px var(--accent), var(--shadow-s); }
+.st-hint {
+  position: absolute; top: 50px; left: 0; padding: 6px 12px; border-radius: 16px; pointer-events: none; white-space: nowrap;
+  display: flex; flex-direction: column; gap: 4px; font: 600 12px/16px var(--font);
+  background: var(--glass); box-shadow: inset 0 0 0 1px var(--pane-line), var(--shadow-s);
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+  opacity: 0; transform: translateY(-4px); transition: opacity .16s ease, transform .16s ease;
+}
+.st-hint.on { opacity: 1; transform: none; }
+.hint-row { display: flex; align-items: center; gap: 8px; }
+.hint-row .ms { font-size: 16px; color: var(--ink-muted); }
+.hint-row.cur .ms { color: var(--accent); }
+.hint-row .sub { color: var(--ink-muted); }
+/* When the top row runs out of room, labels drop away step by step (set by fitTop). */
+.stage:not([data-top="0"]) .st[data-st="bt"] .st-label, .stage:not([data-top="0"]) .st[data-st="wifi"] .st-label,
+.stage[data-top="4"] .st-label { display: none; }
+.stage[data-top="1"] #mText { width: 120px; }
+.stage[data-top="2"] #mText { width: 84px; }
+.stage[data-top="3"] #mText, .stage[data-top="4"] #mText { display: none; }
+.stage[data-top="4"] .mbub [data-m="prev"], .stage[data-top="4"] .mbub [data-m="next"] { display: none; }
+
+.ncwin {
+  position: absolute; right: 0; top: 54px; width: 448px; padding: 12px; border-radius: 26px; display: flex; flex-direction: column; gap: 12px;
+  background: var(--glass); box-shadow: inset 0 0 0 1px var(--pane-line), var(--shadow);
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); animation: drop .2s ease;
+}
+.ncwin .sec { padding: 12px; }
+.q-top { display: grid; grid-template-columns: 100px 100px 1fr; gap: 10px; }
+.q-tile {
+  height: 76px; padding: 10px; border: 0; border-radius: 18px; cursor: pointer; text-align: left; min-width: 0;
+  display: flex; flex-direction: column; justify-content: space-between;
+  background: var(--pane-hover); box-shadow: inset 0 0 0 1px var(--pane-line); color: var(--ink);
+}
+.q-tile[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); box-shadow: none; text-shadow: none; }
+.q-tile .ms { font-size: 22px; }
+.q-name { font: 700 13px/16px var(--font); }
+.q-sub { font: 600 11px/14px var(--font); opacity: .8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.q-text { display: flex; flex-direction: column; min-width: 0; }
+.q-pins { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); gap: 10px; }
+.q-pin { padding: 0; border: 1px dashed rgba(255, 255, 255, .34); border-radius: 12px; background: none; color: var(--ink-muted); display: grid; place-items: center; cursor: pointer; }
+.q-pin:hover { background: var(--pane); }
+.q-pin .ms { font-size: 18px; font-variation-settings: 'FILL' 0; }
+.vol { position: relative; height: 36px; margin-top: 10px; border-radius: 9999px; overflow: hidden; background: var(--pane-hover); box-shadow: inset 0 0 0 1px var(--pane-line); }
+.vol:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.vol-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 34%; min-width: 36px; border-radius: 9999px; background: rgba(16, 185, 129, .8); }
+.vol-mute { position: absolute; left: 4px; top: 4px; z-index: 2; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--ink); display: grid; place-items: center; cursor: pointer; }
+.vol-mute .ms { font-size: 20px; }
+.vol-val { position: absolute; right: 14px; top: 9px; font: 700 13px/18px var(--font); font-variant-numeric: tabular-nums; pointer-events: none; }
+.vol input { position: absolute; left: 36px; right: 0; top: 0; width: calc(100% - 36px); height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.eg { margin-left: 8px; font: 600 11px/14px var(--font); letter-spacing: .6px; color: var(--ink-muted); }
+.dnd { height: 28px; padding: 0 12px 0 8px; border: 0; border-radius: 9999px; cursor: pointer; display: flex; align-items: center; gap: 6px; background: var(--pane-hover); box-shadow: inset 0 0 0 1px var(--pane-line); color: var(--ink); font: 600 12px/16px var(--font); }
+.dnd .ms { font-size: 16px; }
+.dnd[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); box-shadow: none; text-shadow: none; }
+.n-body { display: flex; gap: 2px; margin-left: -10px; }
+.rail.nrail { margin: 4px 0; width: 24px; }
+.rail.nrail::before { left: 11px; }
+.rail.nrail .rail-dot { left: 8px; }
+.rail.nrail .rail-thumb { left: 9px; }
+.n-list { flex: 1; min-width: 0; height: 196px; overflow-y: auto; scrollbar-width: none; display: flex; flex-direction: column; gap: 8px; }
+.n-list::-webkit-scrollbar { display: none; }
+.note { display: flex; align-items: flex-start; gap: 10px; padding: 9px 8px 9px 10px; border-radius: 14px; background: var(--pane-hover); }
+.note-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.note-title { font: 700 13px/18px var(--font); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.note-text { font: 500 12px/16px var(--font); color: var(--ink-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.note-time { flex: none; font: 600 11px/18px var(--font); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.note .icon-btn { width: 24px; height: 24px; margin-top: -3px; }
+.note .icon-btn .ms { font-size: 16px; }
+.n-empty { margin: auto; color: var(--ink-muted); font: 500 13px/18px var(--font); }
+.nc-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 4px 2px; }
+.pw-row { display: flex; gap: 8px; }
+.pw { width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; display: grid; place-items: center; background: var(--pane-hover); box-shadow: inset 0 0 0 1px var(--pane-line); color: var(--ink); }
+.pw:hover { background: rgba(255, 255, 255, .22); }
+.pw .ms { font-size: 20px; }
+.pill-btn { height: 36px; padding: 0 16px 0 10px; border: 0; border-radius: 9999px; cursor: pointer; display: flex; align-items: center; gap: 8px; background: var(--pane-hover); box-shadow: inset 0 0 0 1px var(--pane-line); color: var(--ink); font: 600 13px/18px var(--font); }
+.pill-btn:hover { background: rgba(255, 255, 255, .22); }
+.pill-btn .ms { font-size: 20px; }
+.ncwin, .st-hint { text-shadow: 0 1px 2px rgba(0, 0, 0, .34); }
+
+/* ---------- Settings: a switcher panel plus the program it opens ---------- */
+.scrim { position: absolute; inset: 0; z-index: 8; background: rgba(3, 14, 11, .34); }
+.setwrap { position: absolute; left: 16px; right: 16px; top: 76px; bottom: 144px; z-index: 9; display: flex; justify-content: center; align-items: center; gap: 10px; pointer-events: none; }
+.setpanel, .settool {
+  pointer-events: auto; height: min(560px, 100%); border-radius: 26px; display: flex; flex-direction: column; overflow: hidden;
+  background: var(--glass); box-shadow: inset 0 0 0 1px var(--pane-line), var(--shadow);
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur); text-shadow: 0 1px 2px rgba(0, 0, 0, .34);
+  animation: winin .2s ease;
+}
+.setpanel { width: 304px; flex: none; padding: 12px; gap: 10px; }
+.set-head { display: flex; align-items: center; justify-content: space-between; padding: 0 0 0 8px; }
+.set-head h2 { margin: 0; font: 800 17px/24px var(--font); }
+.set-tabs .seg-btn { flex: 1; padding: 0 4px; font-size: 12px; }
+.set-list { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; display: flex; flex-direction: column; gap: 6px; padding: 2px; }
+.set-list::-webkit-scrollbar { display: none; }
+.set-item {
+  width: 100%; height: 54px; flex: none; padding: 0 10px 0 8px; border: 0; border-radius: 16px; cursor: pointer; text-align: left;
+  display: flex; align-items: center; gap: 12px; background: var(--pane); box-shadow: inset 0 0 0 1px var(--pane-line); color: var(--ink);
+}
+.set-item:hover { background: var(--pane-hover); }
+.set-item.on { background: var(--accent); color: var(--on-accent); box-shadow: none; text-shadow: none; }
+.set-ico { width: 36px; height: 36px; flex: none; border-radius: 12px; display: grid; place-items: center; background: var(--pane-hover); }
+.set-item.on .set-ico { background: rgba(4, 35, 26, .16); }
+.set-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.set-label { font: 700 14px/18px var(--font); }
+.set-sub { font: 500 12px/16px var(--font); opacity: .76; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.set-item .chev { font-size: 20px; opacity: .7; transition: transform .16s ease; }
+.set-item[aria-expanded="true"] .chev { transform: rotate(90deg); }
+.set-kids { display: flex; flex-direction: column; gap: 6px; padding-left: 24px; }
+.set-kids .set-item { height: 46px; padding-left: 14px; }
+.settool { width: min(660px, calc(100% - 314px)); }
+.badge { flex: none; margin-right: 6px; padding: 4px 10px; border-radius: 9999px; background: var(--pane-hover); font: 700 11px/14px var(--font); letter-spacing: .8px; text-transform: uppercase; }
+.tool-body { flex: 1; min-height: 0; padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; }
+.tool-ico { width: 88px; height: 88px; border-radius: 26px; display: grid; place-items: center; background: var(--pane-hover); box-shadow: inset 0 0 0 1px var(--pane-line); }
+.tool-ico .ms { font-size: 44px; }
+.tool-body h3 { margin: 4px 0 0; font: 800 22px/28px var(--font); text-wrap: balance; }
+.tool-body p { margin: 0; max-width: 46ch; color: var(--ink-muted); font: 500 14px/22px var(--font); }
+.cmd-row { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 6px; }
+.cmd-cap { font: 700 11px/14px var(--font); letter-spacing: 1.2px; text-transform: uppercase; color: var(--ink-muted); }
+.cmd { padding: 8px 16px; border-radius: 9999px; background: rgba(0, 0, 0, .3); box-shadow: inset 0 0 0 1px var(--pane-line); font: 600 13px/18px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; -webkit-user-select: text; user-select: text; }
+
+/* ---------- Mock windows on the desktop ---------- */
+.desk { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.win {
+  position: absolute; pointer-events: auto; display: flex; flex-direction: column; overflow: hidden; border-radius: 20px;
+  background: var(--glass); box-shadow: inset 0 0 0 1px var(--pane-line), var(--shadow-s);
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+  transition: left .22s ease, top .22s ease, width .22s ease, height .22s ease, box-shadow .2s ease;
+  animation: winin .2s ease;
+}
+@keyframes winin { from { opacity: 0; transform: scale(.97); } }
+.win.flash { box-shadow: inset 0 0 0 2px var(--accent), var(--shadow-s); }
+.win-bar { display: flex; align-items: center; gap: 10px; height: 44px; flex: none; padding: 0 8px 0 12px; }
+.win-title { flex: 1; min-width: 0; font: 700 13px/18px var(--font); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.win-close { width: 28px; height: 28px; flex: none; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--ink-muted); display: grid; place-items: center; cursor: pointer; }
+.win-close:hover { background: var(--pane-hover); color: var(--ink); }
+.win-close .ms { font-size: 18px; }
+.win-body { flex: 1; min-height: 0; display: grid; place-items: center; color: rgba(255, 255, 255, .16); }
+.win-body .ms { font-size: 72px; }
+
+/* ---------- Menu and toast ---------- */
+.menu {
+  position: fixed; z-index: 100; min-width: 232px; padding: 6px; border-radius: 16px;
+  background: var(--glass-strong); box-shadow: inset 0 0 0 1px var(--pane-line), var(--shadow);
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+}
+.menu-root { animation: pop .16s ease; transform-origin: top left; }
+@keyframes pop { from { opacity: 0; transform: scale(.96); } }
+.menu-row { position: relative; }
+.menu-item {
+  width: 100%; height: 40px; padding: 0 10px; border: 0; border-radius: 10px; background: none; cursor: pointer;
+  display: flex; align-items: center; gap: 12px; text-align: left; font: 500 14px/20px var(--font);
+}
+.menu-item .ms { font-size: 20px; color: var(--ink-muted); }
+.menu-item:hover, .menu-item:focus-visible, .menu-item[aria-expanded="true"] { background: var(--pane-hover); }
+.menu-item[aria-checked="true"] .ms { color: var(--accent); }
+.menu-label { flex: 1; min-width: 0; }
+.menu-sub { position: absolute; left: calc(100% - 2px); top: -6px; min-width: 176px; }
+.menu.flip .menu-sub { left: auto; right: calc(100% - 2px); }
+.toast {
+  position: absolute; left: 50%; top: 72px; z-index: 60; transform: translateX(-50%);
+  max-width: calc(100% - 32px); padding: 10px 16px; border-radius: 16px;
+  display: flex; align-items: center; gap: 12px; font: 500 14px/20px var(--font);
+  background: var(--glass-strong); box-shadow: inset 0 0 0 1px var(--pane-line), var(--shadow-s);
+  -webkit-backdrop-filter: var(--blur); backdrop-filter: var(--blur);
+}
+.toast-btn { border: 0; background: none; padding: 4px 8px; border-radius: 8px; cursor: pointer; color: var(--accent); font: 700 14px/20px var(--font); white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: .01ms !important; animation: none !important; }
+}
+</style>
+
+<div class="stage" id="stage" data-top="0">
+  <canvas class="wall" id="wall" aria-hidden="true"></canvas>
+  <div class="desk" id="desk"></div>
+
+  <div class="scrim" id="setScrim" hidden></div>
+  <div class="setwrap" id="setwrap" hidden>
+    <section class="setpanel" aria-label="Налаштування">
+      <div class="set-head"><h2>Налаштування</h2><button class="icon-btn" type="button" id="setClose" aria-label="Закрити налаштування"><span class="ms" aria-hidden="true">close</span></button></div>
+      <div class="seg set-tabs" role="tablist" aria-label="Розділи налаштувань" id="setTabs"></div>
+      <div class="set-list" id="setList"></div>
+    </section>
+    <section class="settool" id="setTool" aria-live="polite"></section>
+  </div>
+
+  <div class="wsbar" id="wsbar">
+    <button class="bubble" type="button" id="scPill" aria-expanded="false" aria-controls="wswin" title="Клацніть, щоб відкрити список. Колесо миші перемикає сценарій.">
+      <span class="bubble-label">Сценарій</span><span class="bubble-val"><span id="scVal"></span></span>
+    </button>
+    <button class="bubble" type="button" id="wsPill" aria-expanded="false" aria-controls="wswin" title="Клацніть, щоб відкрити список. Колесо миші перемикає стіл.">
+      <span class="bubble-label">Стіл</span><span class="bubble-val round"><span id="wsVal"></span></span>
+    </button>
+  </div>
+  <section class="wswin" id="wswin" aria-label="Столи та сценарії" hidden>
+    <div class="sec">
+      <div class="sec-head"><h2>Відкриті столи</h2></div>
+      <div class="hscroll" id="wsScroll"><div class="ws-row" id="wsList"></div></div>
+      <div class="hrail" id="wsRail" aria-hidden="true"><span class="rail-dot a"></span><span class="rail-dot b"></span><div class="rail-thumb"></div></div>
+    </div>
+    <div class="sec">
+      <div class="sec-head">
+        <h2>Сценарії</h2>
+        <button class="quiet" type="button" id="saveSc"><span class="ms" aria-hidden="true">save</span>Зберегти сценарій</button>
+      </div>
+      <form class="save-form" id="saveForm" hidden>
+        <input type="text" id="scName" maxlength="14" autocomplete="off" spellcheck="false" aria-label="Назва сценарію" placeholder="Назва сценарію">
+        <button class="solid" type="submit">Зберегти</button>
+      </form>
+      <div class="hscroll" id="scScroll"><div class="sc-grid" id="scList"></div></div>
+      <div class="hrail" id="scRail" aria-hidden="true"><span class="rail-dot a"></span><span class="rail-dot b"></span><div class="rail-thumb"></div></div>
+    </div>
+  </section>
+
+  <div class="topc" id="topc">
+    <button class="bubble clockb" type="button" id="clockPill" aria-expanded="false" aria-controls="calwin">
+      <span class="clock-date" id="clockDate"></span><span class="clock-time" id="clockTime"></span>
+    </button>
+    <section class="calwin" id="calwin" aria-label="Календар" hidden>
+      <div class="sec">
+        <div class="sec-head">
+          <h2 id="calTitle"></h2>
+          <div class="cal-nav">
+            <button class="icon-btn back" type="button" id="calPrev" aria-label="Попередній місяць"><span class="ms" aria-hidden="true">chevron_right</span></button>
+            <button class="icon-btn" type="button" id="calNext" aria-label="Наступний місяць"><span class="ms" aria-hidden="true">chevron_right</span></button>
+          </div>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+      <div class="next">
+        <span class="next-over">Наступна подія · приклад</span>
+        <div class="next-main"><span class="next-title" id="nextTitle"></span><span class="next-when" id="nextWhen"></span></div>
+      </div>
+    </section>
+
+    <div class="mwrap" id="mwrap">
+      <div class="bubble mbub">
+        <button class="m-main" type="button" id="mMain" aria-expanded="false" aria-controls="medwin" aria-label="Медіацентр">
+          <span class="m-cover"><span class="pic" id="mCover"></span></span>
+          <span class="mq" id="mText"><span></span></span>
+        </button>
+        <span class="m-ctl">
+          <button class="m-btn" type="button" data-m="prev" aria-label="Попередній запис"><span class="ms" aria-hidden="true">skip_previous</span></button>
+          <button class="m-btn" type="button" data-m="play" aria-label="Пауза"><span class="ms" aria-hidden="true">pause</span></button>
+          <button class="m-btn" type="button" data-m="next" aria-label="Наступний запис"><span class="ms" aria-hidden="true">skip_next</span></button>
+        </span>
+      </div>
+      <div class="m-src" id="mSrc" aria-hidden="true"></div>
+      <section class="medwin" id="medwin" aria-label="Медіацентр" hidden>
+        <div class="sec">
+          <div class="m-name"><span class="mq" id="mwTitle"><span></span></span><span class="m-artist" id="mwArtist"></span></div>
+          <div class="m-art"><div class="pic" id="mwArt"></div></div>
+          <div class="m-ctl big">
+            <button class="m-btn" type="button" data-m="prev" aria-label="Попередній запис"><span class="ms" aria-hidden="true">skip_previous</span></button>
+            <button class="m-btn play" type="button" data-m="play" aria-label="Пауза"><span class="ms" aria-hidden="true">pause</span></button>
+            <button class="m-btn" type="button" data-m="next" aria-label="Наступний запис"><span class="ms" aria-hidden="true">skip_next</span></button>
+          </div>
+          <div class="m-source" id="mwSrc"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="sysbar" id="sysbar">
+    <button class="bubble stat" type="button" id="statPill" aria-expanded="false" aria-controls="ncwin" aria-label="Панель керування">
+      <span class="st" data-st="kb"><span class="ms" aria-hidden="true">keyboard</span><span class="st-label" id="stKb"></span></span>
+      <span class="st" data-st="vol"><span class="ms" aria-hidden="true" id="stVolIcon">volume_up</span><span class="st-label" id="stVol"></span></span>
+      <span class="st" data-st="bt"><span class="ms" aria-hidden="true" id="stBtIcon">bluetooth</span><span class="st-label" id="stBt"></span></span>
+      <span class="st" data-st="wifi"><span class="ms" aria-hidden="true" id="stWifiIcon">wifi</span><span class="st-label" id="stWifi"></span></span>
+    </button>
+    <button class="bubble round" type="button" id="bellBtn" aria-expanded="false" aria-controls="ncwin" aria-label="Сповіщення">
+      <span class="ms" aria-hidden="true" id="bellIcon">notifications</span><span class="ms bell-star" aria-hidden="true" id="bellStar">star</span>
+    </button>
+    <button class="bubble round" type="button" id="powerBtn" aria-label="Живлення"><span class="ms" aria-hidden="true">power_settings_new</span></button>
+    <div class="st-hint" id="stHint" aria-hidden="true"></div>
+
+    <section class="ncwin" id="ncwin" aria-label="Сповіщення та керування" hidden>
+      <div class="sec">
+        <div class="q-top">
+          <button class="q-tile" type="button" id="qWifi" aria-pressed="true"><span class="ms" aria-hidden="true">wifi</span><span class="q-text"><span class="q-name">Wi-Fi</span><span class="q-sub" id="qWifiSub"></span></span></button>
+          <button class="q-tile" type="button" id="qBt" aria-pressed="true"><span class="ms" aria-hidden="true">bluetooth</span><span class="q-text"><span class="q-name">Bluetooth</span><span class="q-sub" id="qBtSub"></span></span></button>
+          <div class="q-pins" id="qPins"></div>
+        </div>
+        <div class="vol">
+          <div class="vol-fill" id="volFill"></div>
+          <button class="vol-mute" type="button" id="volMute" aria-label="Вимкнути звук"><span class="ms" aria-hidden="true">volume_up</span></button>
+          <span class="vol-val" id="volVal"></span>
+          <input type="range" id="volRange" min="0" max="100" step="1" aria-label="Гучність">
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-head">
+          <h2>Сповіщення<span class="eg">приклади</span></h2>
+          <button class="dnd" type="button" id="dndBtn" aria-pressed="false"><span class="ms" aria-hidden="true">do_not_disturb_on</span>Не турбувати</button>
+        </div>
+        <div class="n-body">
+          <div class="rail nrail" id="nRail" aria-hidden="true"><span class="rail-dot top"></span><span class="rail-dot bottom"></span><div class="rail-thumb"></div></div>
+          <div class="n-list" id="nList"></div>
+        </div>
+      </div>
+      <div class="nc-foot">
+        <div class="pw-row" id="pwRow"></div>
+        <button class="pill-btn" type="button" id="openSettings"><span class="ms" aria-hidden="true">settings</span>Відкрити налаштування</button>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel" id="panel" data-view="tiles" aria-label="Меню програм" hidden>
+    <div class="panel-main">
+      <div class="rail" id="rail" aria-hidden="true">
+        <span class="rail-dot top"></span><span class="rail-dot bottom"></span>
+        <div class="rail-thumb" id="thumb"></div>
+      </div>
+      <div class="tiles scroller" id="tiles"></div>
+      <div class="allapps scroller" id="allapps"><div class="allapps-in" id="allappsIn"></div></div>
+    </div>
+    <div class="panel-foot">
+      <button class="quiet" type="button" id="reset"><span class="ms" aria-hidden="true">restart_alt</span>Скинути розкладку</button>
+      <div class="seg" role="tablist" aria-label="Вигляд меню">
+        <button class="seg-btn" type="button" role="tab" id="tabTiles" aria-selected="true">Плитки</button>
+        <button class="seg-btn" type="button" role="tab" id="tabApps" aria-selected="false">Усі програми</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="dock" id="dock">
+    <div class="favs" id="favs" aria-label="Обрані програми"></div>
+    <button class="arrow" type="button" id="launch" aria-label="Меню програм" aria-expanded="false" aria-controls="panel">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 14.5l6-6 6 6"></path></svg>
+    </button>
+  </div>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+</div>
+
+<script>
+(() => {
+'use strict';
+document.documentElement.lang = 'uk';
+
+// ---------- Data ----------
+const G = 8, U = 48, GC = 8, MAX_FAVS = 5, MAX_WINS = 6, MAX_WS = 9;
+let maxCols = 2;
+const SIZES = { small: [1, 1], medium: [2, 2], wide: [4, 2], large: [4, 4] };
+const SIZE_LABEL = { small: 'Малий', medium: 'Середній', wide: 'Широкий', large: 'Великий' };
+const APPS = [
+  { id: 'alarm', name: 'Будильник', icon: 'alarm', mark: 'amber' },
+  { id: 'archive', name: 'Архіватор', icon: 'folder_zip', mark: 'amber' },
+  { id: 'browser', name: 'Браузер', icon: 'public', mark: 'blue' },
+  { id: 'gallery', name: 'Галерея', icon: 'photo_library', mark: 'pink', live: 'gallery' },
+  { id: 'recorder', name: 'Диктофон', icon: 'mic', mark: 'red' },
+  { id: 'disks', name: 'Диски', icon: 'hard_drive', mark: 'slate' },
+  { id: 'tips', name: 'Підказки', icon: 'lightbulb', mark: 'amber', live: 'tips' },
+  { id: 'calendar', name: 'Календар', icon: 'calendar_month', mark: 'red', live: 'calendar' },
+  { id: 'calc', name: 'Калькулятор', icon: 'calculate', mark: 'slate' },
+  { id: 'camera', name: 'Камера', icon: 'photo_camera', mark: 'purple' },
+  { id: 'maps', name: 'Карти', icon: 'map', mark: 'emerald' },
+  { id: 'contacts', name: 'Контакти', icon: 'contacts', mark: 'blue' },
+  { id: 'monitor', name: 'Монітор', icon: 'monitor_heart', mark: 'emerald' },
+  { id: 'music', name: 'Музика', icon: 'music_note', mark: 'purple' },
+  { id: 'settings', name: 'Параметри', icon: 'settings', mark: 'slate' },
+  { id: 'notes', name: 'Нотатки', icon: 'description', mark: 'mint' },
+  { id: 'mail', name: 'Пошта', icon: 'mail', mark: 'blue' },
+  { id: 'weather', name: 'Погода', icon: 'partly_cloudy_day', mark: 'amber' },
+  { id: 'scanner', name: 'Сканер', icon: 'scanner', mark: 'pink' },
+  { id: 'files', name: 'Файли', icon: 'folder', mark: 'amber' },
+  { id: 'terminal', name: 'Термінал', icon: 'terminal', mark: 'slate' },
+  { id: 'clock', name: 'Годинник', icon: 'schedule', mark: 'mint', live: 'clock' },
+  { id: 'tasks', name: 'Завдання', icon: 'checklist', mark: 'emerald' },
+  { id: 'chat', name: 'Чат', icon: 'chat_bubble', mark: 'mint' },
+  { id: 'video', name: 'Відео', icon: 'movie', mark: 'red' },
+  { id: 'games', name: 'Ігри', icon: 'sports_esports', mark: 'purple' },
+  { id: 'paint', name: 'Малювання', icon: 'brush', mark: 'pink' },
+  { id: 'books', name: 'Книги', icon: 'menu_book', mark: 'emerald' },
+  { id: 'store', name: 'Крамниця', icon: 'storefront', mark: 'blue' },
+  { id: 'code', name: 'Редактор', icon: 'code', mark: 'blue' },
+  { id: 'assistant', name: 'Асистент', icon: 'smart_toy', mark: 'amber' },
+  { id: 'stream', name: 'Трансляція', icon: 'videocam', mark: 'red' },
+];
+const APP = Object.fromEntries(APPS.map(a => [a.id, a]));
+const TIPS = [
+  'Права кнопка миші змінює розмір плитки',
+  'Плитку можна перенести в іншу папку',
+  'Проміжок між папками створює нову папку',
+  'Усе несортоване збирається в папці «Інше»',
+  'Клацніть назву папки, щоб змінити її',
+  'Обрані внизу додаються через праву кнопку',
+  'Сценарій відкриває свій набір програм на столі',
+  'Alt + Shift + стрілки рухають плитку',
+];
+const MISC = 'Інше';
+const KEY = 'unia-breathe-menu-v1';
+
+const $ = id => document.getElementById(id);
+const h = (tag, cls) => { const e = document.createElement(tag); if (cls) e.className = cls; return e; };
+const ms = name => `<span class="ms" aria-hidden="true">${name}</span>`;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const clone = o => JSON.parse(JSON.stringify(o));
+const uid = () => 'i' + Math.random().toString(36).slice(2, 10);
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const $stage = $('stage'), $panel = $('panel'), $tiles = $('tiles'), $allapps = $('allapps'), $list = $('allappsIn');
+const $toast = $('toast'), $favs = $('favs'), $rail = $('rail'), $wall = $('wall');
+const $desk = $('desk'), $wswin = $('wswin'), $scPill = $('scPill'), $wsPill = $('wsPill'), $scVal = $('scVal'), $wsVal = $('wsVal');
+const $wsScroll = $('wsScroll'), $wsList = $('wsList'), $scScroll = $('scScroll'), $scList = $('scList'), $saveForm = $('saveForm'), $scName = $('scName');
+
+// ---------- Grid maths ----------
+const dims = t => SIZES[t.size];
+const stepOf = t => (t.size === 'small' ? 1 : 2);
+const hit = (a, b) => {
+  const [aw, ah] = dims(a), [bw, bh] = dims(b);
+  return a.x < b.x + bw && b.x < a.x + aw && a.y < b.y + bh && b.y < a.y + ah;
+};
+const rowsOf = tiles => tiles.reduce((m, t) => Math.max(m, t.y + dims(t)[1]), 0);
+
+// Keep `first` where it is, push whatever it overlaps downwards, then let every tile float up.
+function settle(tiles, first) {
+  for (const t of tiles) {
+    if (stepOf(t) === 2) { t.x -= t.x % 2; t.y -= t.y % 2; }
+    t.x = clamp(t.x, 0, GC - dims(t)[0]);
+    t.y = Math.max(0, t.y);
+  }
+  const rank = t => (t === first ? 0 : 1);
+  const order = tiles.slice().sort((a, b) => rank(a) - rank(b) || a.y - b.y || a.x - b.x);
+  const placed = [];
+  for (const t of order) {
+    let moved = true;
+    while (moved) {
+      moved = false;
+      for (const p of placed) {
+        if (hit(t, p)) { t.y = p.y + dims(p)[1]; if (stepOf(t) === 2 && t.y % 2) t.y++; moved = true; }
+      }
+    }
+    placed.push(t);
+  }
+  const sorted = tiles.slice().sort((a, b) => a.y - b.y || rank(a) - rank(b) || a.x - b.x);
+  const done = [];
+  for (const t of sorted) {
+    const s = stepOf(t);
+    while (t.y - s >= 0) {
+      t.y -= s;
+      if (done.some(p => hit(t, p))) { t.y += s; break; }
+    }
+    done.push(t);
+  }
+}
+// Put `t` into `tiles` (which must not contain it). Tiles it lands on slide into the slot it came from
+// when they fit there; anything else is pushed down by settle().
+function dropInto(tiles, t, origin) {
+  if (origin) {
+    for (const c of tiles.filter(c => hit(c, t))) {
+      const probe = { size: c.size, x: origin.x, y: origin.y };
+      if (stepOf(c) === 2 && (probe.x % 2 || probe.y % 2)) continue;
+      if (probe.x + dims(c)[0] > GC) continue;
+      if (hit(probe, t) || tiles.some(q => q !== c && hit(probe, q))) continue;
+      c.x = probe.x; c.y = probe.y;
+    }
+  }
+  tiles.push(t);
+  settle(tiles, t);
+}
+function freeSlot(tiles, size) {
+  const [w] = SIZES[size], s = size === 'small' ? 1 : 2;
+  for (let y = 0; ; y += s) for (let x = 0; x + w <= GC; x += s) {
+    const probe = { size, x, y };
+    if (!tiles.some(t => hit(probe, t))) return { x, y };
+  }
+}
+
+// ---------- State ----------
+// A scenario is an ordered set of programs; the order fixes where each window lands when the desktop tiles them.
+function deskSeed() {
+  return {
+    scenarios: [
+      { id: 'dev', name: 'Dev', apps: ['code', 'assistant', 'browser', 'files'] },
+      { id: 'default', name: 'Default', apps: [] },
+      { id: 'streamer', name: 'Streamer', apps: ['stream', 'chat', 'music'] },
+      { id: 'writer', name: 'Writer', apps: ['notes', 'browser'] },
+      { id: 'media', name: 'Media', apps: ['video', 'gallery', 'music'] },
+      { id: 'mail', name: 'Mail', apps: ['mail', 'calendar', 'tasks', 'contacts'] },
+    ],
+    ws: { active: 1, list: [
+      { n: 1, scenario: 'dev', wins: ['code', 'assistant', 'browser', 'files'] },
+      { n: 2, scenario: 'default', wins: [] },
+    ] },
+  };
+}
+function sanitizeDesk(s) {
+  const d = deskSeed();
+  const apps = a => [...new Set((Array.isArray(a) ? a : []).filter(x => APP[x]))].slice(0, MAX_WINS);
+  if (Array.isArray(s.scenarios) && s.scenarios.length) {
+    d.scenarios = s.scenarios.slice(0, 24).map(c => ({ id: String(c.id || uid()), name: String(c.name || 'Сценарій').slice(0, 14), apps: apps(c.apps) }));
+  }
+  if (s.ws && Array.isArray(s.ws.list) && s.ws.list.length) {
+    const seen = new Set();
+    const list = s.ws.list
+      .map(w => ({ n: clamp(w.n | 0, 1, MAX_WS), scenario: d.scenarios.some(c => c.id === w.scenario) ? w.scenario : null, wins: apps(w.wins) }))
+      .filter(w => !seen.has(w.n) && seen.add(w.n)).sort((a, b) => a.n - b.n);
+    d.ws = { list, active: list.some(w => w.n === s.ws.active) ? s.ws.active : list[0].n };
+  }
+  return d;
+}
+function seed() {
+  const T = (app, size, x, y) => ({ id: uid(), app, size, x, y });
+  return {
+    ...deskSeed(),
+    favs: ['browser', 'files', 'terminal', 'mail', 'music'],
+    columns: [
+      [
+        { id: uid(), name: 'Щодня', tiles: [
+          T('notes', 'wide', 0, 0), T('calc', 'small', 4, 0), T('camera', 'small', 5, 0), T('recorder', 'small', 4, 1), T('alarm', 'small', 5, 1), T('clock', 'medium', 6, 0),
+          T('mail', 'medium', 0, 2), T('browser', 'medium', 2, 2), T('calendar', 'large', 4, 2),
+          T('files', 'medium', 0, 4), T('tasks', 'medium', 2, 4),
+        ] },
+        { id: uid(), name: 'Творчість', tiles: [
+          T('gallery', 'wide', 0, 0), T('music', 'medium', 4, 0), T('paint', 'medium', 6, 0), T('stream', 'medium', 0, 2),
+        ] },
+      ],
+      [
+        { id: uid(), name: 'Корисне', tiles: [
+          T('maps', 'wide', 0, 0), T('terminal', 'small', 4, 0), T('settings', 'small', 5, 0), T('contacts', 'small', 4, 1), T('store', 'small', 5, 1), T('weather', 'medium', 6, 0),
+          T('chat', 'medium', 0, 2), T('books', 'medium', 2, 2), T('tips', 'large', 4, 2),
+          T('code', 'medium', 0, 4), T('assistant', 'medium', 2, 4),
+        ] },
+        { id: uid(), name: MISC, misc: true, tiles: [] },   // unsorted programs are added by normalize()
+      ],
+    ],
+  };
+}
+function sanitize(s) {
+  if (!s || !Array.isArray(s.columns) || !s.columns.length) return null;
+  const seen = new Set();
+  let misc = false;
+  const cols = s.columns.map(c => (Array.isArray(c) ? c : []).map(g => {
+    const out = {
+      id: String(g.id || uid()), name: String(g.name || '').slice(0, 40),
+      tiles: (Array.isArray(g.tiles) ? g.tiles : [])
+        .filter(t => t && APP[t.app] && SIZES[t.size] && !seen.has(t.app) && seen.add(t.app))
+        .map(t => ({ id: String(t.id || uid()), app: t.app, size: t.size, x: t.x | 0, y: t.y | 0, ...(t.live === false ? { live: false } : {}) })),
+    };
+    if (g.misc && !misc) { out.misc = true; misc = true; }
+    return out;
+  }));
+  while (cols.length > 2) { const last = cols.pop(); cols[cols.length - 1].push(...last); }
+  while (cols.length < 2) cols.push([]);
+  const favs = [...new Set((Array.isArray(s.favs) ? s.favs : []).filter(a => APP[a]))].slice(0, MAX_FAVS);
+  return { favs, columns: cols, ...sanitizeDesk(s) };
+}
+// Every program lives on the tiles: whatever is in no folder goes to the unsorted one.
+function ensureMisc(st) {
+  let g = st.columns.flat().find(g => g.misc);
+  if (!g) { g = { id: uid(), name: MISC, misc: true, tiles: [] }; st.columns[st.columns.length - 1].push(g); }
+  return g;
+}
+function normalize(st) {
+  const have = new Set(st.columns.flat().flatMap(g => g.tiles.map(t => t.app)));
+  for (const a of APPS) if (!have.has(a.id)) {
+    const g = ensureMisc(st);
+    g.tiles.push({ id: uid(), app: a.id, size: 'medium', ...freeSlot(g.tiles, 'medium') });
+  }
+  st.columns.flat().forEach(g => settle(g.tiles));
+  st.columns = st.columns.map(c => c.filter(g => g.tiles.length));
+  return st;
+}
+function load() {
+  try { const raw = localStorage.getItem(KEY); if (raw) { const s = sanitize(JSON.parse(raw)); if (s) return normalize(s); } } catch (e) {}
+  return normalize(seed());
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+let state = load();
+const effCols = () => Math.max(1, Math.min(state.columns.length, maxCols));
+// What is shown: on a window too narrow for two columns the second one stacks under the first.
+function view() {
+  const n = effCols();
+  if (n === state.columns.length) return state.columns;
+  const v = state.columns.slice(0, n).map(c => c.slice());
+  for (let i = n; i < state.columns.length; i++) v[n - 1].push(...state.columns[i]);
+  return v;
+}
+function locate(cols, tileId) {
+  for (let ci = 0; ci < cols.length; ci++) for (let gi = 0; gi < cols[ci].length; gi++) {
+    const g = cols[ci][gi], t = g.tiles.find(t => t.id === tileId);
+    if (t) return { ci, gi, g, t };
+  }
+  return null;
+}
+function locateGroup(cols, id) {
+  for (let ci = 0; ci < cols.length; ci++) for (let gi = 0; gi < cols[ci].length; gi++) if (cols[ci][gi].id === id) return { ci, gi, g: cols[ci][gi] };
+  return null;
+}
+function tileOfApp(app) {
+  for (const g of state.columns.flat()) { const t = g.tiles.find(t => t.app === app); if (t) return { g, t }; }
+  return null;
+}
+function commit() {
+  state.columns = state.columns.map(c => c.filter(g => g.tiles.length));
+  save(); render(); syncApps();
+}
+// Take a previewed column set (built from the view) and make it the saved layout.
+function adopt(cols) {
+  cols = cols.map(c => c.filter(g => g.tiles.length));
+  if (cols.length === state.columns.length) state.columns = cols;
+  else {
+    const byId = new Map(cols.flat().map(g => [g.id, g]));
+    const oldIds = state.columns.flat().map(g => g.id).filter(id => byId.has(id));
+    const newIds = cols.flat().map(g => g.id);
+    if (oldIds.join() === newIds.join()) state.columns = state.columns.map(c => c.map(g => byId.get(g.id)).filter(Boolean));
+    else { while (cols.length < state.columns.length) cols.push([]); state.columns = cols; }
+  }
+  commit();
+}
+
+// ---------- Rendering ----------
+const colEls = [];
+const groupEls = new Map();
+const tileEls = new Map();
+
+function makeGroup(g) {
+  const el = h('section', 'group');
+  const head = h('div', 'group-head');
+  const input = h('input', 'group-name');
+  input.type = 'text'; input.id = 'gn-' + g.id; input.placeholder = 'Назвіть папку'; input.maxLength = 40;
+  input.autocomplete = 'off'; input.spellcheck = false; input.setAttribute('aria-label', 'Назва папки');
+  input.addEventListener('input', () => { const f = locateGroup(state.columns, g.id); if (f) { f.g.name = input.value; save(); syncApps(); } });
+  input.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === 'Escape') { e.stopPropagation(); input.blur(); } });
+  const grip = h('button', 'group-grip');
+  grip.type = 'button'; grip.setAttribute('aria-label', 'Перетягнути папку'); grip.innerHTML = ms('drag_handle');
+  grip.addEventListener('pointerdown', e => press(e, { kind: 'group', id: g.id, instant: true }));
+  head.append(input, grip);
+  const grid = h('div', 'grid');
+  el.append(head, grid);
+  el._head = head; el._input = input; el._grid = grid;
+  return el;
+}
+function makeTile(t) {
+  const a = APP[t.app];
+  const el = h('div', 'tile');
+  el.tabIndex = 0; el.setAttribute('role', 'button'); el.dataset.app = a.id;
+  el.innerHTML = `<div class="tile-front"><span class="chip" style="--mark:var(--mark-${a.mark})">${ms(a.icon)}</span><span class="tile-label"></span></div>`;
+  el.querySelector('.tile-label').textContent = a.name;
+  if (a.live) { const lv = h('div', 'tile-live'); lv.setAttribute('aria-hidden', 'true'); el.append(lv); el._live = lv; }
+  el._off = Math.floor(Math.random() * 7);
+  el.addEventListener('pointerdown', e => press(e, { kind: 'tile', id: t.id }));
+  el.addEventListener('contextmenu', e => { e.preventDefault(); if (lastPointer !== 'touch' && !drag) tileMenu(t.id, e.clientX, e.clientY, el); });
+  el.addEventListener('keydown', e => tileKey(e, t.id));
+  return el;
+}
+const isLive = t => !!APP[t.app].live && t.live !== false && t.size !== 'small';
+function updateTile(el, t) {
+  const [w, hh] = dims(t);
+  el.dataset.size = t.size;
+  el.style.setProperty('--x', t.x); el.style.setProperty('--y', t.y);
+  el.style.setProperty('--w', w); el.style.setProperty('--h', hh);
+  el.setAttribute('aria-label', `${APP[t.app].name}, ${SIZE_LABEL[t.size].toLowerCase()} розмір`);
+  el.classList.toggle('is-slot', !!drag && drag.slotId === t.id);
+  const live = isLive(t);
+  el.classList.toggle('live', live);
+  if (live) fillLive(el, new Date()); else el.classList.remove('live-show', 'live-static');
+}
+function render(cols = view()) {
+  while (colEls.length < cols.length) { const c = h('div', 'col'); $tiles.append(c); colEls.push(c); }
+  while (colEls.length > cols.length) colEls.pop().remove();
+  $panel.style.setProperty('--cols', cols.length);
+  const seenG = new Set(), seenT = new Set();
+  cols.forEach((groups, ci) => {
+    const colEl = colEls[ci];
+    groups.forEach((g, gi) => {
+      let ge = groupEls.get(g.id);
+      if (!ge) { ge = makeGroup(g); groupEls.set(g.id, ge); }
+      if (colEl.children[gi] !== ge) colEl.insertBefore(ge, colEl.children[gi] || null);
+      if (document.activeElement !== ge._input && ge._input.value !== g.name) ge._input.value = g.name;
+      ge.classList.toggle('is-slot', !!drag && drag.slotGroup === g.id);
+      for (const t of g.tiles) {
+        let el = tileEls.get(t.id);
+        if (!el) { el = makeTile(t); tileEls.set(t.id, el); }
+        if (el.parentNode !== ge._grid) ge._grid.append(el);
+        updateTile(el, t);
+        seenT.add(t.id);
+      }
+      ge._grid.style.setProperty('--rows', Math.max(rowsOf(g.tiles), 2));
+      seenG.add(g.id);
+    });
+  });
+  for (const [id, el] of tileEls) if (!seenT.has(id)) { el.remove(); tileEls.delete(id); }
+  for (const [id, el] of groupEls) if (!seenG.has(id)) { el.remove(); groupEls.delete(id); }
+  syncRail();
+}
+
+// ---------- Live tiles ----------
+const pad2 = n => String(n).padStart(2, '0');
+const fmtTime = d => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+const weekday = d => new Intl.DateTimeFormat('uk', { weekday: 'long' }).format(d);
+const monthGen = d => (new Intl.DateTimeFormat('uk', { day: 'numeric', month: 'long' }).formatToParts(d).find(p => p.type === 'month') || {}).value || '';
+function fillLive(el, now) {
+  const a = APP[el.dataset.app], kind = a.live, lv = el._live;
+  let key, show = true, fixed = false;
+  if (kind === 'clock') { key = fmtTime(now); fixed = true; }
+  else if (kind === 'calendar') { key = now.toDateString(); fixed = true; }
+  else {
+    const cycle = Math.floor((now.getTime() / 1000 + el._off) / 7);
+    show = reduceMotion || cycle % 2 === 1;
+    key = String(Math.floor((cycle + 1) / 2));
+  }
+  if (lv.dataset.key !== kind + key) {
+    lv.dataset.key = kind + key;
+    const part = (cls, text) => { const s = h('span', cls); s.textContent = text; return s; };
+    const badge = h('span', 'lv-app'); badge.innerHTML = ms(a.icon);
+    if (kind === 'clock') lv.replaceChildren(badge, part('lv-big', key), part('lv-cap', weekday(now)));
+    else if (kind === 'calendar') lv.replaceChildren(badge, part('lv-over', monthGen(now)), part('lv-big', String(now.getDate())), part('lv-cap', weekday(now)));
+    else if (kind === 'tips') lv.replaceChildren(badge, part('lv-over', 'Підказка'), part('lv-text', TIPS[Number(key) % TIPS.length]));
+    else lv.replaceChildren(h('div', 'pic pic-' + (Number(key) % 3)));
+  }
+  el.classList.toggle('live-static', fixed);
+  el.classList.toggle('live-show', show);
+}
+function tick() {
+  const now = new Date();
+  syncClock(now);
+  for (const el of tileEls.values()) if (el.classList.contains('live')) fillLive(el, now);
+}
+
+// ---------- All programs ----------
+function buildApps() {
+  const sorted = APPS.slice().sort((a, b) => a.name.localeCompare(b.name, 'uk'));
+  let letter = '';
+  for (const a of sorted) {
+    const L = a.name[0].toUpperCase();
+    if (L !== letter) { letter = L; const hd = h('div', 'letter'); hd.textContent = L; $list.append(hd); }
+    const row = h('button', 'app-row'); row.type = 'button'; row.dataset.app = a.id;
+    row.innerHTML = `<span class="chip chip-s" style="--mark:var(--mark-${a.mark})">${ms(a.icon)}</span><span class="app-text"><span class="app-name"></span><span class="app-where"></span></span>`;
+    row.querySelector('.app-name').textContent = a.name;
+    row._where = row.querySelector('.app-where');
+    row.addEventListener('click', () => launch(a.id));
+    row.addEventListener('contextmenu', e => { e.preventDefault(); appMenu(a.id, e.clientX, e.clientY, row); });
+    $list.append(row);
+  }
+}
+function syncApps() {
+  for (const row of $list.querySelectorAll('.app-row')) {
+    const f = tileOfApp(row.dataset.app);
+    row._where.textContent = f ? (f.g.name || 'Папка без назви') : '';
+  }
+}
+
+// ---------- Favourites dock ----------
+function renderDock() {
+  $favs.replaceChildren();
+  for (let i = 0; i < MAX_FAVS; i++) {
+    const app = state.favs[i];
+    if (!app) { $favs.append(h('div', 'fav empty')); continue; }
+    const a = APP[app];
+    const b = h('button', 'fav'); b.type = 'button'; b.title = a.name; b.setAttribute('aria-label', a.name);
+    b.style.setProperty('--mark', `var(--mark-${a.mark})`); b.innerHTML = ms(a.icon);
+    b.addEventListener('click', () => launch(app));
+    b.addEventListener('contextmenu', e => { e.preventDefault(); appMenu(app, e.clientX, e.clientY, b); });
+    $favs.append(b);
+  }
+}
+function toggleFav(app) {
+  const i = state.favs.indexOf(app);
+  if (i >= 0) state.favs.splice(i, 1);
+  else if (state.favs.length >= MAX_FAVS) { toast('Обраних може бути п’ять. Спершу приберіть одну з них.'); return; }
+  else state.favs.push(app);
+  save(); renderDock();
+}
+
+// ---------- Tile actions ----------
+function launch(app) {
+  if (app === 'settings') { togglePanel(false); toggleSettings(true); return; }   // the settings program is the switcher panel
+  const ws = curWs();
+  if (!ws.wins.includes(app)) {
+    if (ws.wins.length >= MAX_WINS) { toast('На столі вже шість вікон. Закрийте одне з них.'); return; }
+    ws.wins.push(app);
+  }
+  togglePanel(false);
+  save(); renderDesk(); syncWs();
+  const el = winEls.get(app);
+  if (el) { el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 900); }
+}
+function flash(id) {
+  requestAnimationFrame(() => {
+    const el = tileEls.get(id); if (!el) return;
+    el.scrollIntoView({ block: 'center' }); el.classList.add('flash');
+    setTimeout(() => el.classList.remove('flash'), 1400);
+  });
+}
+function reveal(app) {
+  const f = tileOfApp(app); if (!f) return;
+  togglePanel(true); setView('tiles'); flash(f.t.id);
+}
+function moveToMisc(id) {
+  const f = locate(state.columns, id); if (!f || f.g.misc) return;
+  f.g.tiles.splice(f.g.tiles.indexOf(f.t), 1);
+  settle(f.g.tiles);
+  const m = ensureMisc(state);
+  const t = { ...f.t, ...freeSlot(m.tiles, f.t.size) };
+  m.tiles.push(t);
+  commit(); flash(t.id);
+}
+function resize(id, size) {
+  const f = locate(state.columns, id); if (!f) return;
+  f.t.size = size;
+  settle(f.g.tiles, f.t);
+  commit();
+}
+function toggleLive(id) {
+  const f = locate(state.columns, id); if (!f) return;
+  if (f.t.live === false) delete f.t.live; else f.t.live = false;
+  commit();
+}
+function nudge(id, dx, dy) {
+  const f = locate(state.columns, id); if (!f) return;
+  const { g, t } = f, s = stepOf(t), [w, hh] = dims(t);
+  const x = t.x + dx * s;
+  if (x < 0 || x + w > GC) return;
+  let below = null;
+  if (dy > 0) {
+    below = g.tiles.filter(o => o !== t && o.y >= t.y + hh && o.x < t.x + w && t.x < o.x + dims(o)[0]).sort((a, b) => a.y - b.y)[0];
+    if (!below) return;
+  }
+  if (dy < 0 && t.y === 0) return;
+  const others = g.tiles.filter(o => o !== t);
+  if (dx) {
+    const origin = { x: t.x, y: t.y };
+    t.x = x;
+    dropInto(others, t, origin);
+    g.tiles = others;
+  } else {
+    settle(others);
+    if (dy > 0) t.y = below.y + dims(below)[1]; else t.y -= s;
+    g.tiles = [...others, t];
+    settle(g.tiles, t);
+  }
+  commit();
+  tileEls.get(id)?.focus();
+}
+function tileKey(e, id) {
+  if (e.target !== e.currentTarget) return;
+  if (e.altKey && e.shiftKey && e.key.startsWith('Arrow')) {
+    e.preventDefault();
+    nudge(id, e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0, e.key === 'ArrowUp' ? -1 : e.key === 'ArrowDown' ? 1 : 0);
+  } else if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    const f = locate(state.columns, id); if (f) launch(f.t.app);
+  }
+}
+const favItem = app => ({ label: state.favs.includes(app) ? 'Прибрати з обраних' : 'Додати до обраних', icon: 'star', run: () => toggleFav(app) });
+function tileMenu(id, x, y, anchor) {
+  const f = locate(state.columns, id); if (!f) return;
+  const { t, g } = f, a = APP[t.app];
+  const misc = state.columns.flat().find(g => g.misc);
+  openMenu([
+    { label: 'Змінити розмір', icon: 'aspect_ratio', sub: Object.keys(SIZES).map(s => ({ label: SIZE_LABEL[s], check: t.size === s, run: () => resize(id, s) })) },
+    !g.misc && { label: `Перенести в «${(misc && misc.name) || MISC}»`, icon: 'folder', run: () => moveToMisc(id) },
+    favItem(t.app),
+    a.live && { label: t.live === false ? 'Увімкнути живу плитку' : 'Вимкнути живу плитку', icon: 'slideshow', run: () => toggleLive(id) },
+  ].filter(Boolean), x, y, anchor);
+}
+function appMenu(app, x, y, anchor) {
+  openMenu([
+    { label: 'Показати на плитках', icon: 'grid_view', run: () => reveal(app) },
+    favItem(app),
+  ], x, y, anchor);
+}
+
+// ---------- Menu ----------
+let menu = null;
+function buildMenu(items) {
+  const el = h('div', 'menu'); el.setAttribute('role', 'menu');
+  for (const it of items) {
+    const row = h('div', 'menu-row');
+    const b = h('button', 'menu-item'); b.type = 'button';
+    const checkable = it.check !== undefined;
+    b.setAttribute('role', checkable ? 'menuitemcheckbox' : 'menuitem');
+    if (checkable) b.setAttribute('aria-checked', !!it.check);
+    const lead = checkable ? (it.check ? ms('check') : '<span class="ms"></span>') : (it.icon ? ms(it.icon) : '<span class="ms"></span>');
+    b.innerHTML = `${lead}<span class="menu-label"></span>${it.sub ? ms('chevron_right') : ''}`;
+    b.querySelector('.menu-label').textContent = it.label;
+    row.append(b);
+    if (it.sub) {
+      const sub = buildMenu(it.sub); sub.classList.add('menu-sub'); sub.hidden = true; row.append(sub);
+      const open = v => { sub.hidden = !v; b.setAttribute('aria-expanded', v); };
+      b.setAttribute('aria-haspopup', 'menu'); open(false);
+      b.addEventListener('click', () => open(sub.hidden));
+      row.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') open(true); });
+      row.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') open(false); });
+      row._open = open;
+    } else b.addEventListener('click', () => { closeMenu(); it.run(); });
+    el.append(row);
+  }
+  el.addEventListener('keydown', e => {
+    const item = e.target.closest('.menu-item');
+    if (!item || item.parentNode.parentNode !== el) return;
+    const items = [...el.children].map(r => r.firstElementChild), i = items.indexOf(item);
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault(); items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length].focus();
+    } else if (e.key === 'ArrowRight' && item.parentNode._open) {
+      e.preventDefault(); item.parentNode._open(true); item.parentNode.querySelector('.menu-sub .menu-item').focus();
+    } else if (e.key === 'ArrowLeft' && el.classList.contains('menu-sub')) {
+      e.preventDefault(); el.parentNode._open(false); el.parentNode.firstElementChild.focus();
+    }
+  });
+  return el;
+}
+function openMenu(items, x, y, anchor) {
+  closeMenu();
+  const el = buildMenu(items); el.classList.add('menu-root');
+  document.body.append(el);
+  const r = el.getBoundingClientRect();
+  const room = items.some(i => i.sub) ? 140 : 0;   // keep the size flyout on screen
+  const left = clamp(x, 8, innerWidth - r.width - 8), top = Math.max(8, clamp(y, 8, innerHeight - r.height - 8 - room));
+  el.style.left = left + 'px'; el.style.top = top + 'px';
+  if (left + r.width + 190 > innerWidth) el.classList.add('flip');
+  menu = { el, anchor };
+  el.querySelector('.menu-item').focus({ preventScroll: true });
+}
+function closeMenu(refocus = true) {
+  if (!menu) return;
+  const m = menu; menu = null;
+  const had = m.el.contains(document.activeElement);
+  m.el.remove();
+  if (refocus && had && m.anchor && m.anchor.isConnected) m.anchor.focus({ preventScroll: true });
+}
+
+// ---------- Toast ----------
+let toastTimer = 0;
+function toast(text, action) {
+  const s = h('span'); s.textContent = text;
+  $toast.replaceChildren(s);
+  if (action) {
+    const b = h('button', 'toast-btn'); b.type = 'button'; b.textContent = action.label;
+    b.addEventListener('click', () => { $toast.hidden = true; action.run(); });
+    $toast.append(b);
+  }
+  $toast.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { $toast.hidden = true; }, action ? 7000 : 2800);
+}
+
+// ---------- Press, drag and drop ----------
+let lastPointer = 'mouse';
+let drag = null;
+let dismissed = false;   // this press only closed a menu
+window.addEventListener('pointerdown', e => {
+  lastPointer = e.pointerType || 'mouse';
+  dismissed = !!menu && !menu.el.contains(e.target);
+  if (dismissed) closeMenu(false);
+}, true);
+document.addEventListener('touchmove', e => { if (drag && drag.active && e.cancelable) e.preventDefault(); }, { passive: false });
+
+function press(e, spec) {
+  if (e.button !== 0) return;
+  if (drag) { if (drag.active) return; release(); drag = null; }
+  const d = drag = { ...spec, pid: e.pointerId, type: e.pointerType || 'mouse', sx: e.clientX, sy: e.clientY, x: e.clientX, y: e.clientY, active: false, moved: false, timer: 0 };
+  if (d.type !== 'mouse' && !d.instant) d.timer = setTimeout(() => { if (drag === d && !d.active) begin(d); }, 380);
+  window.addEventListener('pointermove', onMove);
+  window.addEventListener('pointerup', onUp);
+  window.addEventListener('pointercancel', onCancel);
+}
+function release() {
+  window.removeEventListener('pointermove', onMove);
+  window.removeEventListener('pointerup', onUp);
+  window.removeEventListener('pointercancel', onCancel);
+  if (drag) clearTimeout(drag.timer);
+}
+function onMove(e) {
+  const d = drag; if (!d || e.pointerId !== d.pid) return;
+  d.x = e.clientX; d.y = e.clientY;
+  const dist = Math.hypot(d.x - d.sx, d.y - d.sy);
+  if (!d.active) {
+    if (d.type === 'mouse' || d.instant) { if (dist > 5) begin(d); }
+    else if (dist > 10) { release(); drag = null; }
+    if (!d.active) return;
+  }
+  if (dist > 8) d.moved = true;
+  track(d);
+}
+function onCancel(e) { if (drag && e.pointerId === drag.pid) cancelDrag(); }
+function cancelDrag() {
+  const d = drag; if (!d) return;
+  release(); drag = null;
+  if (d.ghost) d.ghost.remove();
+  $tiles.classList.remove('collapsed'); document.body.classList.remove('dragging');
+  render();
+}
+function onUp(e) {
+  const d = drag; if (!d || e.pointerId !== d.pid) return;
+  release(); drag = null;
+  if (!d.active) {
+    if (d.kind === 'tile') { const f = locate(state.columns, d.id); if (f) launch(f.t.app); }
+    return;
+  }
+  document.body.classList.remove('dragging');
+  if (d.kind === 'group') {
+    $tiles.classList.remove('collapsed'); d.ghost.remove();
+    adopt(d.cur);
+    return;
+  }
+  if (d.type !== 'mouse' && !d.moved) {   // long press without movement opens the menu
+    d.ghost.remove(); render();
+    tileMenu(d.id, d.x, d.y, tileEls.get(d.id));
+    return;
+  }
+  if (d.target) adopt(d.cur); else render();
+  land(d);
+}
+function land(d) {
+  const g = d.ghost, el = tileEls.get(d.tile.id);
+  if (!el) { g.remove(); return; }
+  const r = el.getBoundingClientRect();
+  el.classList.add('is-slot');
+  g.style.transition = 'left .16s ease, top .16s ease, transform .16s ease';
+  g.style.left = r.left + 'px'; g.style.top = r.top + 'px'; g.style.transform = 'none';
+  setTimeout(() => { g.remove(); el.classList.remove('is-slot'); }, reduceMotion ? 0 : 180);
+}
+
+function begin(d) {
+  d.active = true; clearTimeout(d.timer);
+  closeMenu(false);
+  document.body.classList.add('dragging');
+  if (document.activeElement && document.activeElement.classList.contains('group-name')) document.activeElement.blur();
+  if (d.kind === 'group') return beginGroup(d);
+  const f0 = locate(view(), d.id), srcEl = tileEls.get(d.id);
+  if (!f0 || !srcEl) { cancelDrag(); return; }
+  d.tile = { ...f0.t };
+  d.newId = uid();
+  d.base = clone(view());
+  const f = locate(d.base, d.tile.id);
+  f.g.tiles.splice(f.g.tiles.indexOf(f.t), 1);   // left uncompacted so neighbours can slide into the gap
+  d.originGid = f.g.id;
+  d.cur = view();
+  const [w, hh] = dims(d.tile), pw = w * U + (w - 1) * G, ph = hh * U + (hh - 1) * G;
+  const r = srcEl.getBoundingClientRect();
+  d.ox = clamp(d.sx - r.left, 0, pw); d.oy = clamp(d.sy - r.top, 0, ph);
+  const ghost = d.ghost = makeTile(d.tile);
+  ghost.removeAttribute('tabindex');
+  updateTile(ghost, d.tile);
+  ghost.classList.add('ghost');
+  ghost.style.width = pw + 'px'; ghost.style.height = ph + 'px';
+  d.gw = pw;
+  document.body.append(ghost);
+  d.key = '';
+  track(d);
+  autoScroll(d);
+}
+function nearestCol(x) {
+  let ci = 0, best = Infinity;
+  colEls.forEach((c, i) => {
+    const r = c.getBoundingClientRect();
+    const dist = x < r.left ? r.left - x : x > r.right ? x - r.right : 0;
+    if (dist < best) { best = dist; ci = i; }
+  });
+  return ci;
+}
+function hitTest(d) {
+  const ar = $tiles.getBoundingClientRect();
+  if (d.x < ar.left - 24 || d.x > ar.right + 24 || d.y < ar.top - 24 || d.y > ar.bottom + 24) return null;
+  const ci = nearestCol(d.x - d.ox + d.gw / 2);
+  const list = d.cur[ci] || [];
+  const pitch = U + G, big = d.tile.size !== 'small', w = dims(d.tile)[0];
+  let gi = 0;
+  for (let i = 0; i < list.length; i++) {
+    const g = list[i], ge = groupEls.get(g.id);
+    if (!ge) continue;
+    const r = ge.getBoundingClientRect(), isNew = g.id === d.newId;
+    if (d.y < r.top + 4) return { type: 'new', ci, gi };
+    const slack = i === list.length - 1 ? U * 0.6 : 0;
+    if (d.y <= r.bottom + slack) {
+      if (isNew) return { type: 'new', ci, gi };
+      const gr = ge._grid.getBoundingClientRect();
+      const fx = (d.x - d.ox - gr.left) / pitch, fy = (d.y - d.oy - gr.top) / pitch;
+      const x = clamp(big ? 2 * Math.round(fx / 2) : Math.round(fx), 0, GC - w);
+      const y = Math.max(0, big ? 2 * Math.round(fy / 2) : Math.round(fy));
+      return { type: 'group', id: g.id, x, y };
+    }
+    if (!isNew) gi++;
+  }
+  return { type: 'new', ci, gi };
+}
+function track(d) {
+  if (d.kind === 'group') return trackGroup(d);
+  d.ghost.style.left = (d.x - d.ox) + 'px'; d.ghost.style.top = (d.y - d.oy) + 'px';
+  const target = hitTest(d);
+  const key = target ? JSON.stringify(target) : 'none';
+  if (key === d.key) return;
+  d.key = key; d.target = target;
+  if (!target) {   // outside the tiles: show where the tile came from
+    d.cur = view(); d.slotId = d.tile.id;
+    render(d.cur);
+    return;
+  }
+  const cols = clone(d.base);
+  const t = { ...d.tile };
+  const og = locateGroup(cols, d.originGid).g;
+  if (target.type === 'group') {
+    const g = locateGroup(cols, target.id).g;
+    t.x = target.x; t.y = target.y;
+    if (g !== og) settle(og.tiles);
+    dropInto(g.tiles, t, g === og ? { x: d.tile.x, y: d.tile.y } : null);
+  } else {
+    settle(og.tiles);
+    t.x = 0; t.y = 0;
+    cols[target.ci].splice(target.gi, 0, { id: d.newId, name: '', tiles: [t] });
+  }
+  d.cur = cols; d.slotId = t.id;
+  render(cols);
+}
+function autoScroll(d) {
+  const loop = () => {
+    if (drag !== d) return;
+    const r = $tiles.getBoundingClientRect();
+    const dy = d.y < r.top + 40 ? -10 : d.y > r.bottom - 40 ? 10 : 0;
+    if (dy && d.x > r.left && d.x < r.right) {
+      const before = $tiles.scrollTop;
+      $tiles.scrollTop += dy;
+      if ($tiles.scrollTop !== before) track(d);
+    }
+    requestAnimationFrame(loop);
+  };
+  requestAnimationFrame(loop);
+}
+
+function beginGroup(d) {
+  const ge = groupEls.get(d.id);
+  d.base = clone(view());
+  const f = locateGroup(d.base, d.id);
+  if (!ge || !f) { cancelDrag(); return; }
+  d.group = d.base[f.ci].splice(f.gi, 1)[0];
+  const r = ge._head.getBoundingClientRect();
+  $tiles.classList.add('collapsed');
+  const ghost = d.ghost = h('div', 'group-ghost');
+  ghost.textContent = d.group.name || 'Папка без назви';
+  ghost.style.width = r.width + 'px';
+  d.gw = r.width;
+  d.ox = clamp(d.sx - r.left, 0, r.width); d.oy = 22;
+  document.body.append(ghost);
+  d.slotGroup = d.id; d.cur = view(); d.key = '';
+  render(d.cur);
+  track(d);
+  autoScroll(d);
+}
+function trackGroup(d) {
+  d.ghost.style.left = (d.x - d.ox) + 'px'; d.ghost.style.top = (d.y - d.oy) + 'px';
+  const ci = nearestCol(d.x - d.ox + d.gw / 2);
+  let gi = 0;
+  for (const g of d.base[ci]) {
+    const ge = groupEls.get(g.id); if (!ge) continue;
+    const r = ge.getBoundingClientRect();
+    if (d.y > r.top + r.height / 2) gi++;
+  }
+  const key = ci + ':' + gi;
+  if (key === d.key) return;
+  d.key = key;
+  const cols = clone(d.base);
+  cols[ci].splice(gi, 0, clone(d.group));
+  d.cur = cols;
+  render(cols);
+}
+
+// ---------- Scroll rails: a line with a dot at each end ----------
+const scroller = () => ($panel.dataset.view === 'apps' ? $allapps : $tiles);
+function bindRail(rail, getScroller, horiz) {
+  const thumb = rail.querySelector('.rail-thumb');
+  const pos = sc => (horiz ? sc.scrollLeft : sc.scrollTop);
+  const scrollTo = (sc, v) => { if (horiz) sc.scrollLeft = v; else sc.scrollTop = v; };
+  const at = e => (horiz ? e.clientX : e.clientY);
+  const geom = () => {
+    const sc = getScroller();
+    const view = horiz ? sc.clientWidth : sc.clientHeight, full = horiz ? sc.scrollWidth : sc.scrollHeight;
+    const max = full - view, track = (horiz ? rail.clientWidth : rail.clientHeight) - 24;   // between the two end dots
+    const th = max > 1 ? Math.max(36, Math.round(track * view / full)) : track;
+    return { sc, max, track, th };
+  };
+  const sync = () => {
+    if (!rail.clientHeight) return;
+    const { sc, max, track, th } = geom();
+    thumb.hidden = max <= 1;
+    thumb.style[horiz ? 'width' : 'height'] = th + 'px';
+    const p = max > 1 ? (track - th) * pos(sc) / max : 0;
+    thumb.style.transform = horiz ? `translateX(${p}px)` : `translateY(${p}px)`;
+  };
+  rail.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const { sc, max, track, th } = geom();
+    if (max <= 1) return;
+    if (e.target !== thumb) {   // click on the line: jump there
+      const r = rail.getBoundingClientRect();
+      scrollTo(sc, clamp((at(e) - (horiz ? r.left : r.top) - 12 - th / 2) / Math.max(1, track - th), 0, 1) * max);
+    }
+    const a0 = at(e), s0 = pos(sc);
+    rail.setPointerCapture(e.pointerId);
+    const mv = ev => scrollTo(sc, s0 + (at(ev) - a0) * max / Math.max(1, track - th));
+    const up = () => { rail.removeEventListener('pointermove', mv); rail.removeEventListener('pointerup', up); rail.removeEventListener('pointercancel', up); };
+    rail.addEventListener('pointermove', mv); rail.addEventListener('pointerup', up); rail.addEventListener('pointercancel', up);
+  });
+  return sync;
+}
+const syncRail = bindRail($rail, scroller, false);
+const syncWsRail = bindRail($('wsRail'), () => $wsScroll, true);
+const syncScRail = bindRail($('scRail'), () => $scScroll, true);
+$tiles.addEventListener('scroll', syncRail);
+$allapps.addEventListener('scroll', syncRail);
+$wsScroll.addEventListener('scroll', syncWsRail);
+$scScroll.addEventListener('scroll', syncScRail);
+for (const sc of [$wsScroll, $scScroll]) {   // a mouse wheel scrolls these rows sideways
+  sc.addEventListener('wheel', e => { if (sc.scrollWidth > sc.clientWidth && !e.deltaX) { e.preventDefault(); sc.scrollLeft += e.deltaY; } }, { passive: false });
+}
+
+// ---------- Workspaces, scenarios and their windows ----------
+const curWs = () => state.ws.list.find(w => w.n === state.ws.active);
+const scenarioOf = id => state.scenarios.find(c => c.id === id);
+// Dwindle tiling: each new window takes half of what is left, split along the longer side.
+function dwindle(n, r, gap) {
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    if (i === n - 1) { out.push(r); break; }
+    if (r.w >= r.h) { const w = (r.w - gap) / 2; out.push({ x: r.x, y: r.y, w, h: r.h }); r = { x: r.x + w + gap, y: r.y, w, h: r.h }; }
+    else { const hh = (r.h - gap) / 2; out.push({ x: r.x, y: r.y, w: r.w, h: hh }); r = { x: r.x, y: r.y + hh + gap, w: r.w, h: hh }; }
+  }
+  return out;
+}
+const winEls = new Map();
+function makeWin(app) {
+  const a = APP[app];
+  const el = h('div', 'win');
+  el.innerHTML = `<div class="win-bar"><span class="chip chip-s" style="--mark:var(--mark-${a.mark})">${ms(a.icon)}</span><span class="win-title"></span><button class="win-close" type="button">${ms('close')}</button></div><div class="win-body">${ms(a.icon)}</div>`;
+  el.querySelector('.win-title').textContent = a.name;
+  const x = el.querySelector('.win-close');
+  x.setAttribute('aria-label', 'Закрити: ' + a.name);
+  x.addEventListener('click', () => {
+    const ws = curWs(); ws.wins = ws.wins.filter(w => w !== app);
+    save(); renderDesk(); syncWs();
+  });
+  return el;
+}
+function renderDesk() {
+  const ws = curWs();
+  const area = { x: 16, y: 72, w: $stage.clientWidth - 32, h: Math.max(160, $stage.clientHeight - 72 - 140) };
+  const rects = dwindle(ws.wins.length, area, 10);
+  const seen = new Set();
+  ws.wins.forEach((app, i) => {
+    let el = winEls.get(app);
+    if (!el) { el = makeWin(app); winEls.set(app, el); $desk.append(el); }
+    const r = rects[i];
+    el.style.left = r.x + 'px'; el.style.top = r.y + 'px'; el.style.width = r.w + 'px'; el.style.height = r.h + 'px';
+    seen.add(app);
+  });
+  for (const [app, el] of winEls) if (!seen.has(app)) { el.remove(); winEls.delete(app); }
+}
+function clearDesk() { for (const el of winEls.values()) el.remove(); winEls.clear(); }
+
+let rollDir = 1;
+function setVal(el, text, modified) {
+  const key = text + (modified ? '*' : '');
+  if (el._key === key) return;
+  const changed = el._text !== undefined && el._text !== text;
+  el._key = key; el._text = text;
+  el.textContent = text;
+  if (modified) { const dot = h('span', 'mod'); dot.title = 'Набір вікон змінено після відкриття сценарію'; el.append(dot); }
+  if (changed && !reduceMotion) el.animate([{ transform: `translateY(${rollDir * 100}%)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 180, easing: 'ease' });
+}
+const winCount = n => (n === 0 ? 'порожній' : n === 1 ? '1 вікно' : n < 5 ? `${n} вікна` : `${n} вікон`);
+function syncWs() {
+  const ws = curWs(), sc = scenarioOf(ws.scenario);
+  setVal($scVal, sc ? sc.name : 'Власний', !!sc && sc.apps.join() !== ws.wins.join());
+  setVal($wsVal, String(ws.n), false);
+  if ($wswin.hidden) return;
+  $wsList.replaceChildren();
+  for (const w of state.ws.list) {
+    const b = h('button', 'ws-dot' + (w.n === ws.n ? ' on' : '')); b.type = 'button'; b.textContent = w.n;
+    const name = (scenarioOf(w.scenario) || {}).name || 'Власний';
+    b.title = `Стіл ${w.n}: ${name}, ${winCount(w.wins.length)}`; b.setAttribute('aria-label', b.title);
+    if (w.n === ws.n) b.setAttribute('aria-current', 'true');
+    b.addEventListener('click', () => switchWs(w.n));
+    $wsList.append(b);
+  }
+  if (state.ws.list.length < MAX_WS) {
+    const b = h('button', 'ws-dot add'); b.type = 'button'; b.innerHTML = ms('add'); b.title = 'Відкрити новий стіл'; b.setAttribute('aria-label', b.title);
+    b.addEventListener('click', addWs);
+    $wsList.append(b);
+  }
+  $scList.replaceChildren();
+  for (const c of state.scenarios) {
+    const b = h('button', 'sc-card' + (c.id === ws.scenario ? ' on' : '')); b.type = 'button';
+    b.title = c.apps.length ? c.apps.map(a => APP[a].name).join(', ') : 'Порожній стіл';
+    const prev = h('div', 'sc-prev');
+    dwindle(c.apps.length, { x: 3, y: 3, w: 70, h: 40 }, 3).forEach((r, i) => {
+      const q = h('i'); q.style.cssText = `left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px;--mark:var(--mark-${APP[c.apps[i]].mark})`;
+      prev.append(q);
+    });
+    const nm = h('span', 'sc-name'); nm.textContent = c.name;
+    b.append(prev, nm);
+    b.addEventListener('click', () => applyScenario(c.id));
+    b.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      openMenu([
+        { label: 'Відкрити на цьому столі', icon: 'grid_view', run: () => applyScenario(c.id) },
+        c.id !== 'default' && { label: 'Видалити сценарій', icon: 'close', run: () => deleteScenario(c.id) },
+      ].filter(Boolean), e.clientX, e.clientY, b);
+    });
+    $scList.append(b);
+  }
+  syncWsRail(); syncScRail();
+}
+function switchWs(n) {
+  const prev = curWs();
+  if (n === prev.n) return;
+  // an empty workspace closes when you leave it; two always stay, one per monitor
+  if (!prev.wins.length && state.ws.list.length > 2) state.ws.list = state.ws.list.filter(w => w !== prev);
+  rollDir = n > prev.n ? 1 : -1;
+  state.ws.active = n;
+  clearDesk(); save(); renderDesk(); syncWs();
+}
+function addWs() {
+  let n = 1;
+  while (state.ws.list.some(w => w.n === n)) n++;
+  state.ws.list.push({ n, scenario: 'default', wins: [] });
+  state.ws.list.sort((a, b) => a.n - b.n);
+  switchWs(n);
+}
+function applyScenario(id, quiet) {
+  const sc = scenarioOf(id), ws = curWs(); if (!sc) return;
+  ws.scenario = id; ws.wins = sc.apps.slice();
+  save(); renderDesk(); syncWs();
+  if (!quiet) toast(`Сценарій «${sc.name}» відкрито на столі ${ws.n}`);
+}
+function deleteScenario(id) {
+  const sc = scenarioOf(id); if (!sc || id === 'default') return;
+  const prev = clone({ scenarios: state.scenarios, ws: state.ws });
+  state.scenarios = state.scenarios.filter(c => c.id !== id);
+  for (const w of state.ws.list) if (w.scenario === id) w.scenario = null;
+  save(); syncWs();
+  toast(`Сценарій «${sc.name}» видалено`, { label: 'Повернути', run: () => { Object.assign(state, prev); clearDesk(); save(); renderDesk(); syncWs(); } });
+}
+function toggleWs(open) {
+  if (!$wswin.hidden === open) return;
+  if (open) closeOthers('ws');
+  $wswin.hidden = !open;
+  $scPill.setAttribute('aria-expanded', open); $wsPill.setAttribute('aria-expanded', open);
+  if (open) { $saveForm.hidden = true; syncWs(); }
+}
+$scPill.addEventListener('click', () => toggleWs($wswin.hidden));
+$wsPill.addEventListener('click', () => toggleWs($wswin.hidden));
+// The wheel over a bubble steps to the neighbouring value, like the sketch's value above and below.
+let wheelAt = 0;
+function wheelStep(e, fn) {
+  e.preventDefault();
+  const now = performance.now();
+  if (!e.deltaY || now - wheelAt < 170) return;
+  wheelAt = now; fn(e.deltaY > 0 ? 1 : -1);
+}
+$scPill.addEventListener('wheel', e => wheelStep(e, d => {
+  const i = state.scenarios.findIndex(c => c.id === curWs().scenario);
+  const j = clamp(i + d, 0, state.scenarios.length - 1);
+  if (j !== i) { rollDir = d; applyScenario(state.scenarios[j].id, true); }
+}), { passive: false });
+$wsPill.addEventListener('wheel', e => wheelStep(e, d => {
+  const i = state.ws.list.indexOf(curWs());
+  const j = clamp(i + d, 0, state.ws.list.length - 1);
+  if (j !== i) switchWs(state.ws.list[j].n);
+}), { passive: false });
+$('saveSc').addEventListener('click', () => {
+  if (!curWs().wins.length) { toast('На цьому столі немає відкритих програм. Відкрийте кілька з меню внизу.'); return; }
+  let k = 1;
+  while (state.scenarios.some(c => c.name === 'Сценарій ' + k)) k++;
+  $saveForm.hidden = false; $scName.value = 'Сценарій ' + k; $scName.focus(); $scName.select();
+});
+$saveForm.addEventListener('submit', e => {
+  e.preventDefault();
+  const name = $scName.value.trim().slice(0, 14);
+  if (!name) { $scName.focus(); return; }
+  const ws = curWs(), sc = { id: uid(), name, apps: ws.wins.slice() };
+  state.scenarios.push(sc); ws.scenario = sc.id;
+  $saveForm.hidden = true;
+  save(); syncWs();
+  $scScroll.scrollLeft = $scScroll.scrollWidth;
+  toast(`Сценарій «${name}» збережено`);
+});
+$scName.addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); $saveForm.hidden = true; $('saveSc').focus(); } });
+
+// ---------- Popups: only one is open at a time ----------
+const pops = {};
+function closeOthers(key) { for (const k in pops) if (k !== key) pops[k](false); }
+
+// ---------- Clock, calendar and the next event ----------
+const $calwin = $('calwin'), $clockPill = $('clockPill');
+// Example events, placed relative to today so the calendar always has something coming up.
+const EVENTS = (() => {
+  const b = new Date();
+  const at = (d, hh, mm) => new Date(b.getFullYear(), b.getMonth(), b.getDate() + d, hh, mm);
+  return [
+    { t: at(-2, 11, 0), title: 'Планування тижня' },
+    { t: at(0, 20, 0), title: 'Вечірній стрім' },
+    { t: at(1, 10, 0), title: 'Дзвінок з командою' },
+    { t: at(3, 14, 30), title: 'Огляд спринту' },
+    { t: at(6, 12, 0), title: 'Реліз збірки' },
+    { t: at(12, 18, 0), title: 'Настільна гра з друзями' },
+  ];
+})();
+const dayKey = d => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+const shortDate = d => new Intl.DateTimeFormat('uk', { day: 'numeric', month: 'short' }).format(d);
+let calMonth = null, clockKey = '', fitDay = '';
+function syncClock(now) {
+  const key = dayKey(now) + fmtTime(now);
+  if (key === clockKey) return;
+  clockKey = key;
+  $('clockDate').textContent = shortDate(now);
+  $('clockTime').textContent = fmtTime(now);
+  if (!$calwin.hidden) renderCal();
+  if (dayKey(now) !== fitDay) { fitDay = dayKey(now); if (pops.nc) fitTop(); }
+}
+function renderCal() {
+  const now = new Date();
+  if (!calMonth) calMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  $('calTitle').textContent = `${new Intl.DateTimeFormat('uk', { month: 'long' }).format(calMonth)} ${calMonth.getFullYear()}`;
+  const grid = $('calGrid'); grid.replaceChildren();
+  for (const d of ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']) { const c = h('div', 'dow'); c.textContent = d; grid.append(c); }
+  const lead = (calMonth.getDay() + 6) % 7;   // weeks start on Monday
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(calMonth.getFullYear(), calMonth.getMonth(), 1 - lead + i);
+    const evs = EVENTS.filter(e => dayKey(e.t) === dayKey(d));
+    const c = h('div', 'day' + (d.getMonth() !== calMonth.getMonth() ? ' other' : '') + (dayKey(d) === dayKey(now) ? ' today' : '') + (evs.length ? ' ev' : ''));
+    c.textContent = d.getDate();
+    if (evs.length) c.title = evs.map(e => `${fmtTime(e.t)} ${e.title}`).join('\n');
+    grid.append(c);
+  }
+  const next = EVENTS.filter(e => e.t > now).sort((a, b) => a.t - b.t)[0];
+  if (!next) { $('nextTitle').textContent = 'Подій немає'; $('nextWhen').textContent = ''; return; }
+  const days = Math.round((new Date(next.t.getFullYear(), next.t.getMonth(), next.t.getDate()) - new Date(now.getFullYear(), now.getMonth(), now.getDate())) / 864e5);
+  $('nextTitle').textContent = next.title;
+  $('nextWhen').textContent = `${days === 0 ? 'сьогодні' : days === 1 ? 'завтра' : shortDate(next.t)}, ${fmtTime(next.t)}`;
+}
+function toggleCal(open) {
+  if (!$calwin.hidden === open) return;
+  if (open) { closeOthers('cal'); calMonth = null; }
+  $calwin.hidden = !open;
+  $clockPill.setAttribute('aria-expanded', open);
+  if (open) renderCal();
+}
+$clockPill.addEventListener('click', () => toggleCal($calwin.hidden));
+$('calPrev').addEventListener('click', () => { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1); renderCal(); });
+$('calNext').addEventListener('click', () => { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 1); renderCal(); });
+
+// ---------- Media centre ----------
+const $medwin = $('medwin'), $mwrap = $('mwrap'), $mMain = $('mMain');
+// Example tracks; `src` is the program the sound comes from.
+const TRACKS = [
+  { title: 'Ранковий туман над Дніпром', artist: 'Мідні Сосни', src: 'music', art: 0 },
+  { title: 'Devlog 12: рушій плиток', artist: 'Pixel Kitchen', src: 'browser', art: 3 },
+  { title: 'Нічний трамвай', artist: 'Тихий Потік', src: 'music', art: 1 },
+  { title: 'Lo-fi для довгої компіляції', artist: 'Kernel Garden', src: 'browser', art: 2 },
+];
+const media = { i: 0, playing: true };
+// Text that does not fit scrolls back and forth inside its clipped box.
+function marquee(vp) {
+  const inner = vp.firstElementChild;
+  inner.style.animation = 'none';
+  const over = inner.scrollWidth - vp.clientWidth;
+  const clip = vp.clientWidth > 0 && over > 4;
+  vp.classList.toggle('clip', clip);
+  if (clip && !reduceMotion) {
+    inner.style.setProperty('--shift', -(over + 24) + 'px');
+    void inner.offsetWidth;
+    inner.style.animation = `marq ${Math.max(6, over / 16 + 5)}s ease-in-out infinite alternate`;
+  }
+}
+function renderMedia() {
+  const t = TRACKS[media.i], a = APP[t.src];
+  $('mText').firstElementChild.textContent = `${t.title} – ${t.artist}`;
+  $('mCover').className = 'pic pic-' + t.art;
+  const src = `<span class="chip" style="--mark:var(--mark-${a.mark})">${ms(a.icon)}</span>`;
+  $('mSrc').innerHTML = src; $('mSrc').append(a.name);
+  $('mwSrc').innerHTML = src; $('mwSrc').append(a.name);
+  $('mwTitle').firstElementChild.textContent = t.title;
+  $('mwArtist').textContent = t.artist;
+  $('mwArt').className = 'pic pic-' + t.art;
+  for (const b of $mwrap.querySelectorAll('[data-m="play"]')) {
+    b.firstElementChild.textContent = media.playing ? 'pause' : 'play_arrow';
+    b.setAttribute('aria-label', media.playing ? 'Пауза' : 'Відтворити');
+  }
+  marquee($('mText')); marquee($('mwTitle'));
+}
+$mwrap.addEventListener('click', e => {
+  const b = e.target.closest('[data-m]'); if (!b) return;
+  if (b.dataset.m === 'play') media.playing = !media.playing;
+  else { media.i = (media.i + (b.dataset.m === 'next' ? 1 : TRACKS.length - 1)) % TRACKS.length; media.playing = true; }
+  renderMedia();
+});
+function toggleMedia(open) {
+  if (!$medwin.hidden === open) return;
+  if (open) closeOthers('media');
+  $medwin.hidden = !open;
+  $mwrap.classList.toggle('open', open);
+  $mMain.setAttribute('aria-expanded', open);
+  if (open) marquee($('mwTitle'));
+}
+$mMain.addEventListener('click', () => toggleMedia($medwin.hidden));
+
+// ---------- Status bubble, notifications and control panel ----------
+const $ncwin = $('ncwin'), $statPill = $('statPill'), $bellBtn = $('bellBtn'), $stHint = $('stHint'), $nList = $('nList');
+const LAYOUTS = [{ code: 'ua', name: 'Українська' }, { code: 'us', name: 'English (US)' }];
+const BT_DEVS = [{ name: 'Lift', icon: 'headphones', audio: true }, { name: 'Wireless controller', icon: 'sports_esports', audio: false }];
+const POWER = [
+  { label: 'Вимкнути', icon: 'power_settings_new' }, { label: 'Перезавантажити', icon: 'restart_alt' },
+  { label: 'Сон', icon: 'bedtime' }, { label: 'Вийти з сеансу', icon: 'logout' },
+];
+const minsAgo = m => fmtTime(new Date(Date.now() - m * 60000));
+const sys = {
+  layout: 0, vol: 34, muted: false, bt: true, btDev: 0, wifi: true, net: 'Northtop', signal: 82, dnd: false,
+  notes: [   // example notifications
+    { id: 1, app: 'mail', title: 'Новий лист', text: 'Рахунок за хостинг за жовтень', time: minsAgo(4) },
+    { id: 2, app: 'calendar', title: 'Вечірній стрім', text: 'Початок сьогодні о 20:00', time: minsAgo(18) },
+    { id: 3, app: 'chat', title: 'Команда', text: 'Збірка пройшла, можна тестувати', time: minsAgo(41) },
+    { id: 4, app: 'settings', title: 'Оновлення системи', text: 'Доступно 12 пакетів', time: minsAgo(95) },
+    { id: 5, app: 'files', title: 'Копіювання завершено', text: 'Перенесено 248 файлів на зовнішній диск', time: minsAgo(140) },
+  ],
+};
+const volIcon = () => (sys.muted || sys.vol === 0 ? 'volume_off' : 'volume_up');
+const syncNRail = bindRail($('nRail'), () => $nList, false);
+$nList.addEventListener('scroll', syncNRail);
+let hintFor = null;
+function renderSys() {
+  const dev = BT_DEVS[sys.btDev];
+  $('stKb').textContent = LAYOUTS[sys.layout].code;
+  $('stVol').textContent = sys.muted ? 'вимк.' : sys.vol + '%';
+  $('stVolIcon').textContent = volIcon();
+  $('stBt').textContent = sys.bt ? dev.name : 'вимк.';
+  $('stBtIcon').textContent = sys.bt ? 'bluetooth' : 'bluetooth_disabled';
+  $('stWifi').textContent = sys.wifi ? sys.net : 'вимк.';
+  $('stWifiIcon').textContent = sys.wifi ? 'wifi' : 'wifi_off';
+  $statPill.querySelector('[data-st="bt"]').classList.toggle('off', !sys.bt);
+  $statPill.querySelector('[data-st="wifi"]').classList.toggle('off', !sys.wifi);
+  $('bellIcon').textContent = sys.dnd ? 'notifications_off' : 'notifications';
+  $('bellStar').hidden = !sys.notes.length;
+  $bellBtn.setAttribute('aria-label', sys.notes.length ? `Сповіщення: ${sys.notes.length}` : 'Сповіщень немає');
+  // panel
+  $('qWifi').setAttribute('aria-pressed', sys.wifi); $('qWifi').firstElementChild.textContent = sys.wifi ? 'wifi' : 'wifi_off';
+  $('qWifiSub').textContent = sys.wifi ? sys.net : 'Вимкнено';
+  $('qBt').setAttribute('aria-pressed', sys.bt); $('qBt').firstElementChild.textContent = sys.bt ? 'bluetooth' : 'bluetooth_disabled';
+  $('qBtSub').textContent = sys.bt ? dev.name : 'Вимкнено';
+  $('volFill').style.width = (sys.muted ? 0 : sys.vol) + '%';
+  $('volVal').textContent = sys.muted ? 'вимк.' : sys.vol + '%';
+  $('volRange').value = sys.vol;
+  $('volMute').firstElementChild.textContent = volIcon();
+  $('volMute').setAttribute('aria-label', sys.muted ? 'Увімкнути звук' : 'Вимкнути звук');
+  $('dndBtn').setAttribute('aria-pressed', sys.dnd);
+  $nList.replaceChildren();
+  for (const n of sys.notes) {
+    const a = APP[n.app], el = h('div', 'note');
+    el.innerHTML = `<span class="chip chip-s" style="--mark:var(--mark-${a.mark})">${ms(a.icon)}</span><span class="note-main"><span class="note-title"></span><span class="note-text"></span></span><span class="note-time"></span><button class="icon-btn" type="button" aria-label="Прибрати сповіщення">${ms('close')}</button>`;
+    el.querySelector('.note-title').textContent = n.title;
+    el.querySelector('.note-text').textContent = n.text; el.querySelector('.note-text').title = n.text;
+    el.querySelector('.note-time').textContent = n.time;
+    el.querySelector('button').addEventListener('click', () => { sys.notes = sys.notes.filter(x => x !== n); renderSys(); });
+    $nList.append(el);
+  }
+  if (!sys.notes.length) { const e = h('p', 'n-empty'); e.textContent = 'Нових сповіщень немає'; $nList.append(e); }
+  syncNRail();
+  if (hintFor) showHint(hintFor);
+  fitTop();
+}
+// What a plain hover shows under each part of the status bubble.
+function showHint(st) {
+  const kind = st.dataset.st, dev = BT_DEVS[sys.btDev];
+  const row = (icon, text, sub, cur) => `<span class="hint-row${cur ? ' cur' : ''}">${icon ? ms(icon) : ''}<span>${text}</span>${sub ? `<span class="sub">${sub}</span>` : ''}</span>`;
+  let html;
+  if (kind === 'kb') html = row('', LAYOUTS[sys.layout].name);
+  else if (kind === 'vol') html = sys.bt && dev.audio ? row(dev.icon, dev.name, 'Bluetooth') : row('speaker', 'Динаміки');
+  else if (kind === 'bt') html = sys.bt ? BT_DEVS.map((d, i) => row(d.icon, d.name, i === sys.btDev ? 'під’єднано' : '', i === sys.btDev)).join('') : row('bluetooth_disabled', 'Bluetooth вимкнено');
+  else html = sys.wifi ? row('wifi', sys.net, `сигнал ${sys.signal}%`) : row('wifi_off', 'Wi-Fi вимкнено');
+  $stHint.innerHTML = html;
+  hintFor = st;
+  const bar = $('sysbar').getBoundingClientRect(), r = st.getBoundingClientRect(), w = $stHint.offsetWidth;
+  $stHint.style.left = Math.min(r.left + r.width / 2 - w / 2 - bar.left, bar.width - w) + 'px';
+  $stHint.classList.toggle('on', $ncwin.hidden);
+}
+function hideHint() { hintFor = null; $stHint.classList.remove('on'); }
+$statPill.addEventListener('pointerover', e => { const st = e.target.closest('.st'); if (st) showHint(st); else hideHint(); });
+$statPill.addEventListener('pointerleave', hideHint);
+// The wheel changes the value under the pointer: layout, volume or Bluetooth device.
+$statPill.addEventListener('wheel', e => {
+  const st = e.target.closest('.st'); if (!st) return;
+  const kind = st.dataset.st;
+  if (kind === 'vol') {
+    e.preventDefault(); if (!e.deltaY) return;
+    sys.muted = false; sys.vol = clamp(sys.vol + (e.deltaY < 0 ? 2 : -2), 0, 100); renderSys();
+  } else if (kind === 'kb') wheelStep(e, () => { sys.layout = (sys.layout + 1) % LAYOUTS.length; renderSys(); });
+  else if (kind === 'bt' && sys.bt) wheelStep(e, d => { sys.btDev = (sys.btDev + d + BT_DEVS.length) % BT_DEVS.length; renderSys(); });
+}, { passive: false });
+function toggleNc(open) {
+  if (!$ncwin.hidden === open) return;
+  if (open) closeOthers('nc');
+  $ncwin.hidden = !open;
+  $statPill.setAttribute('aria-expanded', open); $bellBtn.setAttribute('aria-expanded', open);
+  if (open) { hideHint(); renderSys(); }
+}
+$statPill.addEventListener('click', () => toggleNc($ncwin.hidden));
+$bellBtn.addEventListener('click', () => toggleNc($ncwin.hidden));
+const mockAction = label => toast(`«${label}»: це макет, нічого не станеться`);
+$('powerBtn').addEventListener('click', e => {
+  const r = e.currentTarget.getBoundingClientRect();
+  openMenu(POWER.map(p => ({ label: p.label, icon: p.icon, run: () => mockAction(p.label) })), r.right - 232, r.bottom + 8, e.currentTarget);
+});
+for (const p of POWER) {
+  const b = h('button', 'pw'); b.type = 'button'; b.title = p.label; b.setAttribute('aria-label', p.label); b.innerHTML = ms(p.icon);
+  b.addEventListener('click', () => mockAction(p.label));
+  $('pwRow').append(b);
+}
+for (let i = 0; i < 6; i++) {   // placeholders until the settings window exists
+  const b = h('button', 'q-pin'); b.type = 'button'; b.title = 'Місце для закріпленого налаштування'; b.setAttribute('aria-label', b.title); b.innerHTML = ms('push_pin');
+  b.addEventListener('click', () => toast('Закріплені налаштування з’являться разом із вікном налаштувань'));
+  $('qPins').append(b);
+}
+$('qWifi').addEventListener('click', () => { sys.wifi = !sys.wifi; renderSys(); });
+$('qBt').addEventListener('click', () => { sys.bt = !sys.bt; renderSys(); });
+$('volRange').addEventListener('input', e => { sys.vol = Number(e.target.value); sys.muted = false; renderSys(); });
+$('volMute').addEventListener('click', () => { sys.muted = !sys.muted; renderSys(); });
+$('dndBtn').addEventListener('click', () => { sys.dnd = !sys.dnd; renderSys(); });
+$('openSettings').addEventListener('click', () => toggleSettings(true));
+// Drop labels from the top row, step by step, until the media bubble and the status bubble no longer touch.
+function fitTop() {
+  const m = document.querySelector('.mbub');
+  for (let lvl = 0; lvl <= 4; lvl++) {
+    $stage.dataset.top = lvl;
+    if (m.getBoundingClientRect().right + 16 <= $statPill.getBoundingClientRect().left) break;
+  }
+  marquee($('mText'));
+}
+
+// ---------- Settings: buttons that each open one program ----------
+// kind 'app': a ready program opens as its own window beside the panel (names are candidates to confirm).
+// kind 'own': no ready GUI exists; the value is set through the command shown.
+const SET_TABS = [{ id: 'main', label: 'Основні' }, { id: 'custom', label: 'Кастомізація' }, { id: 'devices', label: 'Девайси' }];
+const SETTINGS = {
+  main: [
+    { id: 'net', label: 'Інтернет', icon: 'wifi', kind: 'app', tool: 'Редактор мереж', cmd: 'nm-connection-editor' },
+    { id: 'bt', label: 'Блютуз', icon: 'bluetooth', kind: 'app', tool: 'Blueman', cmd: 'blueman-manager' },
+    { id: 'time', label: 'Час і дата', icon: 'schedule', kind: 'own', what: 'часовий пояс, синхронізація, формат годинника', cmd: 'timedatectl' },
+    { id: 'sound', label: 'Звук', icon: 'volume_up', kind: 'app', tool: 'pavucontrol', cmd: 'pavucontrol' },
+    { id: 'display', label: 'Дисплей', icon: 'monitor', kind: 'app', tool: 'nwg-displays', cmd: 'nwg-displays' },
+    { id: 'layout', label: 'Розкладка', icon: 'keyboard', kind: 'own', what: 'мови та спосіб перемикання розкладок', cmd: 'hyprctl keyword input:kb_layout' },
+  ],
+  custom: [
+    { id: 'wall', label: 'Шпалери', icon: 'wallpaper', kind: 'app', tool: 'Waypaper', cmd: 'waypaper' },
+    { id: 'colors', label: 'Кольори', icon: 'palette', kind: 'app', tool: 'nwg-look', cmd: 'nwg-look', note: 'Це теми GTK; для програм на Qt є окремий qt6ct.' },
+    { id: 'opacity', label: 'Прозорість', icon: 'opacity', kind: 'own', what: 'прозорість вікон і розмиття', cmd: 'hyprctl keyword decoration:active_opacity' },
+    { id: 'borders', label: 'Вікна й межі', icon: 'border_style', kind: 'own', what: 'відступи між вікнами, рамки, заокруглення', cmd: 'hyprctl keyword general:border_size' },
+  ],
+  devices: [
+    { id: 'mouse', label: 'Мишка', icon: 'mouse', kids: [
+      { id: 'mouse-speed', label: 'Швидкість і прискорення', kind: 'own', what: 'чутливість і профіль прискорення', cmd: 'hyprctl keyword input:sensitivity' },
+      { id: 'mouse-buttons', label: 'Кнопки та DPI', kind: 'app', tool: 'Piper', cmd: 'piper' },
+    ] },
+    { id: 'keyboard', label: 'Клавіатура', icon: 'keyboard', kids: [
+      { id: 'kb-layout', label: 'Мова та розкладка', kind: 'own', what: 'мови та спосіб перемикання розкладок', cmd: 'hyprctl keyword input:kb_layout' },
+      { id: 'kb-rgb', label: 'Підсвітка', kind: 'app', tool: 'OpenRGB', cmd: 'openrgb' },
+    ] },
+    { id: 'printers', label: 'Принтери', icon: 'print', kind: 'app', tool: 'system-config-printer', cmd: 'system-config-printer' },
+    { id: 'tablet', label: 'Графічний планшет', icon: 'draw', kind: 'app', tool: 'OpenTabletDriver', cmd: 'otd-gui' },
+  ],
+};
+const $setwrap = $('setwrap'), $setScrim = $('setScrim');
+const setState = { tab: 'main', sel: 'net', open: {} };
+const leavesOf = tab => SETTINGS[tab].flatMap(it => (it.kids ? it.kids.map(k => ({ ...k, icon: it.icon, parent: it })) : [it]));
+function renderSettings() {
+  const tabs = $('setTabs'); tabs.replaceChildren();
+  for (const t of SET_TABS) {
+    const b = h('button', 'seg-btn'); b.type = 'button'; b.setAttribute('role', 'tab'); b.textContent = t.label;
+    b.setAttribute('aria-selected', t.id === setState.tab);
+    b.addEventListener('click', () => {
+      setState.tab = t.id;
+      if (!leavesOf(t.id).some(l => l.id === setState.sel)) {   // show this tab's first program
+        const first = leavesOf(t.id)[0]; setState.sel = first.id; if (first.parent) setState.open[first.parent.id] = true;
+      }
+      renderSettings();
+    });
+    tabs.append(b);
+  }
+  const list = $('setList'); list.replaceChildren();
+  const leafBtn = (it, icon) => {
+    const b = h('button', 'set-item' + (it.id === setState.sel ? ' on' : '')); b.type = 'button';
+    b.innerHTML = `${icon ? `<span class="set-ico">${ms(icon)}</span>` : ''}<span class="set-text"><span class="set-label"></span><span class="set-sub"></span></span>`;
+    b.querySelector('.set-label').textContent = it.label;
+    b.querySelector('.set-sub').textContent = it.kind === 'app' ? it.tool : 'готової програми немає';
+    if (it.id === setState.sel) b.setAttribute('aria-current', 'true');
+    b.addEventListener('click', () => { setState.sel = it.id; renderSettings(); });
+    return b;
+  };
+  for (const it of SETTINGS[setState.tab]) {
+    if (!it.kids) { list.append(leafBtn(it, it.icon)); continue; }
+    const open = !!setState.open[it.id];
+    const b = h('button', 'set-item'); b.type = 'button'; b.setAttribute('aria-expanded', open);
+    b.innerHTML = `<span class="set-ico">${ms(it.icon)}</span><span class="set-text"><span class="set-label"></span><span class="set-sub"></span></span>${ms('chevron_right').replace('class="ms"', 'class="ms chev"')}`;
+    b.querySelector('.set-label').textContent = it.label;
+    b.querySelector('.set-sub').textContent = it.kids.map(k => k.label.toLowerCase()).join(', ');
+    b.addEventListener('click', () => { setState.open[it.id] = !open; renderSettings(); });
+    list.append(b);
+    if (open) { const kids = h('div', 'set-kids'); for (const k of it.kids) kids.append(leafBtn(k)); list.append(kids); }
+  }
+  // the window of the chosen program
+  const leaf = Object.keys(SETTINGS).flatMap(leavesOf).find(l => l.id === setState.sel);
+  const tool = $('setTool');
+  const app = leaf.kind === 'app';
+  tool.innerHTML = `<div class="win-bar"><span class="chip chip-s" style="--mark:var(--mark-emerald)">${ms(leaf.icon)}</span><span class="win-title"></span><span class="badge">${app ? 'Програма' : 'Немає програми'}</span></div>
+    <div class="tool-body"><div class="tool-ico">${ms(leaf.icon)}</div><h3></h3><p></p><div class="cmd-row"><span class="cmd-cap">${app ? 'Запускається командою' : 'Керується через'}</span><span class="cmd"></span></div></div>`;
+  tool.querySelector('.win-title').textContent = `${leaf.parent ? leaf.parent.label + ': ' + leaf.label.toLowerCase() : leaf.label}`;
+  tool.querySelector('h3').textContent = app ? leaf.tool : 'Готової програми немає';
+  tool.querySelector('p').textContent = app
+    ? 'Тут відкриється вікно цієї програми. Hyprland тримає його праворуч від панелі, тож разом вони виглядають як одне вікно.' + (leaf.note ? ' ' + leaf.note : '')
+    : `Це налаштування самого Hyprland або системи: ${leaf.what}. Тут потрібна проста власна сторінка або відкриття файлу конфігурації.`;
+  tool.querySelector('.cmd').textContent = leaf.cmd;
+}
+function toggleSettings(open) {
+  if (!$setwrap.hidden === open) return;
+  if (open) closeOthers(null);
+  $setwrap.hidden = !open; $setScrim.hidden = !open;
+  if (open) renderSettings();
+}
+$('setClose').addEventListener('click', () => toggleSettings(false));
+$setScrim.addEventListener('click', () => toggleSettings(false));
+
+// ---------- Wallpaper placeholder ----------
+function paint() {
+  const w = $stage.clientWidth, hh = $stage.clientHeight, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  if (!w || !hh) return;
+  $wall.width = Math.round(w * dpr); $wall.height = Math.round(hh * dpr);
+  const x = $wall.getContext('2d');
+  x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const sky = x.createLinearGradient(0, 0, 0, hh);
+  sky.addColorStop(0, '#132c44'); sky.addColorStop(.42, '#2a6a78'); sky.addColorStop(.68, '#e0ad7c'); sky.addColorStop(1, '#f0cf9f');
+  x.fillStyle = sky; x.fillRect(0, 0, w, hh);
+  const sx = w * .74, sy = hh * .47, r = Math.min(w, hh) * .085;
+  const glow = x.createRadialGradient(sx, sy, r * .4, sx, sy, r * 5);
+  glow.addColorStop(0, 'rgba(255,236,190,.85)'); glow.addColorStop(1, 'rgba(255,236,190,0)');
+  x.fillStyle = glow; x.fillRect(0, 0, w, hh);
+  x.fillStyle = '#fff1cf'; x.beginPath(); x.arc(sx, sy, r, 0, Math.PI * 2); x.fill();
+  const layers = [['#8fd6bd', .55, 34, .9], ['#4cc39c', .62, 48, 1.7], ['#10b981', .70, 56, 2.6], ['#0b8c63', .78, 50, 3.9], ['#0a5d46', .86, 44, 5.3], ['#083b2f', .94, 32, 7.1]];
+  const k = hh / 800;
+  for (const [color, base, amp, ph] of layers) {
+    x.fillStyle = color; x.beginPath(); x.moveTo(0, hh);
+    for (let px = 0; px <= w + 8; px += 8) {
+      const t = px / 1400;
+      x.lineTo(px, hh * base - amp * k * (Math.sin(t * 5.1 + ph) + .55 * Math.sin(t * 11.3 + ph * 1.7) + .3 * Math.sin(t * 23 + ph * .6)));
+    }
+    x.lineTo(w, hh); x.closePath(); x.fill();
+  }
+}
+
+// ---------- Panel ----------
+function measure() {
+  const gw = GC * U + (GC - 1) * G;
+  maxCols = clamp(Math.floor(($stage.clientWidth - 32 - 28 - 12) / (gw + 24)), 1, 2);
+}
+function setView(name) {
+  $panel.dataset.view = name;
+  $('tabTiles').setAttribute('aria-selected', name === 'tiles');
+  $('tabApps').setAttribute('aria-selected', name === 'apps');
+  syncRail();
+}
+function togglePanel(open) {
+  if (!$panel.hidden === open) return;
+  if (open) closeOthers('panel');
+  $panel.hidden = !open;
+  $stage.classList.toggle('open', open);
+  $('launch').setAttribute('aria-expanded', open);
+  if (open) { measure(); render(); }
+}
+$('launch').addEventListener('click', () => togglePanel($panel.hidden));
+$stage.addEventListener('pointerdown', e => {   // a press on the desktop closes whatever is open
+  if (dismissed || e.target.closest('.panel, .dock, .wsbar, .wswin, .topc, .sysbar, .setwrap, .toast')) return;
+  closeOthers(null);
+});
+$('tabTiles').addEventListener('click', () => setView('tiles'));
+$('tabApps').addEventListener('click', () => setView('apps'));
+$('reset').addEventListener('click', () => {
+  const prev = clone(state);
+  state = { ...normalize(seed()), scenarios: prev.scenarios, ws: prev.ws };   // tiles and favourites only
+  commit(); renderDock();
+  toast('Розкладку скинуто', { label: 'Повернути', run: () => { state = prev; commit(); renderDock(); } });
+});
+window.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (menu) closeMenu();
+  else if (drag) cancelDrag();
+  else if (!$panel.hidden || !$wswin.hidden || !$calwin.hidden || !$medwin.hidden || !$ncwin.hidden) closeOthers(null);
+  else toggleSettings(false);
+});
+window.addEventListener('blur', () => { if (drag && drag.active) cancelDrag(); });
+window.addEventListener('scroll', () => closeMenu(false), true);
+
+// ---------- Boot ----------
+buildApps();
+measure();
+paint();
+render();
+syncApps();
+renderDock();
+Object.assign(pops, { panel: togglePanel, ws: toggleWs, cal: toggleCal, media: toggleMedia, nc: toggleNc });
+renderDesk();
+syncWs();
+tick();
+renderMedia();
+renderSys();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { renderMedia(); fitTop(); });   // re-measure once the fonts are in
+setInterval(tick, 1000);
+new ResizeObserver(() => { paint(); renderDesk(); fitTop(); if (drag) return; closeMenu(false); measure(); render(); syncWsRail(); syncScRail(); }).observe($stage);
+})();
+</script>
+
+</body></html>
