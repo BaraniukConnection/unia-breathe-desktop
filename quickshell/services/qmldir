@@ -5,3 +5,4 @@ singleton Net 1.0 Net.qml
 singleton Bt 1.0 Bt.qml
 singleton Media 1.0 Media.qml
 singleton Bell 1.0 Bell.qml
+singleton Events 1.0 Events.qml

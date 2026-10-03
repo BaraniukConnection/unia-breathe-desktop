@@ -5,6 +5,8 @@ REPO="$(cd "$(dirname "$0")" && pwd)"
 
 mkdir -p ~/.config/quickshell ~/.config/unia-breathe
 ln -sfn "$REPO/quickshell" ~/.config/quickshell/unia      # запуск: qs -c unia
+mkdir -p ~/.local/bin
+for f in "$REPO"/bin/*; do ln -sfn "$f" ~/.local/bin/"$(basename "$f")"; done
 
 HYPR=~/.config/hypr/hyprland.conf
 LINE="source = $REPO/hypr/unia.conf"

@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+"""Забирає події з Google Calendar (секретні iCal-адреси) і пише їх у JSON для календаря оболонки.
+
+Адреси: ~/.config/unia-breathe/calendar.url — по одній на рядок, # — коментар.
+Результат: ~/.cache/unia-breathe/events.json — [{"start": ISO, "allDay": bool, "title": str}]
+Береться вікно від 40 днів тому до 90 днів уперед; повторювані події розгортаються.
+"""
+import json
+import sys
+import urllib.request
+from datetime import date, datetime, time, timedelta
+from pathlib import Path
+
+from dateutil.rrule import rrulestr
+from icalendar import Calendar
+
+URLS = Path.home() / ".config/unia-breathe/calendar.url"
+OUT = Path.home() / ".cache/unia-breathe/events.json"
+NOW = datetime.now().astimezone()
+FROM, TO = NOW - timedelta(days=40), NOW + timedelta(days=90)
+
+
+def as_local(v):
+    """date → (опівночі за місцевим часом, True); datetime → (місцевий час, False)."""
+    if isinstance(v, datetime):
+        return (v if v.tzinfo else v.astimezone()).astimezone(), False
+    return datetime.combine(v, time()).astimezone(), True
+
+
+def instances(ev):
+    start, all_day = as_local(ev.decoded("dtstart"))
+    if "rrule" not in ev:
+        return [(start, all_day)] if FROM <= start <= TO else []
+    raw = ev.decoded("dtstart")
+    # rrule рахуємо від оригінального DTSTART (з його часовим поясом), потім переводимо в місцевий
+    base = raw if isinstance(raw, datetime) else datetime.combine(raw, time()).astimezone()
+    if base.tzinfo is None:
+        base = base.astimezone()
+    rule = rrulestr(ev["rrule"].to_ical().decode(), dtstart=base)
+    ex = ev.get("exdate")
+    exdates = {as_local(d.dt)[0] for e in (ex if isinstance(ex, list) else [ex] if ex else []) for d in e.dts}
+    return [(o.astimezone(), all_day) for o in rule.between(FROM, TO, inc=True) if o.astimezone() not in exdates]
+
+
+def main():
+    if not URLS.exists():
+        return
+    urls = [u.strip() for u in URLS.read_text().splitlines() if u.strip() and not u.startswith("#")]
+    events = {}
+    overrides = []
+    for url in urls:
+        try:
+            with urllib.request.urlopen(url, timeout=20) as r:
+                cal = Calendar.from_ical(r.read())
+        except Exception as e:
+            print(f"не вдалося завантажити календар: {e}", file=sys.stderr)
+            continue
+        for ev in cal.walk("VEVENT"):
+            if str(ev.get("status", "")).upper() == "CANCELLED":
+                continue
+            title = str(ev.get("summary", "Без назви"))
+            uid = str(ev.get("uid", id(ev)))
+            if "recurrence-id" in ev:
+                # перенесений/змінений екземпляр повторюваної події
+                overrides.append((uid, as_local(ev.decoded("recurrence-id"))[0], ev, title))
+                continue
+            for start, all_day in instances(ev):
+                events[(uid, start)] = {"start": start.isoformat(), "allDay": all_day, "title": title}
+    for uid, rid, ev, title in overrides:
+        events.pop((uid, rid), None)
+        start, all_day = as_local(ev.decoded("dtstart"))
+        if FROM <= start <= TO:
+            events[(uid, start)] = {"start": start.isoformat(), "allDay": all_day, "title": title}
+
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    tmp = OUT.with_suffix(".tmp")
+    tmp.write_text(json.dumps(sorted(events.values(), key=lambda e: e["start"]), ensure_ascii=False))
+    tmp.replace(OUT)
+
+
+if __name__ == "__main__":
+    main()

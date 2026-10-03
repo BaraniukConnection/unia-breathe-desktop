@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import "../theme"
+import "../services"
 
 // Календар: місяць, перемикання ‹ ›, сітка днів з понеділка, сьогодні підсвічено.
 Glass {
@@ -58,6 +59,7 @@ Glass {
                         readonly property date day: new Date(root.year, root.month, 1 - lead + index)
                         readonly property bool other: day.getMonth() !== root.month
                         readonly property bool isToday: day.toDateString() === root.today.toDateString()
+                        readonly property var events: Events.onDay(day)
                         width: col.width / 7 - 4
                         height: 36
                         Rectangle {
@@ -71,6 +73,56 @@ Glass {
                             weight: parent.isToday ? Font.ExtraBold : Font.DemiBold
                             color: parent.isToday ? Theme.accentInk : parent.other ? Qt.rgba(0.75, 0.89, 0.84, 0.4) : Theme.ink
                             shadow: !parent.isToday
+                        }
+                        Rectangle {
+                            visible: parent.events.length > 0
+                            width: 4; height: 4; radius: 2
+                            color: parent.isToday ? Theme.accentInk : Theme.accent
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            y: parent.height / 2 + 9
+                        }
+                    }
+                }
+            }
+        }
+
+        // Наступна подія (або підказка, як підключити Google Calendar)
+        Rectangle {
+            width: parent.width
+            height: nextCol.implicitHeight + 20
+            radius: 26
+            color: Theme.pane
+            border.width: 1
+            border.color: Theme.paneLine
+            Column {
+                id: nextCol
+                x: 18; y: 10
+                width: parent.width - 36
+                spacing: 2
+                Label { text: Events.configured ? "НАСТУПНА ПОДІЯ" : "GOOGLE CALENDAR"; size: 11; weight: Font.Bold; muted: true; font.letterSpacing: 1.2 }
+                Item {
+                    width: parent.width
+                    height: 20
+                    Label {
+                        width: parent.width - when.implicitWidth - 12
+                        text: !Events.configured ? "Не підключено" : Events.next ? Events.next.title : "Подій немає"
+                        weight: Font.Bold
+                        elide: Text.ElideRight
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                    Label {
+                        id: when
+                        anchors.right: parent.right
+                        anchors.verticalCenter: parent.verticalCenter
+                        size: 13
+                        muted: true
+                        text: {
+                            const e = Events.next
+                            if (!Events.configured || !e) return ""
+                            const d0 = new Date(root.today.getFullYear(), root.today.getMonth(), root.today.getDate())
+                            const days = Math.round((new Date(e.start.getFullYear(), e.start.getMonth(), e.start.getDate()) - d0) / 864e5)
+                            const day = days === 0 ? "сьогодні" : days === 1 ? "завтра" : root.loc.toString(e.start, "d MMM")
+                            return e.allDay ? day : `${day}, ${Qt.formatTime(e.start, "HH:mm")}`
                         }
                     }
                 }
