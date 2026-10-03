@@ -1,3 +1,8 @@
 singleton Theme 1.0 Theme.qml
 Glass 1.0 Glass.qml
 Icon 1.0 Icon.qml
+Label 1.0 Label.qml
+Pill 1.0 Pill.qml
+IconButton 1.0 IconButton.qml
+Bubble 1.0 Bubble.qml
+Marquee 1.0 Marquee.qml

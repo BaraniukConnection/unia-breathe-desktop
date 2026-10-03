@@ -1,0 +1,7 @@
+singleton Popups 1.0 Popups.qml
+singleton Keyboard 1.0 Keyboard.qml
+singleton Audio 1.0 Audio.qml
+singleton Net 1.0 Net.qml
+singleton Bt 1.0 Bt.qml
+singleton Media 1.0 Media.qml
+singleton Bell 1.0 Bell.qml

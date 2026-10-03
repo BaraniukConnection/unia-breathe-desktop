@@ -1,0 +1,32 @@
+import QtQuick
+import Quickshell
+import "../theme"
+import "../services"
+
+// Дата й час по центру; клік — календар.
+Bubble {
+    id: root
+    required property var screen
+    padLeft: 18
+    padRight: 18
+    active: Popups.isOpen("cal", screen)
+    onClicked: Popups.toggle("cal", screen, root)
+
+    SystemClock { id: clock; precision: SystemClock.Minutes }
+
+    Row {
+        height: parent.height
+        spacing: 12
+        Label {
+            anchors.verticalCenter: parent.verticalCenter
+            text: Qt.locale("uk_UA").toString(clock.date, "d MMM")
+            muted: true
+        }
+        Label {
+            anchors.verticalCenter: parent.verticalCenter
+            text: Qt.formatTime(clock.date, "HH:mm")
+            size: 15
+            weight: Font.ExtraBold
+        }
+    }
+}
