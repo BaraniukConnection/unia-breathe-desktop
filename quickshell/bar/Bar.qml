@@ -63,6 +63,7 @@ PanelWindow {
         anchors.rightMargin: Theme.edge
         y: Theme.top
         spacing: Theme.gap
+        RecordBubble {}
         StatusBubble { id: status; screen: bar.screen; compact: bar.compact }
         RoundBubble {
             icon: Notifs.dnd ? "notifications_off" : "notifications"

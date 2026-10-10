@@ -9,6 +9,7 @@ import "popups"
 import "notifications"
 import "settings"
 import "dock"
+import "screenshot"
 
 // Unia Breathe — корінь оболонки.
 ShellRoot {
@@ -18,6 +19,20 @@ ShellRoot {
         target: "settings"
         function toggle(): void { Settings.toggle() }
         function open(id: string): void { Settings.open(id) }
+    }
+
+    // знімки екрана: qs -c unia ipc call shot open | screen | window | stop
+    IpcHandler {
+        target: "shot"
+        function open(): void { Shot.open() }
+        function screen(): void { Shot.open("screen") }
+        function window(): void { Shot.open("window") }
+        function stop(): void { if (Shot.recording) Shot.stopRecording() }
+        function close(): void { Shot.close() }
+    }
+    Variants {
+        model: Quickshell.screens
+        ShotOverlay {}
     }
 
     SettingsPanel {}

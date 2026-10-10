@@ -13,3 +13,4 @@ singleton Prefs 1.0 Prefs.qml
 singleton HyprOpts 1.0 HyprOpts.qml
 singleton Apps 1.0 Apps.qml
 singleton Menu 1.0 Menu.qml
+singleton Shot 1.0 Shot.qml
