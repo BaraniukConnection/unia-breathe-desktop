@@ -13,6 +13,14 @@ FloatingWindow {
     implicitWidth: 900
     implicitHeight: 800
 
+    // закрили ззовні (Super+C) — закриваємо налаштування й повертаємо прив'язку видимості
+    onClosed: { Settings.close(); reopen.restart() }
+    Timer {
+        id: reopen
+        interval: 200
+        onTriggered: { win.visible = false; win.visible = Qt.binding(() => !!Settings.current && Settings.current.kind === "own") }
+    }
+
     Component { id: pTime; TimePage {} }
     Component { id: pLayout; LayoutPage {} }
     Component { id: pOpacity; OpacityPage {} }
