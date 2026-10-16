@@ -21,6 +21,7 @@ PanelWindow {
     // кліки ловлять лише бульбашки; клік повз них (і повз панель) закриває панель через focus grab у shell.qml
     mask: Region {
         Region { item: left }
+        Region { item: tasks }
         Region { item: clock }
         Region { item: media }
         Region { item: right }
@@ -42,6 +43,15 @@ PanelWindow {
         spacing: Theme.gap
         ScenarioBubble { screen: bar.screen }
         WorkspaceBubble { id: ws; screen: bar.screen }
+    }
+
+    // відкриті вікна — ліворуч від годинника, не заходячи на сценарій і стіл
+    TaskBubble {
+        id: tasks
+        barWindow: bar
+        maxWidth: clock.x - 16 - (left.x + left.width + 24)
+        x: clock.x - 16 - width
+        y: Theme.top
     }
 
     ClockBubble {

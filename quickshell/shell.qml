@@ -8,6 +8,7 @@ import "bar"
 import "popups"
 import "notifications"
 import "components/settings"
+import "components/app-menu"
 import "dock"
 import "screenshot"
 
@@ -19,6 +20,18 @@ ShellRoot {
         target: "settings"
         function toggle(): void { Settings.toggle() }
         function open(id: string): void { Settings.open(id) }
+    }
+
+    // qs -c unia ipc call apps launch <id .desktop> — як клік у меню (відкрита «одновіконна» програма — перехід до неї)
+    IpcHandler {
+        target: "apps"
+        function launch(id: string): void { Apps.launch(id) }
+    }
+
+    // qs -c unia ipc call windows minimize — згорнути активне вікно (Super+M)
+    IpcHandler {
+        target: "windows"
+        function minimize(): void { const w = Windows.list.find(w => w.active && !w.minimized); if (w) Windows.minimize(w) }
     }
 
     // знімки екрана: qs -c unia ipc call shot open | screen | window | stop

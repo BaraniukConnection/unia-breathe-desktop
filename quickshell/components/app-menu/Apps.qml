@@ -1,6 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell
+import Quickshell.Hyprland
 import "../settings"
 import "../../services"
 
@@ -16,10 +17,31 @@ Singleton {
     function byId(id) { return id === "unia-settings" ? settingsEntry : list.find(e => e.id === id) ?? null }
     function icon(e) { return e ? Quickshell.iconPath(e.icon, "application-x-executable") : "" }
 
+    // програми, що тримають одне головне вікно: якщо вже відкриті — одразу переходимо до них
+    readonly property var singleKeys: ["claude", "steam", "telegram", "discord", "spotify", "heroic", "lutris", "obsidian", "slack", "signal"]
+    function single(e) { return singleKeys.some(k => e.id.toLowerCase().includes(k)) }
+
     function launch(id) {
         if (id === "unia-settings") { Settings.open(); return }
         const e = byId(id)
-        if (e) e.execute()
+        if (!e) return
+        const open = Windows.ofEntry(e)
+        if (open.length && single(e)) { Windows.focus(open[0]); return }
+        e.execute()
+        // решта: якщо за 2,5 с нового вікна не з'явилось (програма лише «прокинулась») — показуємо наявне
+        if (open.length) { pending = { e: e, before: open.map(w => w.address) }; noNewWindow.restart() }
+    }
+    property var pending: null
+    Timer {
+        id: noNewWindow
+        interval: 2500
+        onTriggered: {
+            const p = root.pending
+            root.pending = null
+            if (!p) return
+            const now = Windows.ofEntry(p.e)
+            if (!now.some(w => !p.before.includes(w.address)) && now.length) Windows.focus(now[0])
+        }
     }
 
     // пошук: збіг з початку назви важить найбільше, далі — з початку слова, далі — будь-де (назва, опис, ключові слова)
