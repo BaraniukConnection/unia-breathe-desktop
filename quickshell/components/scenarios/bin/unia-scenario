@@ -115,7 +115,7 @@ def save(name):
         })
     DIR.mkdir(parents=True, exist_ok=True)
     (DIR / f"{name}.json").write_text(json.dumps({"windows": wins}, ensure_ascii=False, indent=2))
-    mark({w["workspace"] for w in wins}, name)
+    # збереження не вмикає сценарій на столі — лише явне «Відкрити» (load)
     notify(f"Збережено «{name}»: {len(wins)} вікон")
 
 

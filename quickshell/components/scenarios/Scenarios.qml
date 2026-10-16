@@ -3,6 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
+import "../../services"
 
 // Сценарії: список (unia-scenario list), який відкрито на якому столі, запуск/збереження/видалення.
 Singleton {
@@ -24,18 +25,36 @@ Singleton {
     function save(name) { runner.command = [bin, "save", name]; runner.running = true }
     function remove(name) { runner.command = [bin, "delete", name]; runner.running = true }
 
-    // чи змінився набір вікон на столі відносно сценарію (порівнюємо класи вікон)
+    // чи змінився набір програм на столі відносно сценарію (класи вікон; розташування не важить,
+    // згорнуте вікно вважається на своєму столі)
     function modified(wsId) {
         const sc = find(nameFor(wsId))
         if (!sc) return false
         const want = sc.windows.filter(w => w.workspace === String(wsId)).map(w => w.class.toLowerCase()).sort()
-        const have = Hyprland.toplevels.values
-            .filter(t => t.workspace && t.workspace.id === wsId && t.lastIpcObject && t.lastIpcObject.class)
-            .map(t => t.lastIpcObject.class.toLowerCase()).sort()
+        const have = Windows.list
+            .filter(w => w.minimized ? Windows.origin[w.address] === wsId : w.wsId === wsId)
+            .map(w => w.cls.toLowerCase()).sort()
         return want.join() !== have.join()
     }
 
-    Component.onCompleted: { refresh(); Hyprland.refreshToplevels() }
+    // змінилась програма на столі — сценарій там більше не діє («Порожній»)
+    function dropChanged() {
+        if (loading !== "" || !settled || Windows.list.length === 0) return
+        const s = Object.assign({}, state)
+        let changed = false
+        for (const k of Object.keys(s)) {
+            const id = Number(k)
+            if (Number.isInteger(id) && modified(id)) { delete s[k]; changed = true }
+        }
+        if (changed) { state = s; stateFile.setText(JSON.stringify(s)) }
+    }
+    // перші секунди після старту список вікон ще неповний — не чіпаємо стан, щоб не скинути помилково
+    property bool settled: false
+    Timer { running: true; interval: 4000; onTriggered: { root.settled = true; root.dropChanged() } }
+    Connections { target: Windows; function onListChanged() { dropCheck.restart() } }
+    Timer { id: dropCheck; interval: 800; onTriggered: root.dropChanged() }
+
+    Component.onCompleted: refresh()
 
     Process {
         id: lister
@@ -48,6 +67,7 @@ Singleton {
     }
 
     FileView {
+        id: stateFile
         path: root.home + "/.cache/unia-breathe/scenario-state.json"
         watchChanges: true
         printErrors: false
@@ -55,12 +75,4 @@ Singleton {
         onLoaded: { try { root.state = JSON.parse(text()) } catch (e) { root.state = {} } root.loading = "" }
     }
 
-    // класи вікон (lastIpcObject) оновлюються лише на запит — просимо після змін вікон
-    Connections {
-        target: Hyprland
-        function onRawEvent(ev) {
-            if (["openwindow", "closewindow", "movewindowv2"].includes(ev.name)) refreshTimer.restart()
-        }
-    }
-    Timer { id: refreshTimer; interval: 300; onTriggered: Hyprland.refreshToplevels() }
 }

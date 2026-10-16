@@ -4,7 +4,7 @@ import Quickshell.Hyprland
 import "../../theme"
 import "../../services"
 
-// «Сценарій · OxygenDev» для столу цього монітора. Крапка — набір вікон змінився.
+// «Сценарій · OxygenDev» для столу цього монітора; «Порожній» — сценарій не відкривали або програми змінились.
 // Колесо гортає назви (нічого не запускає), клік по вибраній назві — відкриває сценарій.
 Bubble {
     id: root
@@ -12,7 +12,6 @@ Bubble {
     readonly property var monitor: Hyprland.monitorFor(screen)
     readonly property int wsId: monitor && monitor.activeWorkspace ? monitor.activeWorkspace.id : 0
     readonly property string current: Scenarios.nameFor(wsId)
-    readonly property bool mod: current !== "" && Scenarios.modified(wsId)
     property string pending: ""             // назва, на яку прогорнули колесом
 
     popup: pending === "" ? "ws" : ""
@@ -46,16 +45,10 @@ Bubble {
                 spacing: 6
                 Label {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: Scenarios.loading ? Scenarios.loading + "…" : root.pending || root.current || "Власний"
+                    text: Scenarios.loading ? Scenarios.loading + "…" : root.pending || root.current || "Порожній"
                     weight: Font.Bold
                     color: root.active ? Theme.accentInk : Theme.ink
                     shadow: !root.active
-                }
-                Rectangle {
-                    visible: root.mod && !root.pending
-                    width: 6; height: 6; radius: 3
-                    color: root.active ? Theme.accentInk : Theme.accent
-                    anchors.verticalCenter: parent.verticalCenter
                 }
             }
         }
