@@ -48,12 +48,26 @@ Singleton {
     function find(id) { return items.find(i => i.id === id) ?? null }
 
     // ---------- відкриття / закриття ----------
-    function toggle() { Hyprland.dispatch("togglespecialworkspace settings") }
+    function toggle() {
+        if (!shown && panelGone) { restorePanel(); return }
+        Hyprland.dispatch("togglespecialworkspace settings")
+    }
     function open(id) {
         if (id) select(id)
         if (!shown) toggle()
     }
     function close() { if (shown) toggle() }
+
+    // панель закрили ззовні (Super+C) — не створюємо її одразу (нове вікно знову показало б налаштування),
+    // а лише при наступному відкритті; поява вікна на спецворкспейсі сама його показує
+    property bool panelGone: false
+    signal panelRestoreRequested()
+    function restorePanel() {
+        panelGone = false
+        panelRestoreRequested()
+        ensureShown.restart()
+    }
+    Timer { id: ensureShown; interval: 400; onTriggered: if (!root.shown) Hyprland.dispatch("togglespecialworkspace settings") }
 
     // ---------- геометрія: панель 304 px зліва, програма — решта ----------
     readonly property int panelW: 304
@@ -65,7 +79,19 @@ Singleton {
         return { x: m.x + side, y: m.y + top, h: h - top - bottom,
                  toolX: m.x + side + panelW + 10, toolW: w - 2 * side - panelW - 10 }
     }
+    // чи є вікно під селектором: для неіснуючого вікна Hyprland застосовує movetoworkspace/setfloating
+    // до АКТИВНОГО вікна — так у налаштування затягувало браузер
+    function exists(sel) {
+        const ts = Hyprland.toplevels.values
+        if (sel.startsWith("address:")) {
+            const a = sel.slice(8).replace(/^0x/, "")
+            return ts.some(t => t.address.replace(/^0x/, "") === a)
+        }
+        const re = new RegExp(sel.replace(/^title:/, ""))
+        return ts.some(t => re.test(t.title))
+    }
     function place(sel, x, y, w, h) {
+        if (!exists(sel)) return
         Hyprland.dispatch(`movetoworkspacesilent special:settings,${sel}`)
         Hyprland.dispatch(`setfloating ${sel}`)
         Hyprland.dispatch(`resizewindowpixel exact ${Math.round(w)} ${Math.round(h)},${sel}`)
@@ -99,7 +125,7 @@ Singleton {
         const it = find(id)
         if (!it) return
         const prev = current
-        if (prev && prev.id !== id && prev.kind === "app" && addrs[prev.id])
+        if (prev && prev.id !== id && prev.kind === "app" && addrs[prev.id] && exists(`address:${addrs[prev.id]}`))
             Hyprland.dispatch(`movetoworkspacesilent special:unia-stash,address:${addrs[prev.id]}`)
         sel = id
         tab = it.tab

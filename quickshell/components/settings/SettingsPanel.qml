@@ -58,10 +58,13 @@ FloatingWindow {
     onRowsChanged: cursor = Math.min(cursor, rows.length - 1)
     Connections { target: Settings; function onSelChanged() { win.syncCursor() } }
 
-    // вікно закрили ззовні (Super+C, Alt+F4) — це «закрити налаштування»; саму панель створюємо знову,
-    // інакше наступне відкриття покаже лише затемнений порожній спецворкспейс
-    onClosed: { Settings.close(); reopen.restart() }
-    Timer { id: reopen; interval: 200; onTriggered: { win.visible = false; win.visible = true } }
+    // вікно закрили ззовні (Super+C, Alt+F4) — це «закрити налаштування»; панель створимо знову
+    // при наступному відкритті (інакше воно покаже лише затемнений порожній спецворкспейс)
+    onClosed: { Settings.panelGone = true; Settings.close() }
+    Connections {
+        target: Settings
+        function onPanelRestoreRequested() { win.visible = false; win.visible = true }
+    }
 
     Item {
         id: keys

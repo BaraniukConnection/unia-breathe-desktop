@@ -13,12 +13,18 @@ FloatingWindow {
     implicitWidth: 900
     implicitHeight: 800
 
-    // закрили ззовні (Super+C) — закриваємо налаштування й повертаємо прив'язку видимості
-    onClosed: { Settings.close(); reopen.restart() }
-    Timer {
-        id: reopen
-        interval: 200
-        onTriggered: { win.visible = false; win.visible = Qt.binding(() => !!Settings.current && Settings.current.kind === "own") }
+    // закрили ззовні (Super+C) — закриваємо налаштування; прив'язку видимості повертаємо,
+    // лише коли налаштування знову відкриють (інакше нове вікно саме показало б їх)
+    property bool gone: false
+    onClosed: { gone = true; Settings.close() }
+    Connections {
+        target: Settings
+        function onShownChanged() {
+            if (!Settings.shown || !win.gone) return
+            win.gone = false
+            win.visible = false
+            win.visible = Qt.binding(() => !!Settings.current && Settings.current.kind === "own")
+        }
     }
 
     Component { id: pTime; TimePage {} }
