@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls
-import "../theme"
-import "../services"
+import "../../theme"
+import "../../services"
 
 // Папка: назва (клік — перейменувати) і сітка плиток 8 клітинок завширшки.
 Column {

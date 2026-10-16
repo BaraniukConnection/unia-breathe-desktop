@@ -1,0 +1,6 @@
+singleton Apps 1.0 Apps.qml
+singleton Menu 1.0 Menu.qml
+MenuPanel 1.0 MenuPanel.qml
+Tile 1.0 Tile.qml
+Folder 1.0 Folder.qml
+AppIcon 1.0 AppIcon.qml

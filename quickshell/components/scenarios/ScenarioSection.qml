@@ -2,8 +2,9 @@ import QtQuick
 import QtQuick.Controls
 import Quickshell
 import Quickshell.Hyprland
-import "../theme"
-import "../services"
+import "../../theme"
+import "../../services"
+import "../../popups"
 
 // Сценарії: картки з мініатюрою розкладки. Клік — відкрити, права кнопка — видалити,
 // «Зберегти сценарій» — назва прямо тут.

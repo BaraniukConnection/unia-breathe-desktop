@@ -7,7 +7,7 @@ import "services"
 import "bar"
 import "popups"
 import "notifications"
-import "settings"
+import "components/settings"
 import "dock"
 import "screenshot"
 

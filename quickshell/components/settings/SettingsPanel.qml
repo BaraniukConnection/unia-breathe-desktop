@@ -1,8 +1,8 @@
 import QtQuick
 import Quickshell
-import "../theme"
-import "../services"
-import "../popups"
+import "../../theme"
+import "../../services"
+import "../../popups"
 
 // Панель категорій налаштувань (304 px зліва на спецворкспейсі). Права кнопка — закріпити в панелі керування.
 FloatingWindow {

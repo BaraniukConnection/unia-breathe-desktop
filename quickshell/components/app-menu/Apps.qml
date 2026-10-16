@@ -1,6 +1,8 @@
 pragma Singleton
 import QtQuick
 import Quickshell
+import "../settings"
+import "../../services"
 
 // Встановлені програми (з .desktop-файлів), пошук і запуск. «Налаштування» оболонки — теж програма.
 Singleton {

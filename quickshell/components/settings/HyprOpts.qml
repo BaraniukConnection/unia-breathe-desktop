@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import "../../services"
 
 // Параметри Hyprland для власних сторінок: читає поточні значення (hyprctl getoption),
 // змінює наживо (hyprctl keyword) і запам'ятовує в Prefs, щоб пережили перезапуск.

@@ -1,8 +1,8 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../../theme"
-import "../../services"
+import "../../../theme"
+import "../../../services"
 
 // Час і дата: часовий пояс, автоматична синхронізація (timedatectl), формат годинника на смузі.
 Page {

@@ -4,6 +4,7 @@ import Quickshell.Wayland
 import Quickshell.Hyprland
 import "../theme"
 import "../services"
+import "../components/scenarios"
 
 // Верхня смуга одного монітора: прозора, лише окремі бульбашки. Кліки між ними проходять наскрізь.
 PanelWindow {

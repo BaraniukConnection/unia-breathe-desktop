@@ -3,6 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
+import "../../services"
 
 // Налаштування: спецворкспейс special:settings, панель категорій зліва, програма праворуч.
 // Клік по категорії показує її програму (запускає, якщо треба) і ховає попередню в special:unia-stash.

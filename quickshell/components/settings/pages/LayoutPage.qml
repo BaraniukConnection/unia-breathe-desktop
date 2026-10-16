@@ -1,8 +1,9 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../../theme"
-import "../../services"
+import "../../../theme"
+import "../../../services"
+import ".."
 
 // Розкладки клавіатури: список мов (порядок, видалення, додавання) і клавіша перемикання.
 Page {

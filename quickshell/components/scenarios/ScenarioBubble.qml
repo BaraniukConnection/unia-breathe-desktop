@@ -1,8 +1,8 @@
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
-import "../theme"
-import "../services"
+import "../../theme"
+import "../../services"
 
 // «Сценарій · OxygenDev» для столу цього монітора. Крапка — набір вікон змінився.
 // Колесо гортає назви (нічого не запускає), клік по вибраній назві — відкриває сценарій.

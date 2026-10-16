@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import "../../theme"
+import "../../../theme"
 
 // Поле пошуку і список варіантів під ним (часові пояси, мови).
 Column {

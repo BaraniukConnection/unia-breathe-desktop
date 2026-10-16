@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick.Controls
 import Quickshell
-import "../theme"
-import "../services"
+import "../../theme"
+import "../../services"
 
 // Меню програм над доком: пошук, папки з плитками (перетягування, розміри, обрані), «Усі програми».
 Glass {

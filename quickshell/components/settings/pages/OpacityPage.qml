@@ -1,6 +1,7 @@
 import QtQuick
-import "../../theme"
-import "../../services"
+import "../../../theme"
+import "../../../services"
+import ".."
 
 Page {
     title: "Прозорість"

@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Hyprland
 import "../theme"
 import "../services"
+import "../components/scenarios"
 
 // «Столи та сценарії»: відкриті столи — окремий ряд для кожного монітора («+» — новий стіл саме на ньому),
 // нижче — сценарії.

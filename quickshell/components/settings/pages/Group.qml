@@ -1,5 +1,5 @@
 import QtQuick
-import "../../theme"
+import "../../../theme"
 
 // Картка-група на сторінці налаштувань: заголовок і рядки.
 Rectangle {

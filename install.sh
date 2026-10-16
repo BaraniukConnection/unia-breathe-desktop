@@ -7,15 +7,23 @@ mkdir -p ~/.config/quickshell ~/.config/unia-breathe
 touch ~/.config/unia-breathe/hyprland.conf                # згенерований налаштуваннями; має існувати для source
 ln -sfn "$REPO/quickshell" ~/.config/quickshell/unia      # запуск: qs -c unia
 mkdir -p ~/.local/bin
-for f in "$REPO"/bin/*; do ln -sfn "$f" ~/.local/bin/"$(basename "$f")"; done
+for f in "$REPO"/bin/* "$REPO"/quickshell/components/*/bin/*; do ln -sfn "$f" ~/.local/bin/"$(basename "$f")"; done
 
 # екран блокування (hyprlock читає ~/.config/hypr/hyprlock.conf)
 ln -sfn "$REPO/hypr/hyprlock.conf" ~/.config/hypr/hyprlock.conf
 
 # GTK: тема adw-gtk3-dark + палітра Unia Breathe
+# якщо nwg-look поставив gtk.css симлінком на тему — підключаємо ту тему першою, а палітру Unia поверх неї
 for v in 3 4; do
-    mkdir -p ~/.config/gtk-$v.0
-    printf '/* Unia Breathe */\n@import url("file://%s/gtk/gtk%s.css");\n' "$REPO" "$v" > ~/.config/gtk-$v.0/gtk.css
+    f=~/.config/gtk-$v.0/gtk.css
+    mkdir -p "$(dirname "$f")"
+    base=""
+    if [ -L "$f" ]; then base=$(readlink -f "$f"); rm "$f"; fi
+    {
+        echo "/* Unia Breathe */"
+        [ -n "$base" ] && echo "@import url(\"file://$base\");"
+        echo "@import url(\"file://$REPO/gtk/gtk$v.css\");"
+    } > "$f"
 done
 gsettings set org.gnome.desktop.interface gtk-theme adw-gtk3-dark
 gsettings set org.gnome.desktop.interface color-scheme prefer-dark

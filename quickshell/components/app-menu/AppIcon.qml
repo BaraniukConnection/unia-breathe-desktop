@@ -1,6 +1,6 @@
 import QtQuick
 import Quickshell.Widgets
-import "../services"
+import "../../services"
 
 // Іконка програми з теми іконок (за id .desktop-файлу).
 IconImage {

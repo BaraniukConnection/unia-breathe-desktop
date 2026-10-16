@@ -1,7 +1,7 @@
 import QtQuick
 import Quickshell
-import "../theme"
-import "../services"
+import "../../theme"
+import "../../services"
 import "pages"
 
 // Власна сторінка налаштування (праворуч від панелі): час, розкладка, прозорість, вікна, мишка.

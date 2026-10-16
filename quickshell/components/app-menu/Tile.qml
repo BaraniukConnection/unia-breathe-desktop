@@ -1,8 +1,8 @@
 import QtQuick
 import Quickshell
 import Quickshell.Widgets
-import "../theme"
-import "../services"
+import "../../theme"
+import "../../services"
 
 // Плитка програми. Малий розмір — лише іконка; середній і більші — скляна плитка з назвою,
 // «живі» показують вміст (календар, годинник, що грає).
