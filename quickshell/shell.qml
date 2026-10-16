@@ -51,8 +51,8 @@ ShellRoot {
         ShotOverlay {}
     }
 
-    // краплина на рамці вікна: тягнути, згорнути, на весь екран, закрити, на інший стіл
-    // qs -c unia ipc call drop menu | close — меню краплини для активного вікна
+    // виїмка-«крапля» на рамці вікна: тягнути, згорнути, на весь екран, закрити, на інший стіл
+    // qs -c unia ipc call drop menu | close — меню виїмки для активного вікна
     Variants {
         model: Quickshell.screens
         WindowDrop {}

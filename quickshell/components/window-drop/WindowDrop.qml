@@ -6,8 +6,9 @@ import Quickshell.Hyprland
 import "../../theme"
 
 // WindowDrop одного монітора: прозорий шар над вікнами. Курсор він ловить лише на «гачках» —
-// смужках посередині верхньої рамки видимих вікон; там з'являється краплина (Droplet).
-// Затиснути краплину й тягнути — вікно стає квадратом і їде за курсором; клік — меню (DropMenu).
+// смугах посередині верхньої рамки видимих вікон. Там із рамки виростає виїмка (Notch): чим ближче курсор,
+// тим глибша, на повну — з крапкою всередині. Затиснути й тягнути — вікно стає квадратом і їде за курсором;
+// клік — меню (DropMenu).
 PanelWindow {
     id: win
     required property var modelData
@@ -23,8 +24,9 @@ PanelWindow {
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"
 
-    // ---------- гачки: { address, x, y, w, h } у координатах монітора ----------
-    // присвоюємо лише коли справді змінились — інакше маска смикається й наведення скидається
+    // ---------- гачки: { address, x, y, w, h, cx, cy } у координатах монітора ----------
+    // смуга навколо середини верхньої рамки: 14 px над нею (проміжок між вікнами) і 12 px у вікні.
+    // Присвоюємо лише коли справді змінились — інакше маска смикається й наведення скидається
     property var zones: []
     property string zonesKey: ""
     function updateZones() {
@@ -34,8 +36,9 @@ PanelWindow {
             const cx = c.at[0] + c.size[0] / 2, top = c.at[1]
             // середину рамки перекриває вікно вище — гачка немає
             if (wins.slice(i + 1).some(o => cx >= o.at[0] && cx <= o.at[0] + o.size[0] && top >= o.at[1] - 8 && top <= o.at[1] + o.size[1])) return
-            const w = Math.round(Math.min(160, c.size[0] * 0.4))
-            z.push({ address: c.address, x: Math.round(cx - ox - w / 2), y: Math.round(top - oy - 10), w: w, h: 16 })
+            const w = Math.round(Math.min(200, c.size[0] * 0.5))
+            z.push({ address: c.address, x: Math.round(cx - ox - w / 2), y: Math.round(top - oy - 14), w: w, h: 26,
+                     cx: cx - ox, cy: top - oy - Drops.border / 2 })
         })
         const k = JSON.stringify(z)
         if (k !== zonesKey) { zonesKey = k; zones = z }
@@ -45,7 +48,7 @@ PanelWindow {
 
     mask: Region {
         item: Drops.busy ? base : null
-        regions: Drops.busy ? [] : [...zoneRegions.instances, ...(win.here ? [dropRegion] : [])]
+        regions: Drops.busy ? [] : [...zoneRegions.instances, ...(win.here ? [notchRegion] : [])]
     }
     Variants {
         id: zoneRegions
@@ -55,99 +58,107 @@ PanelWindow {
             x: modelData.x; y: modelData.y; width: modelData.w; height: modelData.h
         }
     }
-    Region { id: dropRegion; item: holder }
+    Region { id: notchRegion; item: holder }
 
-    // ---------- вікно з краплею ----------
+    // ---------- вікно з виїмкою ----------
     readonly property var dc: Drops.client(Drops.current)
     readonly property bool here: !!dc && !!mon && (Drops.drag ? Drops.drag.mon === mon.id : dc.monitor === mon.id)
-    // точка на рамці: посередині верхнього краю, у товщі рамки; коли вікна з краплею вже немає
-    // (меню закривається, краплина ховається), лишається остання — анімація не стрибає в кут
+    // точка на рамці: посередині верхнього краю, зовнішній край рамки; коли вікна вже немає
+    // (меню закривається, виїмка ховається), лишається остання — анімація не стрибає в кут
     property real ax: 0
     property real ay: 0
     Binding {
         when: !!win.dc
         win.ax: !win.dc ? win.ax : Drops.drag ? Drops.drag.rect.x + Drops.drag.rect.w / 2 - win.ox : win.dc.at[0] + win.dc.size[0] / 2 - win.ox
-        win.ay: !win.dc ? win.ay : (Drops.drag ? Drops.drag.rect.y : win.dc.at[1]) - win.oy - Drops.border / 2
+        win.ay: !win.dc ? win.ay : (Drops.drag ? Drops.drag.rect.y : win.dc.at[1]) - win.oy - Drops.border
         restoreMode: Binding.RestoreNone
     }
 
-    // курсор на гачку (кожен монітор прибирає лише те наведення, яке поставив сам)
-    property string mine: ""
+    // ---------- наближення: чим ближче курсор до середини рамки, тим глибша виїмка ----------
+    property real near: 0                         // 0…1, куди тягнеться глибина
+    property real depth: here && !Drops.drag ? (Drops.menuFor ? 1 : near) : 0
+    Behavior on depth { SmoothedAnimation { velocity: 5 } }
+    property string mine: ""                      // наведення, яке поставив цей монітор
+    function proximity(x, y) {
+        if (holder.visible && x >= holder.x && x < holder.x + holder.width && y >= holder.y && y < holder.y + holder.height)
+            return { address: Drops.hovered, near: 1 }
+        const z = zones.find(z => x >= z.x && x < z.x + z.w && y >= z.y && y < z.y + z.h)
+        if (!z) return null
+        const dx = (x - z.cx) / (z.w / 2), dy = (y - z.cy) / (y < z.cy ? 14 : 12)
+        return { address: z.address, near: Math.max(0, Math.min(1, (1 - Math.hypot(dx, dy)) / 0.65)) }
+    }
+
+    // увесь ввід шару: наведення, натиск/перетягування, клік повз меню
     MouseArea {
         id: base
         anchors.fill: parent
         hoverEnabled: true
-        acceptedButtons: Qt.AllButtons
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        cursorShape: Drops.drag ? Qt.ClosedHandCursor : win.near > 0.5 ? Qt.OpenHandCursor : Qt.ArrowCursor
+        property point press
+        property string pressed_: ""              // вікно, виїмку якого натиснули
+        property bool menuWasOpen: false
         onPositionChanged: m => {
+            if (pressed_ && (pressedButtons & Qt.LeftButton)) {
+                if (!Drops.drag && Math.hypot(m.x - press.x, m.y - press.y) > 6) Drops.startDrag(pressed_, m.x + win.ox, m.y + win.oy)
+                else if (Drops.drag) Drops.moveDrag(m.x + win.ox, m.y + win.oy)
+                return
+            }
             if (Drops.busy) return
-            const z = win.zones.find(z => m.x >= z.x && m.x < z.x + z.w && m.y >= z.y && m.y < z.y + z.h)
-            if (z) { leave.stop(); win.mine = z.address; Drops.hovered = z.address }
+            const p = win.proximity(m.x, m.y)
+            if (p && p.near > 0) { leave.stop(); win.mine = p.address; Drops.hovered = p.address; win.near = p.near }
+            else { win.near = 0; leave.restart() }
         }
-        onContainsMouseChanged: if (!containsMouse) leave.restart()
-        onClicked: if (Drops.menuFor) Drops.closeMenu()           // клік повз меню — закрити
+        onContainsMouseChanged: if (!containsMouse && !Drops.busy) { win.near = 0; leave.restart() }
+        onPressed: m => {
+            menuWasOpen = !!Drops.menuFor
+            if (m.button === Qt.RightButton) { if (Drops.drag) Drops.cancelDrag(); return }
+            pressed_ = !menuWasOpen && Drops.hovered && win.near > 0 ? Drops.hovered : ""
+            press = Qt.point(m.x, m.y)
+            if (pressed_) { win.near = 1; forceActiveFocus() }
+        }
+        onReleased: m => {
+            if (m.button !== Qt.LeftButton) return
+            if (Drops.drag) Drops.endDrag()
+            else if (pressed_) Drops.openMenu(pressed_)
+            pressed_ = ""
+        }
+        onClicked: if (menuWasOpen) Drops.closeMenu()     // клік повз меню — закрити
+        Keys.onEscapePressed: if (Drops.drag) Drops.cancelDrag()
     }
     Timer {
         id: leave
-        interval: 350
+        interval: 250
         onTriggered: {
-            if (Drops.busy || base.containsMouse || dropArea.containsMouse) return
+            if (Drops.busy || win.near > 0) return
             if (win.mine && Drops.hovered === win.mine) Drops.hovered = ""
             win.mine = ""
         }
     }
 
-    // ---------- краплина ----------
-    property real grow: 0
-    readonly property bool wanted: here && !Drops.drag
-    onWantedChanged: { growAnim.to = wanted ? 1 : 0; growAnim.duration = wanted ? 280 : 160; growAnim.easing.type = wanted ? Easing.OutBack : Easing.InCubic; growAnim.restart() }
-    NumberAnimation { id: growAnim; target: win; property: "grow" }
-
+    // ---------- виїмка ----------
     Item {
         id: holder
-        visible: win.here && (win.grow > 0 || !!Drops.drag)
+        visible: win.depth > 0.01 || (!!Drops.drag && win.here)
         x: win.ax - width / 2
         y: win.ay
-        width: 40
-        height: 44
-        Droplet {
+        width: notch.implicitWidth
+        height: notch.implicitHeight
+        Notch {
+            id: notch
             anchors.fill: parent
-            grow: win.grow
-            neck: 1 - menu.detach
-            fall: menu.detach * 10
-            opacity: Drops.drag ? 0 : 1 - Math.min(1, menu.grow1 * 2)
+            band: Drops.border
+            depth: win.depth * (1 - menu.detach)
+            dotFall: menu.detach * 14
+            dotOpacity: Drops.drag ? 0 : menu.shown ? 1 - Math.min(1, menu.grow1 * 2) : Math.max(0, Math.min(1, (win.depth - 0.75) / 0.25))
         }
-        MouseArea {
-            id: dropArea
-            anchors.fill: parent
-            hoverEnabled: true
-            enabled: !Drops.menuFor
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
-            cursorShape: Drops.drag ? Qt.ClosedHandCursor : Qt.OpenHandCursor
-            property point press
-            onContainsMouseChanged: containsMouse ? leave.stop() : leave.restart()
-            onPressed: m => {
-                if (m.button === Qt.RightButton) { if (Drops.drag) Drops.cancelDrag(); return }
-                press = Qt.point(m.x, m.y)
-            }
-            onPositionChanged: m => {
-                if (!pressed || !(pressedButtons & Qt.LeftButton)) return
-                const p = mapToItem(base, m.x, m.y)
-                if (!Drops.drag && Math.hypot(m.x - press.x, m.y - press.y) > 6) Drops.startDrag(Drops.hovered, p.x + win.ox, p.y + win.oy)
-                else if (Drops.drag) Drops.moveDrag(p.x + win.ox, p.y + win.oy)
-            }
-            onReleased: m => {
-                if (m.button !== Qt.LeftButton) return
-                if (Drops.drag) Drops.endDrag()
-                else Drops.openMenu(Drops.hovered)
-            }
-        }
-        Keys.onEscapePressed: if (Drops.drag) Drops.cancelDrag()
     }
 
     DropMenu {
         id: menu
         x: win.ax
         y: win.ay
+        band: Drops.border
         client: win.dc
         open: win.here && Drops.menuFor !== "" && Drops.menuFor === Drops.current
         // не вилізти за край екрана
@@ -201,10 +212,10 @@ PanelWindow {
             border.width: 2
             border.color: Theme.accent
         }
-        Droplet {                                   // краплина, за яку тримаємо
+        Notch {                                     // виїмка, за яку тримаємо
             anchors.horizontalCenter: parent.horizontalCenter
-            y: -1
-            width: 40; height: 44
+            y: 0
+            band: 2
         }
     }
     NumberAnimation { id: shrink; target: ghost; property: "t"; from: 0; to: 1; duration: 260; easing.type: Easing.OutCubic }
@@ -214,7 +225,6 @@ PanelWindow {
             if (!Drops.drag) return
             ghost.r0 = Drops.drag.rect
             shrink.restart()
-            holder.forceActiveFocus()
         }
     }
 

@@ -2,8 +2,8 @@ import QtQuick
 import Quickshell.Hyprland
 import "../../theme"
 
-// Меню краплини. Точка (0, 0) — краплина на рамці. Відкриття: краплина відривається від рамки (detach),
-// розтікається в панель із трьома діями (grow1), з-під неї стікає друга панель — перемістити на стіл (grow2).
+// Меню виїмки. Точка (0, 0) — середина рамки, зовнішній край. Відкриття: виїмка втягується в рамку, а крапка
+// з неї падає (detach) і розтікається в панель із трьома діями (grow1); з-під неї стікає друга — на інший стіл (grow2).
 Item {
     id: root
     property var client: null
@@ -12,9 +12,10 @@ Item {
     property real grow1: 0
     property real grow2: 0
     property real shift: 0             // зсув панелей уздовж рамки, щоб не вилізти за край екрана
+    property real band: 3              // товщина рамки
     readonly property real w1: 168
     readonly property real h1: 52
-    readonly property real top1: 16
+    readonly property real top1: band + 14
     readonly property real top2: top1 + h1 + 8
 
     // столи: усі звичайні, плюс новий (найменший вільний номер)
@@ -58,20 +59,20 @@ Item {
     Item {
         id: p1
         readonly property real t: root.grow1
-        width: root.lerp(14, root.w1, t)
-        height: root.lerp(14, root.h1, Math.min(1, t))
+        width: root.lerp(7, root.w1, t)
+        height: root.lerp(7, root.h1, Math.min(1, t))
         x: root.shift * t - width / 2
-        y: root.lerp(4 + 15 + 10 - 7, root.top1, t)          // з кульки, що впала, — на своє місце
+        y: root.lerp(root.band + 9 + 14 - 3.5, root.top1, t)   // з крапки, що випала з виїмки, — на своє місце
         visible: t > 0
         Glass {
             anchors.fill: parent
             strong: true
             radius: Math.min(width, height) / 2
         }
-        Rectangle {                                         // ще крапля — акцентна, поки розтікається
+        Rectangle {                                         // ще крапка — темна, поки розтікається
             anchors.fill: parent
             radius: Math.min(width, height) / 2
-            color: Theme.accent
+            color: Theme.accentInk
             opacity: 1 - Math.min(1, p1.t * 1.6)
         }
         Row {

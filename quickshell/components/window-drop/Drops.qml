@@ -5,13 +5,14 @@ import Quickshell.Io
 import Quickshell.Hyprland
 import "../../services"
 
-// WindowDrop: «краплина» посередині верхньої рамки вікна. Наведення — краплина звисає з рамки;
-// затиснути й тягнути — вікно стискається в квадрат і їде за курсором; клік — меню вікна.
+// WindowDrop: виїмка-«крапля» посередині верхньої рамки вікна (як виріз під фронтальну камеру).
+// Наближення курсора — виїмка росте з рамки; затиснути й тягнути — вікно стискається в квадрат
+// і їде за курсором; клік — меню вікна.
 // Тут стан і дії; малює кожен монітор свій шар (WindowDrop.qml).
 Singleton {
     id: root
     readonly property string dragWs: Windows.dragWs      // де вікно чекає, поки його тягнуть
-    // службові столи, на вікнах яких краплі немає
+    // службові столи, на вікнах яких виїмки немає
     readonly property var skipWs: ["special:settings", "special:unia-stash", Windows.minimizedWs, Windows.dragWs]
 
     property var clients: []
@@ -24,7 +25,7 @@ Singleton {
     property real dragX: 0                    // курсор під час перетягування (глобальні координати)
     property real dragY: 0
     readonly property bool busy: menuFor !== "" || drag !== null
-    readonly property string current: drag ? drag.address : menuFor || hovered   // вікно з краплею
+    readonly property string current: drag ? drag.address : menuFor || hovered   // вікно з виїмкою
 
     function client(a) { return clients.find(c => c.address === a) ?? null }
     function monitorAt(x, y) {
@@ -82,7 +83,7 @@ Singleton {
     Component.onCompleted: refresh()
 
     // ---------- наведення ----------
-    // з нульовою (чи 1 px) рамкою краплині нема за що триматись — поки вона є, рамка вікна 3 px
+    // з нульовою (чи 1 px) рамкою виїмці нема з чого рости — поки вона є, рамка вікна 3 px
     property string thick: ""
     onCurrentChanged: {
         if (thick && thick !== current) { Hyprland.dispatch(`setprop address:${thick} border_size unset`); thick = "" }
@@ -91,7 +92,7 @@ Singleton {
 
     // ---------- меню ----------
     function openMenu(a) { hovered = a; menuFor = a }
-    function closeMenu() { menuFor = ""; hovered = "" }    // курсор ще на гачку — наступний рух поверне краплину
+    function closeMenu() { menuFor = ""; hovered = "" }    // курсор ще на гачку — наступний рух поверне виїмку
     function act(what) {
         const c = client(menuFor)
         closeMenu()
@@ -133,7 +134,7 @@ Singleton {
         if (!m) { cancel(d); return }
         const a = d.address, ws = m.activeWorkspace.id
         if (d.floating) {
-            // плаваюче — туди, де відпустили: краплина (верх посередині) під курсором
+            // плаваюче — туди, де відпустили: виїмка (верх посередині) під курсором
             const mw = m.width / m.scale, mh = m.height / m.scale
             const x = Math.round(Math.max(m.x, Math.min(dragX - d.rect.w / 2, m.x + mw - d.rect.w)))
             const y = Math.round(Math.max(m.y, Math.min(dragY - 8, m.y + mh - d.rect.h)))
