@@ -9,6 +9,7 @@ import "popups"
 import "notifications"
 import "components/settings"
 import "components/app-menu"
+import "components/window-drop"
 import "dock"
 import "screenshot"
 
@@ -48,6 +49,18 @@ ShellRoot {
     Variants {
         model: Quickshell.screens
         ShotOverlay {}
+    }
+
+    // краплина на рамці вікна: тягнути, згорнути, на весь екран, закрити, на інший стіл
+    // qs -c unia ipc call drop menu | close — меню краплини для активного вікна
+    Variants {
+        model: Quickshell.screens
+        WindowDrop {}
+    }
+    IpcHandler {
+        target: "drop"
+        function menu(): void { const w = Windows.list.find(w => w.active && !w.minimized); if (w) Drops.openMenu(w.address) }
+        function close(): void { Drops.closeMenu() }
     }
 
     SettingsPanel {}

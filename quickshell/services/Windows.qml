@@ -8,6 +8,7 @@ import Quickshell.Hyprland
 Singleton {
     id: root
     readonly property string minimizedWs: "special:minimized"
+    readonly property string dragWs: "special:unia-drop"       // вікно, яке зараз тягнуть краплиною (WindowDrop)
     // службові столи оболонки, вікна з яких не показуємо
     readonly property var hiddenWs: ["special:settings", "special:unia-stash"]
 
@@ -20,7 +21,7 @@ Singleton {
             return {
                 address: o.address, cls: o.class, title: o.title,
                 wsId: o.workspace.id, wsName: ws,
-                minimized: ws === root.minimizedWs,
+                minimized: ws === root.minimizedWs || ws === root.dragWs,
                 active: t.activated,
                 entry: DesktopEntries.heuristicLookup(o.class),
             }
@@ -48,10 +49,13 @@ Singleton {
         }
         Hyprland.dispatch(`focuswindow address:${w.address}`)
     }
-    function minimize(w) {
+    function remember(address, ws) {
         const o = Object.assign({}, origin)
-        o[w.address] = w.wsId > 0 ? w.wsId : w.wsName
+        o[address] = ws
         origin = o
+    }
+    function minimize(w) {
+        remember(w.address, w.wsId > 0 ? w.wsId : w.wsName)
         Hyprland.dispatch(`movetoworkspacesilent ${minimizedWs},address:${w.address}`)
     }
     function close(w) { Hyprland.dispatch(`closewindow address:${w.address}`) }
