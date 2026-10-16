@@ -66,6 +66,7 @@ Glass {
         ghost.x = p.x - grab.x
         ghost.y = p.y - grab.y
         dropSlot = targetAt(p)
+        edgeScroll(p)
     }
     function endDrag(p) {
         const t = targetAt(p)
@@ -73,7 +74,34 @@ Glass {
         else if (t) Menu.moveTile(dragTile, t.group, t.x, t.y)
         cancelDrag()
     }
-    function cancelDrag() { dragTile = ""; dragData = null; dropSlot = null }
+    function cancelDrag() { dragTile = ""; dragData = null; dropSlot = null; scrollSpeed = 0 }
+
+    // ---------- автопрокрутка під час перетягування ----------
+    // курсор біля верхнього/нижнього краю списку — прокручуємо в той бік (ближче до краю — швидше)
+    readonly property int edgeZone: 64
+    property real scrollSpeed: 0
+    property point lastDrag
+    function edgeScroll(p) {
+        lastDrag = p
+        const y = tilesView.mapFromItem(root, p.x, p.y).y
+        if (y < edgeZone) scrollSpeed = -Math.min(1, (edgeZone - y) / edgeZone) * 18
+        else if (y > tilesView.height - edgeZone) scrollSpeed = Math.min(1, (y - tilesView.height + edgeZone) / edgeZone) * 18
+        else scrollSpeed = 0
+    }
+    Timer {
+        interval: 16
+        repeat: true
+        running: root.scrollSpeed !== 0 && (root.dragTile !== "" || root.dragFolder !== "")
+        onTriggered: {
+            const max = Math.max(0, tilesView.contentHeight - tilesView.height)
+            const y = Math.max(0, Math.min(max, tilesView.contentY + root.scrollSpeed))
+            if (y === tilesView.contentY) return
+            tilesView.contentY = y
+            // під нерухомим курсором тепер інше місце — оновлюємо ціль
+            if (root.dragTile !== "") root.dropSlot = root.targetAt(root.lastDrag)
+            else root.folderDrop = root.folderTarget(root.lastDrag)
+        }
+    }
 
     // ---------- перетягування папок ----------
     property string dragFolder: ""
@@ -85,13 +113,14 @@ Glass {
         folderGhost.x = p.x - 20
         folderGhost.y = p.y - 18
         folderDrop = folderTarget(p)
+        edgeScroll(p)
     }
     function endFolderDrag(p) {
         const t = folderTarget(p)
         if (t) Menu.placeFolder(dragFolder, t.col, t.index)
         cancelFolderDrag()
     }
-    function cancelFolderDrag() { dragFolder = ""; folderDrop = null }
+    function cancelFolderDrag() { dragFolder = ""; folderDrop = null; scrollSpeed = 0 }
     function folderTarget(p) {
         // колонка — за x; на вузькому екрані одна видима колонка, яка насправді — дві підряд
         const c0 = cols.mapToItem(root, 0, 0)
