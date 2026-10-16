@@ -9,6 +9,11 @@ Rectangle {
     signal chosen(var value)
     width: row.implicitWidth + 8
     height: 36
+    activeFocusOnTab: true
+    readonly property int idx: options.findIndex(o => o.value === current)
+    Keys.onLeftPressed: if (idx > 0) chosen(options[idx - 1].value)
+    Keys.onRightPressed: if (idx < options.length - 1) chosen(options[idx + 1].value)
+    Rectangle { anchors.fill: parent; anchors.margins: -4; radius: parent.radius + 4; color: "transparent"; border.width: 2; border.color: Theme.accent; visible: root.activeFocus }
     radius: 18
     color: Theme.paneHover
     border.width: 1

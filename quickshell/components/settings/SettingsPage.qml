@@ -19,14 +19,41 @@ FloatingWindow {
     Component { id: pBorders; BordersPage {} }
     Component { id: pMouse; MousePage {} }
 
+    // Tab з панелі — фокус на перший елемент сторінки
+    Connections {
+        target: Settings
+        function onPageFocusRequested() {
+            Qt.callLater(() => {
+                if (!loader.item) return
+                const f = loader.item.nextItemInFocusChain(true)
+                if (f) f.forceActiveFocus()
+            })
+        }
+    }
+    // елемент у фокусі має бути видно — прокручуємо сторінку до нього
+    Item {
+        readonly property Item focused: win.contentItem ? win.contentItem.Window.activeFocusItem : null
+        onFocusedChanged: {
+            const pg = loader.item
+            if (!focused || !pg || !pg.contentItem) return
+            const y = focused.mapToItem(pg.contentItem, 0, 0).y
+            if (y < pg.contentY + 20) pg.contentY = Math.max(0, y - 40)
+            else if (y + focused.height > pg.contentY + pg.height - 20)
+                pg.contentY = Math.min(pg.contentHeight - pg.height, y + focused.height - pg.height + 40)
+        }
+    }
+
     Glass {
         anchors.fill: parent
         radius: 26
 
         Loader {
+            id: loader
             anchors.fill: parent
             anchors.margins: 6
             active: win.visible
+            focus: true
+            Keys.onEscapePressed: Settings.focusPanel()       // назад до списку категорій
             sourceComponent: {
                 switch (Settings.sel) {
                 case "time": return pTime

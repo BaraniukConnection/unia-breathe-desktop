@@ -39,6 +39,7 @@ Page {
         adding = false
     }
     property bool adding: false
+    onAddingChanged: if (adding) Qt.callLater(() => addList.focusField())
 
     Process {
         running: true
@@ -59,9 +60,9 @@ Page {
                 label: page.nameOf(modelData)
                 hint: modelData + (page.variants[index] ? ` (${page.variants[index]})` : "") + (index === 0 ? " · основна" : "")
                 Row {
-                    IconButton { implicitWidth: 32; implicitHeight: 32; icon: "arrow_upward"; muted: true; opacity: index > 0 ? 1 : 0.3; onClicked: page.move(index, -1) }
-                    IconButton { implicitWidth: 32; implicitHeight: 32; icon: "arrow_downward"; muted: true; opacity: index < page.layouts.length - 1 ? 1 : 0.3; onClicked: page.move(index, 1) }
-                    IconButton { implicitWidth: 32; implicitHeight: 32; icon: "close"; muted: true; opacity: page.layouts.length > 1 ? 1 : 0.3; onClicked: page.remove(index) }
+                    IconButton { focusable: true; implicitWidth: 32; implicitHeight: 32; icon: "arrow_upward"; muted: true; opacity: index > 0 ? 1 : 0.3; onClicked: page.move(index, -1) }
+                    IconButton { focusable: true; implicitWidth: 32; implicitHeight: 32; icon: "arrow_downward"; muted: true; opacity: index < page.layouts.length - 1 ? 1 : 0.3; onClicked: page.move(index, 1) }
+                    IconButton { focusable: true; implicitWidth: 32; implicitHeight: 32; icon: "close"; muted: true; opacity: page.layouts.length > 1 ? 1 : 0.3; onClicked: page.remove(index) }
                 }
             }
         }
@@ -73,7 +74,12 @@ Page {
                 anchors.verticalCenter: parent.verticalCenter
                 width: addRow.implicitWidth + 28
                 height: 36
-                hovered: addArea.containsMouse
+                hovered: addArea.containsMouse || activeFocus
+                activeFocusOnTab: true
+                Keys.onSpacePressed: page.adding = true
+                Keys.onReturnPressed: page.adding = true
+                border.width: activeFocus ? 2 : 1
+                border.color: activeFocus ? Theme.accent : Theme.paneLine
                 Row { id: addRow; anchors.centerIn: parent; spacing: 8
                     Icon { name: "add"; anchors.verticalCenter: parent.verticalCenter }
                     Label { text: "Додати мову"; weight: Font.Bold; anchors.verticalCenter: parent.verticalCenter } }
@@ -81,6 +87,7 @@ Page {
             }
         }
         SearchList {
+            id: addList
             visible: page.adding
             items: page.all
             placeholder: "Пошук мови (напр. German, Polish, de)"

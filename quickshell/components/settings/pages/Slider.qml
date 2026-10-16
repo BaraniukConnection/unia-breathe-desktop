@@ -14,6 +14,13 @@ Item {
     signal moved(real value)
     width: 300
     height: 32
+    activeFocusOnTab: true
+    function nudge(d) { moved(Number(Math.max(from, Math.min(to, value + d * step)).toFixed(decimals))) }
+    Keys.onLeftPressed: nudge(-1)
+    Keys.onDownPressed: nudge(-1)
+    Keys.onRightPressed: nudge(1)
+    Keys.onUpPressed: nudge(1)
+    Rectangle { anchors.fill: parent; anchors.margins: -6; radius: 12; color: "transparent"; border.width: 2; border.color: Theme.accent; visible: root.activeFocus }
 
     Rectangle {
         id: track

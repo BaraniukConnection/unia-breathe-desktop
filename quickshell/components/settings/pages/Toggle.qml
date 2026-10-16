@@ -7,6 +7,11 @@ Rectangle {
     property bool checked
     signal toggled(bool value)
     width: 48; height: 28; radius: 14
+    activeFocusOnTab: true
+    Keys.onSpacePressed: toggled(!checked)
+    Keys.onReturnPressed: toggled(!checked)
+    // рамка фокусу клавіатури
+    Rectangle { anchors.fill: parent; anchors.margins: -4; radius: parent.radius + 4; color: "transparent"; border.width: 2; border.color: Theme.accent; visible: parent.activeFocus }
     color: checked ? Theme.accent : Theme.paneHover
     border.width: checked ? 0 : 1
     border.color: Theme.paneLine

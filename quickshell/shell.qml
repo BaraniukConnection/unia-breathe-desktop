@@ -20,6 +20,8 @@ ShellRoot {
         target: "settings"
         function toggle(): void { Settings.toggle() }
         function open(id: string): void { Settings.open(id) }
+        // Super+Tab: у налаштуваннях — повернути клавіатуру в панель; поза ними — наступне вікно
+        function back(): void { if (Settings.shown) Settings.focusPanel(); else Hyprland.dispatch("cyclenext") }
     }
 
     // qs -c unia ipc call apps launch <id .desktop> — як клік у меню (відкрита «одновіконна» програма — перехід до неї)

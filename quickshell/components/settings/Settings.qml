@@ -78,10 +78,20 @@ Singleton {
         const it = current
         if (!it) return
         if (it.kind === "own") place("title:^(Unia · Сторінка)$", a.toolX, a.y, a.toolW, a.h)
-        else if (addrs[it.id]) {
-            place(`address:${addrs[it.id]}`, a.toolX, a.y, a.toolW, a.h)
-            Hyprland.dispatch(`focuswindow address:${addrs[it.id]}`)
-        }
+        else if (addrs[it.id]) place(`address:${addrs[it.id]}`, a.toolX, a.y, a.toolW, a.h)
+        focusPanel()        // клавіатура лишається в панелі: Tab — перейти до програми
+        refocus.restart()   // щойно відкрите вікно програми забирає фокус собі — повертаємо його панелі
+    }
+    Timer { id: refocus; interval: 350; onTriggered: if (root.shown) root.focusPanel() }
+
+    // ---------- фокус клавіатури: панель ↔ програма праворуч ----------
+    signal pageFocusRequested()        // власній сторінці — поставити фокус на перший елемент
+    function focusPanel() { Hyprland.dispatch("focuswindow title:^(Unia · Налаштування)$") }
+    function focusTool() {
+        const it = current
+        if (!it) return
+        if (it.kind === "own") { Hyprland.dispatch("focuswindow title:^(Unia · Сторінка)$"); pageFocusRequested() }
+        else if (addrs[it.id]) Hyprland.dispatch(`focuswindow address:${addrs[it.id]}`)
     }
 
     // ---------- вибір категорії ----------
