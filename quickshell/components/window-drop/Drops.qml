@@ -28,18 +28,21 @@ Singleton {
     readonly property string current: drag ? drag.address : menuFor || hovered   // вікно з виїмкою
 
     function client(a) { return clients.find(c => c.address === a) ?? null }
+    // товщина рамки вікна: у повноекранного (не просто розгорнутого) рамки немає — виїмка росте з краю екрана
+    function bandOf(c) { return c && c.fullscreen >= 2 ? 0 : border }
     function monitorAt(x, y) {
         return monitors.find(m => x >= m.x && x < m.x + m.width / m.scale && y >= m.y && y < m.y + m.height / m.scale) ?? null
     }
 
     // вікна, які видно на моніторі, знизу вгору: спершу розкладені, потім плаваючі; давніший фокус — нижче.
-    // Повноекранне вікно на столі — крапель немає зовсім.
+    // Є повноекранне вікно — видно лише його (решта під ним).
     function visibleOn(m) {
         if (!m) return []
         const ws = m.specialWorkspace.name || m.activeWorkspace.name
         if (skipWs.includes(ws)) return []
         const list = clients.filter(c => c.mapped && !c.hidden && c.workspace.name === ws && c.class !== "org.quickshell")
-        if (list.some(c => c.fullscreen)) return []
+        const full = list.filter(c => c.fullscreen).sort((a, b) => a.focusHistoryID - b.focusHistoryID)
+        if (full.length) return [full[0]]
         return list.sort((a, b) => (a.floating - b.floating) || (b.focusHistoryID - a.focusHistoryID))
     }
     // верхнє вікно під точкою (крім указаного)
@@ -87,7 +90,7 @@ Singleton {
     property string thick: ""
     onCurrentChanged: {
         if (thick && thick !== current) { Hyprland.dispatch(`setprop address:${thick} border_size unset`); thick = "" }
-        if (current && border < 2 && client(current)) { Hyprland.dispatch(`setprop address:${current} border_size 3`); thick = current }
+        if (current && border < 2 && client(current) && !client(current).fullscreen) { Hyprland.dispatch(`setprop address:${current} border_size 3`); thick = current }
     }
 
     // ---------- меню ----------
@@ -119,6 +122,11 @@ Singleton {
         const c = client(a)
         if (!c) return
         dragX = x; dragY = y
+        // повноекранне спершу повертаємо у звичайне — тягнути його як квадрат, а поставити звичайним вікном
+        if (c.fullscreen) {
+            Hyprland.dispatch(`focuswindow address:${a}`)
+            Hyprland.dispatch("fullscreen 0")
+        }
         drag = { address: a, floating: c.floating, wsId: c.workspace.id, mon: c.monitor,
                  rect: { x: c.at[0], y: c.at[1], w: c.size[0], h: c.size[1] } }
         // поки тягнемо, саме вікно чекає на схованому столі (у смузі — як згорнуте, сценарій його не втрачає)

@@ -82,7 +82,9 @@ Item {
             Repeater {
                 model: [
                     { act: "minimize", icon: "remove", tip: "Згорнути" },
-                    { act: "fullscreen", icon: "open_in_full", tip: "На весь екран" },
+                    root.client && root.client.fullscreen
+                        ? { act: "fullscreen", icon: "close_fullscreen", tip: "Вийти з повного екрана" }
+                        : { act: "fullscreen", icon: "open_in_full", tip: "На весь екран" },
                     { act: "close", icon: "close", tip: "Закрити" },
                 ]
                 Rectangle {

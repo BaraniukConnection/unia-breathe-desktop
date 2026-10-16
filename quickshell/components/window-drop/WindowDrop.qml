@@ -37,8 +37,10 @@ PanelWindow {
             // середину рамки перекриває вікно вище — гачка немає
             if (wins.slice(i + 1).some(o => cx >= o.at[0] && cx <= o.at[0] + o.size[0] && top >= o.at[1] - 8 && top <= o.at[1] + o.size[1])) return
             const w = Math.round(Math.min(200, c.size[0] * 0.5))
-            z.push({ address: c.address, x: Math.round(cx - ox - w / 2), y: Math.round(top - oy - 14), w: w, h: 26,
-                     cx: cx - ox, cy: top - oy - Drops.border / 2 })
+            // біля верхнього краю екрана (повноекранне вікно) смуга лише всередині вікна
+            const y0 = Math.max(0, Math.round(top - oy - 14)), y1 = Math.round(top - oy + 12)
+            z.push({ address: c.address, x: Math.round(cx - ox - w / 2), y: y0, w: w, h: y1 - y0,
+                     cx: cx - ox, cy: top - oy - Drops.bandOf(c) / 2 })
         })
         const k = JSON.stringify(z)
         if (k !== zonesKey) { zonesKey = k; zones = z }
@@ -67,12 +69,14 @@ PanelWindow {
     // (меню закривається, виїмка ховається), лишається остання — анімація не стрибає в кут
     property real ax: 0
     property real ay: 0
+    property real band: 3
     Binding {
         when: !!win.dc
         win.ax: !win.dc ? win.ax : Drops.drag ? Drops.drag.rect.x + Drops.drag.rect.w / 2 - win.ox : win.dc.at[0] + win.dc.size[0] / 2 - win.ox
-        win.ay: !win.dc ? win.ay : (Drops.drag ? Drops.drag.rect.y : win.dc.at[1]) - win.oy - Drops.border
+        win.ay: !win.dc ? win.ay : (Drops.drag ? Drops.drag.rect.y : win.dc.at[1]) - win.oy - win.band
         restoreMode: Binding.RestoreNone
     }
+    Binding { when: !!win.dc && !Drops.drag; win.band: Drops.bandOf(win.dc); restoreMode: Binding.RestoreNone }
 
     // ---------- наближення: чим ближче курсор до середини рамки, тим глибша виїмка ----------
     property real near: 0                         // 0…1, куди тягнеться глибина
@@ -147,7 +151,7 @@ PanelWindow {
         Notch {
             id: notch
             anchors.fill: parent
-            band: Drops.border
+            band: win.band
             depth: win.depth * (1 - menu.detach)
             dotFall: menu.detach * 14
             dotOpacity: Drops.drag ? 0 : menu.shown ? 1 - Math.min(1, menu.grow1 * 2) : Math.max(0, Math.min(1, (win.depth - 0.75) / 0.25))
@@ -158,7 +162,7 @@ PanelWindow {
         id: menu
         x: win.ax
         y: win.ay
-        band: Drops.border
+        band: win.band
         client: win.dc
         open: win.here && Drops.menuFor !== "" && Drops.menuFor === Drops.current
         // не вилізти за край екрана
