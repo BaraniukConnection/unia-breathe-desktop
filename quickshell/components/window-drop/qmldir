@@ -2,3 +2,4 @@ singleton Drops 1.0 Drops.qml
 WindowDrop 1.0 WindowDrop.qml
 Notch 1.0 Notch.qml
 DropMenu 1.0 DropMenu.qml
+DropPlace 1.0 DropPlace.qml

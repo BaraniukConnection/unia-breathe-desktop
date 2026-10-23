@@ -52,15 +52,19 @@ ShellRoot {
     }
 
     // виїмка-«крапля» на рамці вікна: тягнути, згорнути, на весь екран, закрити, на інший стіл
-    // qs -c unia ipc call drop menu | close — меню виїмки для активного вікна
+    // qs -c unia ipc call drop menu | close — меню виїмки для активного вікна; grab | release — Super+ЛКМ
     Variants {
         model: Quickshell.screens
         WindowDrop {}
     }
+    DropPlace {}
     IpcHandler {
         target: "drop"
         function menu(): void { const w = Windows.list.find(w => w.active && !w.minimized); if (w) Drops.openMenu(w.address) }
         function close(): void { Drops.closeMenu() }
+        // Super+ЛКМ (hyprland.conf): узяти вікно під курсором і поставити, відпустивши
+        function grab(): void { Drops.grab() }
+        function release(): void { Drops.release() }
     }
 
     SettingsPanel {}

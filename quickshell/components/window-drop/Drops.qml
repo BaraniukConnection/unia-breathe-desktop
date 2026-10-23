@@ -6,8 +6,9 @@ import Quickshell.Hyprland
 import "../../services"
 
 // WindowDrop: виїмка-«крапля» посередині верхньої рамки вікна (як виріз під фронтальну камеру).
-// Наближення курсора — виїмка росте з рамки; затиснути й тягнути — вікно стискається в квадрат
-// і їде за курсором; клік — меню вікна.
+// Наближення курсора — виїмка росте з рамки; затиснути й тягнути (або Super+ЛКМ будь-де у вікні) —
+// вікно стискається в квадрат і їде за курсором, а там, куди воно стане, вже розсувається місце (DropPlace);
+// клік — меню вікна.
 // Тут стан і дії; малює кожен монітор свій шар (WindowDrop.qml).
 Singleton {
     id: root
@@ -21,7 +22,7 @@ Singleton {
 
     property string hovered: ""               // адреса вікна, на рамці якого курсор
     property string menuFor: ""               // адреса вікна з відкритим меню
-    property var drag: null                   // { address, floating, wsId, rect, mon } — поки тягнемо
+    property var drag: null                   // { address, floating, wsId, rect, mon, offX, offY, grab } — поки тягнемо
     property real dragX: 0                    // курсор під час перетягування (глобальні координати)
     property real dragY: 0
     readonly property bool busy: menuFor !== "" || drag !== null
@@ -59,25 +60,32 @@ Singleton {
     // подій про зміну розмірів Hyprland не шле, тож, крім подій, перечитуємо раз на 0,7 с
     Process {
         id: poll
-        command: ["hyprctl", "--batch", "j/clients;j/monitors;j/getoption general:border_size"]
+        command: ["hyprctl", "--batch", "j/clients;j/monitors;j/getoption general:border_size;" +
+                  "j/getoption dwindle:use_active_for_splits;j/getoption dwindle:smart_split;j/getoption cursor:no_warps"]
         stdout: StdioCollector {
             onStreamFinished: {
                 try {
-                    const [c, m, b] = text.split(/\n\n\n/).map(s => JSON.parse(s))
+                    const [c, m, b, ua, ss, nw] = text.split(/\n\n\n/).map(s => JSON.parse(s))
                     root.clients = c
                     root.monitors = m
                     root.border = b.int ?? 1
+                    // поки тягнемо, ці опції підмінені — пам'ятаємо лише справжні
+                    if (!root.drag && !restore.running) root.opts = { ua: ua.int, ss: ss.int, nw: nw.int }
                 } catch (e) {}
                 if (root.menuFor && !root.client(root.menuFor)) root.closeMenu()
             }
         }
     }
     function refresh() { if (!poll.running) poll.running = true }
-    Timer { interval: 700; running: true; repeat: true; onTriggered: root.refresh() }
+    Timer { interval: root.drag ? 120 : 700; running: true; repeat: true; onTriggered: root.refresh() }
     Timer { id: soon; interval: 60; onTriggered: root.refresh() }
     Connections {
         target: Hyprland
         function onRawEvent(ev) {
+            if (ev.name === "openwindow") {
+                const [addr, , , ...t] = ev.data.split(",")
+                if (t.join(",") === root.placeTitle) { root.placeAddr = "0x" + addr; if (root.drag) root.relocate() }
+            }
             if (["openwindow", "closewindow", "movewindowv2", "changefloatingmode", "fullscreen", "workspacev2",
                  "activespecial", "focusedmonv2", "activewindowv2", "monitoraddedv2", "monitorremoved", "configreloaded"].includes(ev.name))
                 soon.restart()
@@ -118,60 +126,153 @@ Singleton {
     }
 
     // ---------- перетягування ----------
-    function startDrag(a, x, y) {
+    // Вікно, яке тягнуть, чекає на схованому столі, а за курсором їде його квадрат. Розкладене вікно
+    // заступає «місце» (DropPlace) — напівпрозоре порожнє вікно, яке Hyprland розкладає як звичайне:
+    // сусіди розсуваються, і видно, куди стане вікно. Місце для нього вибирає сам Hyprland — за курсором
+    // (dwindle smart_split: бік вікна під курсором), тож на час перетягування ці опції підмінюємо.
+    readonly property string placeTitle: "unia-drop-place"
+    property string placeAddr: ""             // адреса вікна-місця, коли воно відкрите
+    readonly property bool placeWanted: !!drag && !drag.floating
+    property string placeKey: ""              // куди зараз поставлене місце: «адреса:бік» або «ws:N»
+    property var opts: ({ ua: 1, ss: 0, nw: 0 })   // справжні dwindle:use_active_for_splits, smart_split, cursor:no_warps
+
+    function hypr(cmds) { Quickshell.execDetached(["hyprctl", "--batch", cmds.join(" ; ")]) }
+    function restoreOpts() {
+        return [`keyword dwindle:use_active_for_splits ${opts.ua}`, `keyword dwindle:smart_split ${opts.ss}`,
+                `keyword cursor:no_warps ${opts.nw}`]
+    }
+    Timer { id: restore; interval: 400 }      // щойно повернули опції — опитування ще могло прочитати підмінені
+
+    function startDrag(a, x, y, grab) {
         const c = client(a)
         if (!c) return
         dragX = x; dragY = y
+        const cmds = []
         // повноекранне спершу повертаємо у звичайне — тягнути його як квадрат, а поставити звичайним вікном
-        if (c.fullscreen) {
-            Hyprland.dispatch(`focuswindow address:${a}`)
-            Hyprland.dispatch("fullscreen 0")
-        }
-        drag = { address: a, floating: c.floating, wsId: c.workspace.id, mon: c.monitor,
-                 rect: { x: c.at[0], y: c.at[1], w: c.size[0], h: c.size[1] } }
-        // поки тягнемо, саме вікно чекає на схованому столі (у смузі — як згорнуте, сценарій його не втрачає)
+        if (c.fullscreen) cmds.push(`dispatch focuswindow address:${a}`, "dispatch fullscreen 0")
+        drag = { address: a, floating: c.floating, wsId: c.workspace.id, mon: c.monitor, grab: !!grab,
+                 rect: { x: c.at[0], y: c.at[1], w: c.size[0], h: c.size[1] },
+                 // де саме тримаємо вікно (для плаваючого — щоб стало так само під курсором)
+                 offX: Math.max(0, Math.min(c.size[0], x - c.at[0])), offY: Math.max(0, Math.min(c.size[1], y - c.at[1])) }
+        placeKey = ""
         Windows.remember(a, c.workspace.id)
-        Hyprland.dispatch(`movetoworkspacesilent ${dragWs},address:${a}`)
+        Windows.moving = true
+        if (!c.floating) cmds.push("keyword dwindle:use_active_for_splits 0", "keyword dwindle:smart_split 1", "keyword cursor:no_warps 1")
+        // поки тягнемо, саме вікно чекає на схованому столі (у смузі — як згорнуте, сценарій його не втрачає)
+        cmds.push(`dispatch movetoworkspacesilent ${dragWs},address:${a}`)
+        hypr(cmds)
     }
-    function moveDrag(x, y) { dragX = x; dragY = y }
+    function moveDrag(x, y) {
+        dragX = x; dragY = y
+        if (!placeWanted) return
+        const k = placeKeyAt(x, y)
+        if (k !== null && k !== placeKey) { placeKey = k; reloc.restart() }
+    }
+    // куди стало б вікно, якби відпустили тут; null — лишити як є (курсор на самому місці чи в проміжку)
+    function placeKeyAt(x, y) {
+        const m = monitorAt(x, y)
+        if (!m) return null
+        const p = client(placeAddr)
+        if (p && p.workspace.id === m.activeWorkspace.id && x >= p.at[0] && x < p.at[0] + p.size[0] && y >= p.at[1] && y < p.at[1] + p.size[1])
+            return null
+        const tiled = visibleOn(m).filter(c => !c.floating && c.address !== drag.address)
+        const t = tiled.slice().reverse().find(c => x >= c.at[0] && x < c.at[0] + c.size[0] && y >= c.at[1] && y < c.at[1] + c.size[1])
+        if (!t) return tiled.length ? null : `ws:${m.activeWorkspace.id}`
+        const dx = (x - (t.at[0] + t.size[0] / 2)) / t.size[0], dy = (y - (t.at[1] + t.size[1] / 2)) / t.size[1]
+        return `${t.address}:${Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? "l" : "r") : (dy < 0 ? "u" : "d")}`
+    }
+    Timer { id: reloc; interval: 70; onTriggered: root.relocate() }
+    // переставити місце під курсор: прибрати й вставити знову (Hyprland сам вибере бік)
+    function relocate() {
+        const m = monitorAt(dragX, dragY)
+        if (!placeAddr || !m || !placeWanted) return
+        hypr([`dispatch movetoworkspacesilent ${dragWs},address:${placeAddr}`,
+              `dispatch movetoworkspacesilent ${m.activeWorkspace.id},address:${placeAddr}`])
+        soon.restart()
+    }
+
     function endDrag() {
         const d = drag
         if (!d) return
         const m = monitorAt(dragX, dragY) ?? monitors.find(m => m.id === d.mon)
-        drag = null
-        if (!m) { cancel(d); return }
+        if (!m) { cancelDrag(); return }
         const a = d.address, ws = m.activeWorkspace.id
+        let cmds
         if (d.floating) {
-            // плаваюче — туди, де відпустили: виїмка (верх посередині) під курсором
+            // плаваюче — туди, де відпустили, тим самим місцем під курсором, що й тримали
             const mw = m.width / m.scale, mh = m.height / m.scale
-            const x = Math.round(Math.max(m.x, Math.min(dragX - d.rect.w / 2, m.x + mw - d.rect.w)))
-            const y = Math.round(Math.max(m.y, Math.min(dragY - 8, m.y + mh - d.rect.h)))
-            Hyprland.dispatch(`movetoworkspacesilent ${ws},address:${a}`)
-            Hyprland.dispatch(`movewindowpixel exact ${x} ${y},address:${a}`)
+            const x = Math.round(Math.max(m.x, Math.min(dragX - d.offX, m.x + mw - d.rect.w)))
+            const y = Math.round(Math.max(m.y, Math.min(dragY - d.offY, m.y + mh - d.rect.h)))
+            cmds = [`dispatch movetoworkspacesilent ${ws},address:${a}`, `dispatch movewindowpixel exact ${x} ${y},address:${a}`,
+                    `dispatch focuswindow address:${a}`]
+        } else if (placeAddr && client(placeAddr) && client(placeAddr).workspace.id === ws) {
+            // розкладене — рівно на місце: ділить його (воно у фокусі), а потім місце зникає й вікно забирає весь його простір
+            cmds = [`dispatch focuswindow address:${placeAddr}`, "keyword dwindle:use_active_for_splits 1",
+                    `dispatch movetoworkspacesilent ${ws},address:${a}`,
+                    `dispatch movetoworkspacesilent ${dragWs},address:${placeAddr}`,
+                    `dispatch focuswindow address:${a}`, ...restoreOpts()]
         } else {
-            // розкладене — поруч із вікном під курсором, з того боку, ближче до якого відпустили
-            const t = windowAt(m, dragX, dragY, a)
-            if (t && !t.floating) {
-                const dx = (dragX - (t.at[0] + t.size[0] / 2)) / t.size[0]
-                const dy = (dragY - (t.at[1] + t.size[1] / 2)) / t.size[1]
-                Hyprland.dispatch(`focuswindow address:${t.address}`)
-                Hyprland.dispatch(`layoutmsg preselect ${Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? "l" : "r") : (dy < 0 ? "u" : "d")}`)
-            }
-            Hyprland.dispatch(`movetoworkspacesilent ${ws},address:${a}`)
+            cmds = [`dispatch movetoworkspacesilent ${ws},address:${a}`, "keyword cursor:no_warps 1",
+                    `dispatch focuswindow address:${a}`, ...restoreOpts()]
         }
-        Hyprland.dispatch(`focuswindow address:${a}`)
-        hovered = ""
-        soon.restart()
+        finish(cmds)
     }
     function cancelDrag() {
         const d = drag
-        drag = null
-        if (d) cancel(d)
+        if (!d) return
+        const cmds = [`dispatch movetoworkspacesilent ${d.wsId},address:${d.address}`]
+        if (d.floating) cmds.push(`dispatch movewindowpixel exact ${d.rect.x} ${d.rect.y},address:${d.address}`)
+        else cmds.push(...restoreOpts())
+        finish(cmds)
     }
-    function cancel(d) {
-        Hyprland.dispatch(`movetoworkspacesilent ${d.wsId},address:${d.address}`)
-        if (d.floating) Hyprland.dispatch(`movewindowpixel exact ${d.rect.x} ${d.rect.y},address:${d.address}`)
+    function finish(cmds) {
+        if (!drag.floating) restore.restart()
+        drag = null                           // місце (DropPlace) зникає саме, коли drag порожній
+        hypr(cmds)
+        Windows.moving = false
         hovered = ""
+        placeKey = ""
         soon.restart()
+    }
+
+    // Super+ЛКМ: узяти вікно під курсором (замість звичайного перетягування Hyprland), Super+відпустити — поставити
+    property bool grabbing: false
+    property bool releaseEarly: false
+    function grab() {
+        if (drag || grabbing) return
+        closeMenu()
+        grabbing = true
+        releaseEarly = false
+        cursorProc.running = true
+    }
+    function release() {
+        if (grabbing) releaseEarly = true
+        else if (drag && drag.grab) endDrag()
+    }
+    Process {
+        id: cursorProc
+        command: ["hyprctl", "-j", "cursorpos"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let p = null
+                try { p = JSON.parse(text) } catch (e) {}
+                const m = p ? root.monitorAt(p.x, p.y) : null
+                const t = m ? root.windowAt(m, p.x, p.y) : null
+                if (!t) { root.grabbing = false; return }
+                root.hovered = t.address           // знімок вікна для квадрата
+                grabStart.pos = p
+                grabStart.restart()
+            }
+        }
+    }
+    Timer {
+        id: grabStart
+        property var pos
+        interval: 90                          // дати знімку вікна з'явитись, поки вікно ще видно
+        onTriggered: {
+            root.grabbing = false
+            root.startDrag(root.hovered, pos.x, pos.y, true)
+            if (root.releaseEarly) root.endDrag()
+        }
     }
 }

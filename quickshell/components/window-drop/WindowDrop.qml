@@ -7,8 +7,8 @@ import "../../theme"
 
 // WindowDrop одного монітора: прозорий шар над вікнами. Курсор він ловить лише на «гачках» —
 // смугах посередині верхньої рамки видимих вікон. Там із рамки виростає виїмка (Notch): чим ближче курсор,
-// тим глибша, на повну — з крапкою всередині. Затиснути й тягнути — вікно стає квадратом і їде за курсором;
-// клік — меню (DropMenu).
+// тим глибша, на повну — з крапкою всередині. Затиснути й тягнути (чи Super+ЛКМ у вікні) — вікно стає квадратом
+// і їде за курсором, а місце, куди стане, вже видно (DropPlace); клік — меню (DropMenu).
 PanelWindow {
     id: win
     required property var modelData
@@ -108,6 +108,8 @@ PanelWindow {
                 else if (Drops.drag) Drops.moveDrag(m.x + win.ox, m.y + win.oy)
                 return
             }
+            // Super+ЛКМ: кнопку перехопив Hyprland, тож сюди йде просто рух курсора
+            if (Drops.drag && Drops.drag.grab) { Drops.moveDrag(m.x + win.ox, m.y + win.oy); return }
             if (Drops.busy) return
             const p = win.proximity(m.x, m.y)
             if (p && p.near > 0) { leave.stop(); win.mine = p.address; Drops.hovered = p.address; win.near = p.near }
@@ -117,6 +119,8 @@ PanelWindow {
         onPressed: m => {
             menuWasOpen = !!Drops.menuFor
             if (m.button === Qt.RightButton) { if (Drops.drag) Drops.cancelDrag(); return }
+            // узяте Super+ЛКМ, а Super відпустили раніше за кнопку — тоді ставимо наступним кліком
+            if (Drops.drag && Drops.drag.grab) { Drops.endDrag(); return }
             pressed_ = !menuWasOpen && Drops.hovered && win.near > 0 ? Drops.hovered : ""
             press = Qt.point(m.x, m.y)
             if (pressed_) { win.near = 1; forceActiveFocus() }
@@ -175,13 +179,30 @@ PanelWindow {
     readonly property var toplevel: Hyprland.toplevels.values.find(t => "0x" + t.address.replace(/^0x/, "") === shotAddress) ?? null
     onToplevelChanged: if (toplevel && !Drops.drag) Qt.callLater(() => shot.captureFrame())
 
+    // плаваюче вікно нікого не розсуває — його місце малюємо самі: напівпрозоре порожнє вікно там, де стане
+    Rectangle {
+        readonly property var d: Drops.drag
+        visible: !!d && d.floating
+        x: d ? Drops.dragX - d.offX - win.ox : 0
+        y: d ? Drops.dragY - d.offY - win.oy : 0
+        width: d ? d.rect.w : 0
+        height: d ? d.rect.h : 0
+        radius: 14
+        color: Theme.glass
+        border.width: 2
+        border.color: Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.8)
+    }
+
     Item {
         id: ghost
         property var r0: ({ x: 0, y: 0, w: 1, h: 1 })
         property real t: 0
+        // де тримаємо: та сама точка квадрата, що й вікна (за виїмку — верх посередині)
+        property real fx: 0.5
+        property real fy: 0
         readonly property real side: Math.max(150, Math.min(260, Math.min(r0.w, r0.h) * 0.45))
-        x: win.lerp(r0.x - win.ox, Drops.dragX - win.ox - side / 2, t)
-        y: win.lerp(r0.y - win.oy, Drops.dragY - win.oy - 12, t)
+        x: win.lerp(r0.x - win.ox, Drops.dragX - win.ox - fx * side, t)
+        y: win.lerp(r0.y - win.oy, Drops.dragY - win.oy - Math.max(12, fy * side), t)
         width: win.lerp(r0.w, side, t)
         height: win.lerp(r0.h, side, t)
         opacity: Drops.drag ? 1 : 0
@@ -227,7 +248,10 @@ PanelWindow {
         target: Drops
         function onDragChanged() {
             if (!Drops.drag) return
-            ghost.r0 = Drops.drag.rect
+            const d = Drops.drag
+            ghost.r0 = d.rect
+            ghost.fx = d.offX / d.rect.w
+            ghost.fy = d.offY / d.rect.h
             shrink.restart()
         }
     }

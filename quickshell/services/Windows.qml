@@ -9,6 +9,7 @@ Singleton {
     id: root
     readonly property string minimizedWs: "special:minimized"
     readonly property string dragWs: "special:unia-drop"       // вікно, яке зараз тягнуть краплиною (WindowDrop)
+    property bool moving: false                                  // вікно зараз тягнуть — стіл тимчасово неповний
     // службові столи оболонки, вікна з яких не показуємо
     readonly property var hiddenWs: ["special:settings", "special:unia-stash"]
 

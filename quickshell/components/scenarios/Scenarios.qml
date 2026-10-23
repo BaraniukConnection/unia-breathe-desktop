@@ -39,7 +39,8 @@ Singleton {
 
     // змінилась програма на столі — сценарій там більше не діє («Порожній»)
     function dropChanged() {
-        if (loading !== "" || !settled || Windows.list.length === 0) return
+        // поки вікно тягнуть (WindowDrop), набір програм столу лише тимчасово інший
+        if (loading !== "" || !settled || Windows.list.length === 0 || Windows.moving) return
         const s = Object.assign({}, state)
         let changed = false
         for (const k of Object.keys(s)) {
@@ -51,7 +52,7 @@ Singleton {
     // перші секунди після старту список вікон ще неповний — не чіпаємо стан, щоб не скинути помилково
     property bool settled: false
     Timer { running: true; interval: 4000; onTriggered: { root.settled = true; root.dropChanged() } }
-    Connections { target: Windows; function onListChanged() { dropCheck.restart() } }
+    Connections { target: Windows; function onListChanged() { dropCheck.restart() } function onMovingChanged() { dropCheck.restart() } }
     Timer { id: dropCheck; interval: 800; onTriggered: root.dropChanged() }
 
     Component.onCompleted: refresh()
