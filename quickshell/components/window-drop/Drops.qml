@@ -132,7 +132,9 @@ Singleton {
     // (dwindle smart_split: бік вікна під курсором), тож на час перетягування ці опції підмінюємо.
     readonly property string placeTitle: "unia-drop-place"
     property string placeAddr: ""             // адреса вікна-місця, коли воно відкрите
-    readonly property bool placeWanted: !!drag && !drag.floating
+    // місце живе й трохи після кидка — поки Hyprland ставить на нього вікно (зникни воно раніше, команда
+    // «прибрати місце» не знайшла б його й спрацювала б на активному вікні)
+    readonly property bool placeWanted: !!drag && !drag.floating || placeHold.running
     property string placeKey: ""              // куди зараз поставлене місце: «адреса:бік» або «ws:N»
     property var opts: ({ ua: 1, ss: 0, nw: 0 })   // справжні dwindle:use_active_for_splits, smart_split, cursor:no_warps
 
@@ -142,6 +144,7 @@ Singleton {
                 `keyword cursor:no_warps ${opts.nw}`]
     }
     Timer { id: restore; interval: 400 }      // щойно повернули опції — опитування ще могло прочитати підмінені
+    Timer { id: placeHold; interval: 500 }
 
     function startDrag(a, x, y, grab) {
         const c = client(a)
@@ -158,8 +161,11 @@ Singleton {
         Windows.remember(a, c.workspace.id)
         Windows.moving = true
         if (!c.floating) cmds.push("keyword dwindle:use_active_for_splits 0", "keyword dwindle:smart_split 1", "keyword cursor:no_warps 1")
-        // поки тягнемо, саме вікно чекає на схованому столі (у смузі — як згорнуте, сценарій його не втрачає)
-        cmds.push(`dispatch movetoworkspacesilent ${dragWs},address:${a}`)
+        // відпускання кнопки ловить Hyprland (не наш шар: поки вікна перескакують, шар може втратити курсор)
+        cmds.push("keyword bindrn ,mouse:272,exec,qs -c unia ipc call drop release")
+        // поки тягнемо, саме вікно чекає на схованому столі (у смузі — як згорнуте, сценарій його не втрачає).
+        // Фокусу йому не можна: фокус на вікні схованого столу показує весь стіл
+        cmds.push(`dispatch setprop address:${a} no_focus 1`, `dispatch movetoworkspacesilent ${dragWs},address:${a}`)
         hypr(cmds)
     }
     function moveDrag(x, y) {
@@ -197,6 +203,8 @@ Singleton {
         const m = monitorAt(dragX, dragY) ?? monitors.find(m => m.id === d.mon)
         if (!m) { cancelDrag(); return }
         const a = d.address, ws = m.activeWorkspace.id
+        const back = `dispatch setprop address:${a} no_focus unset`
+        const p = client(placeAddr)
         let cmds
         if (d.floating) {
             // плаваюче — туди, де відпустили, тим самим місцем під курсором, що й тримали
@@ -204,35 +212,60 @@ Singleton {
             const x = Math.round(Math.max(m.x, Math.min(dragX - d.offX, m.x + mw - d.rect.w)))
             const y = Math.round(Math.max(m.y, Math.min(dragY - d.offY, m.y + mh - d.rect.h)))
             cmds = [`dispatch movetoworkspacesilent ${ws},address:${a}`, `dispatch movewindowpixel exact ${x} ${y},address:${a}`,
-                    `dispatch focuswindow address:${a}`]
-        } else if (placeAddr && client(placeAddr) && client(placeAddr).workspace.id === ws) {
+                    back, `dispatch focuswindow address:${a}`]
+        } else if (p && p.workspace.id === ws) {
             // розкладене — рівно на місце: ділить його (воно у фокусі), а потім місце зникає й вікно забирає весь його простір
-            cmds = [`dispatch focuswindow address:${placeAddr}`, "keyword dwindle:use_active_for_splits 1",
+            cmds = [`dispatch setprop address:${placeAddr} no_focus 0`, `dispatch focuswindow address:${placeAddr}`,
+                    "keyword dwindle:use_active_for_splits 1",
                     `dispatch movetoworkspacesilent ${ws},address:${a}`,
                     `dispatch movetoworkspacesilent ${dragWs},address:${placeAddr}`,
-                    `dispatch focuswindow address:${a}`, ...restoreOpts()]
+                    back, `dispatch focuswindow address:${a}`, ...restoreOpts()]
         } else {
-            cmds = [`dispatch movetoworkspacesilent ${ws},address:${a}`, "keyword cursor:no_warps 1",
-                    `dispatch focuswindow address:${a}`, ...restoreOpts()]
+            cmds = [...(p ? [`dispatch movetoworkspacesilent ${dragWs},address:${placeAddr}`] : []),
+                    `dispatch movetoworkspacesilent ${ws},address:${a}`, back, `dispatch focuswindow address:${a}`, ...restoreOpts()]
         }
         finish(cmds)
     }
     function cancelDrag() {
         const d = drag
         if (!d) return
-        const cmds = [`dispatch movetoworkspacesilent ${d.wsId},address:${d.address}`]
+        const cmds = []
+        if (client(placeAddr)) cmds.push(`dispatch movetoworkspacesilent ${dragWs},address:${placeAddr}`)
+        cmds.push(`dispatch movetoworkspacesilent ${d.wsId},address:${d.address}`, `dispatch setprop address:${d.address} no_focus unset`)
         if (d.floating) cmds.push(`dispatch movewindowpixel exact ${d.rect.x} ${d.rect.y},address:${d.address}`)
         else cmds.push(...restoreOpts())
         finish(cmds)
     }
     function finish(cmds) {
-        if (!drag.floating) restore.restart()
-        drag = null                           // місце (DropPlace) зникає саме, коли drag порожній
-        hypr(cmds)
+        if (!drag.floating) { restore.restart(); placeHold.restart() }
+        drag = null                           // місце (DropPlace) зникає саме, щойно мине placeHold
+        hypr([...cmds, "keyword unbind ,mouse:272"])
         Windows.moving = false
         hovered = ""
         placeKey = ""
         soon.restart()
+    }
+
+    // курсор під час перетягування — прямо з сокета Hyprland: поки кнопку затиснуто (Super+ЛКМ перехопив
+    // Hyprland) чи вікна перескакують, наш шар руху курсора може й не отримувати
+    Process {
+        id: cursorStream
+        running: !!root.drag
+        command: ["python3", "-u", "-c", `
+import os, socket, time
+p = os.path.join(os.environ["XDG_RUNTIME_DIR"], "hypr", os.environ["HYPRLAND_INSTANCE_SIGNATURE"], ".socket.sock")
+last = None
+while True:
+    s = socket.socket(socket.AF_UNIX); s.connect(p); s.sendall(b"cursorpos"); d = s.recv(64); s.close()
+    if d != last: print(d.decode().strip(), flush=True); last = d
+    time.sleep(0.012)
+`]
+        stdout: SplitParser {
+            onRead: line => {
+                const [x, y] = line.split(",").map(Number)
+                if (root.drag && !isNaN(x) && !isNaN(y)) root.moveDrag(x, y)
+            }
+        }
     }
 
     // Super+ЛКМ: узяти вікно під курсором (замість звичайного перетягування Hyprland), Super+відпустити — поставити
@@ -247,7 +280,7 @@ Singleton {
     }
     function release() {
         if (grabbing) releaseEarly = true
-        else if (drag && drag.grab) endDrag()
+        else if (drag) endDrag()
     }
     Process {
         id: cursorProc

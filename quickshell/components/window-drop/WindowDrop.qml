@@ -104,12 +104,10 @@ PanelWindow {
         property bool menuWasOpen: false
         onPositionChanged: m => {
             if (pressed_ && (pressedButtons & Qt.LeftButton)) {
+                // далі курсор і відпускання веде Drops (сокет Hyprland)
                 if (!Drops.drag && Math.hypot(m.x - press.x, m.y - press.y) > 6) Drops.startDrag(pressed_, m.x + win.ox, m.y + win.oy)
-                else if (Drops.drag) Drops.moveDrag(m.x + win.ox, m.y + win.oy)
                 return
             }
-            // Super+ЛКМ: кнопку перехопив Hyprland, тож сюди йде просто рух курсора
-            if (Drops.drag && Drops.drag.grab) { Drops.moveDrag(m.x + win.ox, m.y + win.oy); return }
             if (Drops.busy) return
             const p = win.proximity(m.x, m.y)
             if (p && p.near > 0) { leave.stop(); win.mine = p.address; Drops.hovered = p.address; win.near = p.near }
@@ -119,16 +117,16 @@ PanelWindow {
         onPressed: m => {
             menuWasOpen = !!Drops.menuFor
             if (m.button === Qt.RightButton) { if (Drops.drag) Drops.cancelDrag(); return }
-            // узяте Super+ЛКМ, а Super відпустили раніше за кнопку — тоді ставимо наступним кліком
-            if (Drops.drag && Drops.drag.grab) { Drops.endDrag(); return }
+            // запасний шлях: перетягування не закінчилось відпусканням (Hyprland його не передав) — ставимо кліком
+            if (Drops.drag) { Drops.endDrag(); return }
             pressed_ = !menuWasOpen && Drops.hovered && win.near > 0 ? Drops.hovered : ""
             press = Qt.point(m.x, m.y)
             if (pressed_) { win.near = 1; forceActiveFocus() }
         }
         onReleased: m => {
             if (m.button !== Qt.LeftButton) return
-            if (Drops.drag) Drops.endDrag()
-            else if (pressed_) Drops.openMenu(pressed_)
+            // кінець перетягування ловить Hyprland (drop release); тут лише клік — меню
+            if (!Drops.drag && pressed_) Drops.openMenu(pressed_)
             pressed_ = ""
         }
         onClicked: if (menuWasOpen) Drops.closeMenu()     // клік повз меню — закрити
