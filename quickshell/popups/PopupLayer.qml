@@ -4,7 +4,7 @@ import Quickshell.Wayland
 import "../theme"
 import "../services"
 import "../dock"
-import "../components/app-menu"
+import "../components/tile-menu"
 
 // Шар під смугою для спливаючих вікон. Ловить кліки лише в межах самого вікна;
 // клік деінде закриває його через focus grab (shell.qml), Esc — з клавіатури.

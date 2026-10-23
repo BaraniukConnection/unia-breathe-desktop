@@ -4,7 +4,7 @@ import Quickshell.Wayland
 import Quickshell.Hyprland
 import "../theme"
 import "../services"
-import "../components/app-menu"
+import "../components/tile-menu"
 
 // Док одного монітора: 5 обраних програм і стрілка меню. Схований; виїжджає, коли курсор торкається
 // нижнього краю екрана (як в Ubuntu), ховається, коли курсор пішов, а меню закрите.

@@ -5,8 +5,8 @@ import Quickshell.Bluetooth
 import Quickshell.Networking
 import "../theme"
 import "../services"
-import "../components/app-menu"
-import "../components/settings"
+import "../components/tile-menu"
+import "../components/settings-box"
 
 // Панель керування й сповіщень: Wi-Fi, Bluetooth, закріплені налаштування, гучність, сповіщення, живлення.
 Glass {
