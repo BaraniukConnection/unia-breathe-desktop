@@ -1,0 +1,17 @@
+#!/bin/sh
+# Сон з панелі керування / меню ⏻ — як Super+L, а вже тоді сон.
+# Якщо одразу викликати systemctl suspend, екран блокування запускає hypridle (before_sleep_cmd) уже посеред
+# засинання: hyprlock не встигає з'явитись (напівпрозорий), і після пробудження екран зависає.
+# Тож спершу блокуємо й чекаємо, поки hyprlock справді заблокує сеанс, і лише тоді присипляємо.
+loginctl lock-session
+
+# hyprlock повідомляє logind, що сеанс заблоковано (LockedHint); чекаємо до 5 с
+i=0
+while [ "$i" -lt 50 ]; do
+    [ "$(loginctl show-session "${XDG_SESSION_ID:-auto}" -p LockedHint --value 2>/dev/null)" = yes ] && break
+    sleep 0.1
+    i=$((i + 1))
+done
+sleep 1    # дати hyprlock домалювати появу
+
+exec systemctl suspend
