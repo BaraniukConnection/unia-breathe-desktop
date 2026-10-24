@@ -22,7 +22,7 @@ done
 # of that commit. <target>/oxygen-files must be a clone of the fork that has Loaf's history (git fetch upstream).
 dest="$TARGET/oxygen-files"
 if [ ! -d "$dest/.git" ]; then
-    echo "oxygen-files: clone it first: git clone https://github.com/BaraniukConnection/oxygen-files $dest" >&2
+    echo "oxygen-files: clone it first: git clone https://github.com/BaraniukConnection/OxygenFiles $dest" >&2
     exit 1
 fi
 git clone -q --single-branch -b main "$REPO" "$TMP/oxygen-files"

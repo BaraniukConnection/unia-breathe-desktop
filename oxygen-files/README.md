@@ -60,8 +60,8 @@ Oxygen Files is built against your system's Qt 6. On Fedora:
 ```bash
 sudo dnf install cargo rust cmake ninja-build gcc-c++ pkgconf-pkg-config \
   qt6-qtbase-devel qt6-qtbase-private-devel qt6-qtdeclarative-devel qt6-qtsvg-devel qt6-qtwayland-devel
-git clone https://github.com/BaraniukConnection/oxygen-files
-cd oxygen-files
+git clone https://github.com/BaraniukConnection/OxygenFiles
+cd OxygenFiles
 ./install.sh        # builds if needed; installs the oxygen-files command and an "Oxygen Files" menu entry
 ```
 
