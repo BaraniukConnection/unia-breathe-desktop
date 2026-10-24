@@ -1,0 +1,162 @@
+# Contributing to Loaf
+
+Thank you for your interest in contributing to **Loaf**! Loaf is an experimental, modern Material 3 Expressive file manager for Linux, built with Rust, C++, and Qt6 Quick.
+
+Whether you are fixing a bug, adding new features, improving packaging, or helping with documentation, all contributions are welcome.
+
+---
+
+## 🧭 Branching Strategy
+
+- **`dev`** is our primary active development branch. **All pull requests must target `dev`**.
+- **`main`** is reserved strictly for stable release tags. No code should be edited here unless it's part of a release.
+
+### Opening a Pull Request
+1. Fork the repository and clone your fork.
+2. Branch off of the latest `dev` branch:
+   ```bash
+   git checkout dev
+   git pull origin dev
+   git checkout -b feature/my-cool-feature
+   ```
+3. Keep your commits clean and descriptive (we follow [Conventional Commits](https://www.conventionalcommits.org/), e.g. `feat:`, `fix:`, `perf:`, `chore:`).
+4. If `dev` has moved forward while you were working, **rebase** your branch onto `origin/dev` before opening your PR:
+   ```bash
+   git fetch origin
+   git rebase origin/dev
+   ```
+
+---
+
+## 🛠️ Development Environment
+
+### Using Nix (Recommended)
+
+The repository provides a complete Nix flake containing all Qt6 libraries, Rust toolchains, and build tooling:
+
+```bash
+# Run Loaf in development mode:
+nix develop --command cargo run
+
+# Run unit tests:
+nix develop --command cargo test
+
+# Build an optimized release binary:
+nix develop --command cargo build --release
+```
+
+### Manual Setup (Without Nix)
+
+If you prefer building directly on your host distribution:
+
+1. **Rust Toolchain**: Rust 1.75+ (`rustc`, `cargo`).
+2. **C++ Compiler**: A modern C++17 compiler (`g++` or `clang++`).
+3. **Qt6 Libraries**:
+   - `qtbase` (including private headers and `QtDBus`)
+   - `qtdeclarative` (QML and Quick engine)
+   - `qtsvg`
+   - `qtwayland`
+4. **Build Tools**: `cmake`, `ninja`, `pkg-config`.
+
+**Fedora / RHEL / CentOS:**
+```bash
+sudo dnf install qt6-qtbase-devel qt6-qtbase-private-devel qt6-qtdeclarative-devel qt6-qtsvg-devel qt6-qtwayland-devel cmake ninja-build pkg-config
+```
+
+**Ubuntu / Debian / Pop!_OS:**
+```bash
+sudo apt install build-essential cmake ninja-build pkg-config \
+    qt6-base-dev qt6-base-private-dev qt6-declarative-dev qt6-svg-dev libqt6waylandclient6-dev
+```
+
+**Arch Linux / Manjaro / EndeavourOS:**
+```bash
+sudo pacman -S --needed base-devel cmake ninja pkgconf qt6-base qt6-declarative qt6-svg qt6-wayland
+```
+
+Then build and run:
+```bash
+cargo run
+cargo test
+```
+
+---
+
+## 🧱 Codebase Architecture
+
+Loaf is organized into three clean layers:
+
+```text
+loaf/
+├── src/                  # Pure-Rust & CXX-Qt engine
+│   ├── core.rs           # LoafCore QObject: drives, bookmarks, settings, background jobs, Open With
+│   ├── pane.rs           # LoafEngine: QAbstractListModel on worker threads with live inotify updates
+│   ├── fsops.rs          # Threaded copy, move, delete with cancel and progress callbacks
+│   ├── trash.rs          # FreeDesktop trash spec with removable drive ($topdir/.Trash-$uid) support
+│   ├── watcher.rs        # inotify directory and device monitoring
+│   ├── apps.rs           # Cached desktop entries and MIME associations
+│   ├── archive.rs        # Safe extraction and compression (zip, 7z, tar, cpio)
+│   ├── drives.rs         # Storage drive discovery and UDisks2 integration
+│   ├── icons.rs          # Icon theme resolution and XDG data lookup
+│   ├── listing.rs        # Directory listing, natural sorting, and hidden file logic
+│   └── xdg.rs            # Localized XDG user dirs, GTK bookmarks, recently-used.xbel, scripts
+├── cpp/                  # Native C++ bridges and async providers
+│   ├── thumbnails.cpp    # QQuickAsyncImageProvider (image://thumb/...) running on QThreadPool
+│   └── native.cpp        # D-Bus single instance, system clipboard interop, MIME detection
+└── qml/                  # Material 3 Expressive QML Interface
+    ├── main.qml          # App shell, global shortcuts, dialog routing, top navigation bar
+    ├── FilePane.qml      # Primary file view pane: tabs, split view (F3), grid/list views
+    ├── Sidebar.qml       # Collapsible navigation rail: places, drives, bookmarks, trash
+    ├── QuickLook.qml     # Spacebar file preview modal with syntax highlighting & media inspection
+    ├── SettingsView.qml  # Preferences panel (Interface, Behavior, Accessibility, Experimental, About)
+    ├── PCView.qml        # "This PC" storage drive cards and frequent directory dashboard
+    ├── ConflictDialog.qml# File transfer conflict resolution dialog (side-by-side comparison)
+    ├── Theme.qml         # Material 3 tokens, dynamic palettes, Pywal/Matugen integration
+    └── components/       # Reusable Material 3 design components (LoafButton, LoafMenu, etc.)
+```
+
+---
+
+## 🎨 Design & Coding Guidelines
+
+### 1. Material 3 Expressive Design
+- Loaf strictly adheres to Material 3 Expressive aesthetics: generous paddings, pill-shaped tags, rounded surface containers (`theme.radiusXl`), and smooth spring/cubic transitions.
+- Every animation must respect `theme.animate` (which honors the user's Reduce Motion and Low-Power settings).
+- Use reusable components in `qml/components/` (`LoafButton`, `LoafMenu`, `LoafSwitch`, `LoafSegmented`, `LoafDialog`, `LoafCard`) rather than hand-rolling one-off UI primitives.
+
+### 2. Performance & Responsiveness
+- **Never block the main UI thread**: Filesystem I/O, thumbnail generation, large directory scans, and compression must run on worker threads or async providers.
+- **Image Thumbnails**: All thumbnails use `image://thumb/...` through the native `QQuickAsyncImageProvider`. Always specify an explicit `sourceSize` on `Image` items to avoid decoding full-resolution raw photos into RAM.
+- **QML Layouts**: Avoid circular height/width references in QML items (e.g. making an item's `height` depend on a parent view's `contentHeight`), as this causes binding loops and crash hazards.
+
+### 3. Broad Linux Distribution Portability
+- **Never hardcode Nix store paths** or distro-specific paths in code or packaging. Use `util::which("binary")` for runtime discovery.
+- Keep dependencies lean and optional where possible (e.g. 7-Zip, ffmpegthumbnailer, and secret-tool are optional runtime enhancements; Loaf degrades gracefully when they are absent).
+
+---
+
+## 🧪 Testing Your Changes
+
+Before submitting your PR, verify:
+
+1. **Backend Tests**: Run `cargo test` to ensure all pure-Rust unit tests pass:
+   ```bash
+   cargo test
+   ```
+2. **Formatting**: Ensure your code follows formatting standards:
+   ```bash
+   cargo fmt --check
+   cargo clippy
+   ```
+3. **Runtime Check**: Launch Loaf and ensure there are no QML warnings or console errors in `stdout` / `stderr`:
+   ```bash
+   ./target/debug/loaf
+   ```
+
+---
+
+## 💡 Feature Ideas & Roadmap
+
+Check [`TODO.md`](./TODO.md) before submitting large feature suggestions to see existing roadmap items, community requests, and planned view experiments.
+
+If you have questions or want to discuss an architectural change before writing code, feel free to open a Discussion on GitHub or to message me on Discord (m_uvex)!

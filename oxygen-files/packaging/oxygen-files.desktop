@@ -1,0 +1,18 @@
+[Desktop Entry]
+Name=Oxygen Files
+Comment=Material 3 Expressive File Manager (Loaf fork, Oxygen Theme Family)
+GenericName=File Manager
+Exec=oxygen-files %U
+Icon=loaf
+Terminal=false
+Type=Application
+StartupNotify=true
+StartupWMClass=loaf
+Categories=System;FileTools;FileManager;Core;
+MimeType=inode/directory;
+Keywords=files;folders;explorer;browser;manager;loaf;oxygen;
+Actions=NewWindow;
+
+[Desktop Action NewWindow]
+Name=New Window
+Exec=oxygen-files --new-window
