@@ -288,6 +288,11 @@ Item {
             "separatorBefore": true,
             "action": function () { pcView.requestRename(d); }
         });
+        items.push({
+            "text": qsTr("Change Icon…"),
+            "icon": "paint-brush",
+            "action": function () { iconPicker.openFor(theme.driveIconKey(d)); }
+        });
         if (external) {
             items.push({
                 "text": qsTr("Eject"),
@@ -502,7 +507,14 @@ Item {
                                         spacing: 10
 
                                         LoafIcon {
+                                            visible: theme.customIcon("place:" + modelData.id) === ""
                                             name: modelData.icon
+                                            size: 20
+                                            color: theme.primary
+                                        }
+                                        CustomIcon {
+                                            visible: spec !== ""
+                                            spec: theme.customIcon("place:" + modelData.id)
                                             size: 20
                                             color: theme.primary
                                         }

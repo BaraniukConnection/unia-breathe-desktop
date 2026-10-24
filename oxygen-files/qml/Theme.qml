@@ -64,6 +64,48 @@ Item {
     FontLoader { id: fontDuotone; source: "qrc:/loaf/fonts/Phosphor-Duotone.ttf" }
     FontLoader { id: fontLight; source: "qrc:/loaf/fonts/Phosphor-Light.ttf" }
     FontLoader { id: fontThin; source: "qrc:/loaf/fonts/Phosphor-Thin.ttf" }
+    FontLoader { id: fontMaterial; source: "qrc:/loaf/fonts/MaterialSymbolsOutlined.ttf" }
+    readonly property string materialFamily: fontMaterial.name || "Material Symbols Outlined"
+
+    // ---- custom icons -------------------------------------------------------
+    // Icons the user picked for folders ("/abs/path"), sidebar places
+    // ("place:<id>") and disks ("drive:<model>/<name>"), as "<set>:<value>" specs:
+    // system:<icon-name>, simple:<slug>, simple-color:<slug>, material:<name>,
+    // emoji:<char>, image:<url | path | data: URI>, user:<file url>.
+    property var customIcons: ({})
+    function customIcon(key) {
+        return (key && customIcons[key]) ? customIcons[key] : "";
+    }
+    function setCustomIcon(key, spec) {
+        var copy = Object.assign({}, customIcons);
+        if (spec && spec.length > 0)
+            copy[key] = spec;
+        else
+            delete copy[key];
+        customIcons = copy;
+    }
+    function driveIconKey(d) {
+        return d ? "drive:" + (d.model || "") + "/" + (d.name || d.device || "") : "";
+    }
+
+    // Simple Icons, parsed on first use: slug -> [slug, title, hex, path].
+    property var simpleIconRows: null
+    property var simpleIconMap: null
+    function loadSimpleIcons() {
+        if (simpleIconRows === null && typeof core !== "undefined" && core) {
+            var rows = JSON.parse(core.icon_set_json("simple"));
+            var map = {};
+            for (var i = 0; i < rows.length; ++i)
+                map[rows[i][0]] = rows[i];
+            simpleIconMap = map;
+            simpleIconRows = rows;
+        }
+        return simpleIconRows || [];
+    }
+    function simpleIcon(slug) {
+        loadSimpleIcons();
+        return simpleIconMap ? (simpleIconMap[slug] || null) : null;
+    }
 
     function getFontFamily() {
         switch (phosphorWeight) {
@@ -2068,6 +2110,10 @@ Item {
         }
         value = readSetting("hideTrashWhenEmpty");
         if (value.length > 0) hideTrashWhenEmpty = (value === "true");
+        value = readSetting("customIcons");
+        if (value.length > 0) {
+            try { customIcons = JSON.parse(value); } catch (e) { customIcons = {}; }
+        }
         value = readSetting("glassOpacity");
         if (value.length > 0) glassOpacity = parseFloat(value) || 1.0;
         loaded = true;
@@ -2101,4 +2147,5 @@ Item {
     onDisabledMenuItemsChanged: writeSetting("disabledMenuItems", JSON.stringify(disabledMenuItems))
     onHideTrashWhenEmptyChanged: writeSetting("hideTrashWhenEmpty", hideTrashWhenEmpty)
     onGlassOpacityChanged: writeSetting("glassOpacity", glassOpacity)
+    onCustomIconsChanged: writeSetting("customIcons", JSON.stringify(customIcons))
 }

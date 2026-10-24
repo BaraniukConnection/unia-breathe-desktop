@@ -748,10 +748,11 @@ ApplicationWindow {
     FontLoader { source: "qrc:/loaf/fonts/Phosphor.ttf" }
     FontLoader { source: "qrc:/loaf/fonts/Phosphor-Bold.ttf" }
 
-    // Decorative background blobs (skipped in low-power mode).
+    // Decorative background blobs (skipped in low-power mode and on glass, where they
+    // read as stray shapes over the blurred wallpaper).
     Item {
         anchors.fill: parent
-        visible: !theme.lowPower
+        visible: !theme.lowPower && theme.glassOpacity >= 1.0
         Rectangle {
             width: 420; height: 220; radius: 200; x: -40; y: -50
             color: theme.primaryContainer
@@ -1320,7 +1321,9 @@ ApplicationWindow {
                                 if (viewMenuPopup.visible) {
                                     viewMenuPopup.close();
                                 } else {
-                                    var pt = mapToItem(window.contentItem, viewDropdownButton.width - viewMenuPopup.width, viewDropdownButton.height + 6);
+                                    // Map from the button, not this MouseArea (the caret on its right), so the
+                                    // menu's right edge lines up with the button's.
+                                    var pt = viewDropdownButton.mapToItem(window.contentItem, viewDropdownButton.width - viewMenuPopup.width, viewDropdownButton.height + 6);
                                     viewMenuPopup.openAt(pt.x, pt.y);
                                 }
                             }
@@ -2050,6 +2053,8 @@ ApplicationWindow {
             m.push({ text: qsTr("Copy Path"), icon: "copy-simple", shortcut: "Ctrl+Shift+C", itemKey: "copy_path", action: function() { window.copyPathOfSelection(); } });
             if (single)
                 m.push({ text: qsTr("Rename…"), icon: "pencil-simple", shortcut: "F2", itemKey: "rename", action: function() { pane.startRename(); } });
+            if (single && item.is_dir)
+                m.push({ text: qsTr("Change Icon…"), icon: "paint-brush", itemKey: "change_icon", action: function() { iconPicker.openFor(item.path); } });
             else
                 m.push({ text: qsTr("Rename %1 Items…").arg(paths.length), icon: "pencil-simple", shortcut: "F2", itemKey: "rename", action: function() { batchRename.showFor(pane.selectedItems()); } });
             if (kind === "dir") {
@@ -2397,6 +2402,11 @@ ApplicationWindow {
         }
     }
 
+    // Custom icons for folders, sidebar places and disks.
+    IconPicker {
+        id: iconPicker
+    }
+
     // Sidebar entry menu.
     LoafMenu {
         id: placeMenu
@@ -2411,6 +2421,7 @@ ApplicationWindow {
                 m.push({ text: qsTr("Empty Trash"), icon: "trash", danger: true, enabled: !core.trash_empty, action: function() { window.confirmEmptyTrash(); } });
             if (place.kind === "place" || place.kind === "bookmark")
                 m.push({ text: qsTr("Rename / Change Folder…"), icon: "pencil-simple", action: function() { placeEdit.openFor(place); } });
+            m.push({ text: qsTr("Change Icon…"), icon: "paint-brush", action: function() { iconPicker.openFor("place:" + place.id); } });
             m.push({ text: qsTr("Move Up"), icon: "arrow-up", separatorBefore: true, enabled: idx > 0, action: function() { core.move_place(place.id, idx - 1); } });
             m.push({ text: qsTr("Move Down"), icon: "arrow-down", enabled: idx >= 0 && idx < all.length - 1, action: function() { core.move_place(place.id, idx + 1); } });
             if (place.kind === "bookmark")
@@ -2915,6 +2926,7 @@ ApplicationWindow {
             { id: "copy_path", name: qsTr("Copy Path"), icon: "copy-simple", shortcut: "Ctrl+Shift+C" },
             { id: "paste", name: qsTr("Paste"), icon: "clipboard", shortcut: "Ctrl+V" },
             { id: "rename", name: qsTr("Rename"), icon: "pencil-simple", shortcut: "F2" },
+            { id: "change_icon", name: qsTr("Change Icon"), icon: "paint-brush", shortcut: "" },
             { id: "duplicate", name: qsTr("Duplicate"), icon: "copy-simple", shortcut: "" },
             { id: "make_link", name: qsTr("Make Link"), icon: "link", shortcut: "" },
             { id: "compress", name: qsTr("Compress"), icon: "file-archive", shortcut: "" },

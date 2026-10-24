@@ -960,6 +960,7 @@ Item {
                     required property string thumb_id
                     required property string display_name
                     required property bool starred
+                    readonly property string customSpec: is_dir ? theme.customIcon(path) : ""
 
                     readonly property bool isSelected: !!pane.selection[path]
                     readonly property bool isCut: !!window.cutSet[path]
@@ -1030,8 +1031,16 @@ Item {
                             Layout.preferredWidth: Math.round(46 * pane.zoom)
                             Layout.preferredHeight: Math.round(46 * pane.zoom)
 
+                            CustomIcon {
+                                visible: card.customSpec !== "" && !card.isCut
+                                anchors.centerIn: parent
+                                spec: card.customSpec
+                                size: pane.iconSize
+                                color: card.isSelected ? theme.secondaryContainerFg : theme.primary
+                            }
+
                             LoafIcon {
-                                visible: !card.hasThumb && theme.iconSource === "phosphor"
+                                visible: !card.hasThumb && (card.customSpec === "" || card.isCut) && theme.iconSource === "phosphor"
                                 anchors.centerIn: parent
                                 name: card.isCut ? (card.is_dir ? "folder-dashed" : "file-dashed") : (card.icon || "file")
                                 size: pane.iconSize
@@ -1039,7 +1048,7 @@ Item {
                             }
 
                             Image {
-                                visible: !card.hasThumb && theme.iconSource !== "phosphor"
+                                visible: !card.hasThumb && (card.customSpec === "" || card.isCut) && theme.iconSource !== "phosphor"
                                 anchors.centerIn: parent
                                 source: theme.iconSource !== "phosphor" ? window.systemIcon(card.system_icon) : ""
                                 width: pane.iconSize + 2
@@ -1376,6 +1385,7 @@ Item {
                     required property string detail
                     required property string display_name
                     required property bool starred
+                    readonly property string customSpec: is_dir ? theme.customIcon(path) : ""
 
                     readonly property bool isSelected: !!pane.selection[path]
                     readonly property bool isCut: !!window.cutSet[path]
@@ -1413,15 +1423,22 @@ Item {
                                 width: 22; height: 22
                                 Layout.alignment: Qt.AlignVCenter
 
+                                CustomIcon {
+                                    visible: row.customSpec !== "" && !row.isCut
+                                    anchors.centerIn: parent
+                                    spec: row.customSpec
+                                    size: 18
+                                    color: row.isSelected ? theme.secondaryContainerFg : theme.primary
+                                }
                                 LoafIcon {
-                                    visible: !row.hasThumb && theme.iconSource === "phosphor"
+                                    visible: !row.hasThumb && (row.customSpec === "" || row.isCut) && theme.iconSource === "phosphor"
                                     anchors.centerIn: parent
                                     name: row.isCut ? (row.is_dir ? "folder-dashed" : "file-dashed") : (row.icon || "file")
                                     size: 18
                                     color: row.isSelected ? theme.secondaryContainerFg : (row.is_dir ? theme.primary : theme.textMain)
                                 }
                                 Image {
-                                    visible: !row.hasThumb && theme.iconSource !== "phosphor"
+                                    visible: !row.hasThumb && (row.customSpec === "" || row.isCut) && theme.iconSource !== "phosphor"
                                     anchors.centerIn: parent
                                     source: theme.iconSource !== "phosphor" ? window.systemIcon(row.system_icon) : ""
                                     width: 18; height: 18

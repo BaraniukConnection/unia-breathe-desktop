@@ -63,6 +63,8 @@ pub mod qobject {
         fn reload_wallpaper_colors(self: Pin<&mut LoafCore>) -> bool;
         #[qinvokable]
         fn resolve_icon(self: &LoafCore, theme: &QString, name: &QString) -> QString;
+        #[qinvokable]
+        fn icon_set_json(self: &LoafCore, set: &QString) -> QString;
 
         // places, bookmarks, starred, frequent
         #[qinvokable]
@@ -725,6 +727,20 @@ impl qobject::LoafCore {
         }
         self.as_mut().set_wallpaper_colors_json(q(&content));
         true
+    }
+
+    /// Data for the custom icon picker: "simple", "material" and "emoji" are
+    /// bundled; "system" lists the current icon theme, "user" the user's own
+    /// icon themes.
+    pub fn icon_set_json(&self, set: &QString) -> QString {
+        match set.to_string().as_str() {
+            "simple" => q(include_str!("../assets/icon-sets/simple-icons.json")),
+            "material" => q(include_str!("../assets/icon-sets/material-symbols.json")),
+            "emoji" => q(include_str!("../assets/icon-sets/emoji.json")),
+            "system" => q(&serde_json::to_string(&icons::list_names(&icons::system_theme())).unwrap_or_default()),
+            "user" => q(&icons::user_themes().to_string()),
+            _ => q("[]"),
+        }
     }
 
     pub fn resolve_icon(&self, theme_name: &QString, name: &QString) -> QString {

@@ -258,6 +258,7 @@ Rectangle {
                 required property int index
                 iconName: modelData.icon
                 systemIcon: modelData.system_icon
+                customSpec: theme.customIcon("place:" + modelData.id) || (modelData.path ? theme.customIcon(modelData.path) : "")
                 label: modelData.name
                 showLabel: rail.expanded
                 selected: rail.activeId === modelData.id
@@ -357,6 +358,7 @@ Rectangle {
         id: btn
         property string iconName: "folder"
         property string systemIcon: ""
+        property string customSpec: ""
         property string label: ""
         property bool showLabel: false
         property bool selected: false
@@ -402,15 +404,22 @@ Rectangle {
             scale: mouse.pressed ? 0.88 : (mouse.containsMouse ? 1.10 : 1.0)
             Behavior on scale { enabled: theme.animate; SpringAnimation { spring: 4.5; damping: 0.3 } }
 
+            CustomIcon {
+                visible: btn.customSpec.length > 0
+                anchors.centerIn: parent
+                spec: btn.customSpec
+                size: 20
+                color: btn.selected ? theme.primaryContainerFg : (mouse.containsMouse ? theme.textMain : theme.textMuted)
+            }
             LoafIcon {
-                visible: theme.iconSource === "phosphor" || btn.systemIcon.length === 0
+                visible: btn.customSpec.length === 0 && (theme.iconSource === "phosphor" || btn.systemIcon.length === 0)
                 anchors.centerIn: parent
                 name: btn.iconName
                 size: 20
                 color: btn.selected ? theme.primaryContainerFg : (mouse.containsMouse ? theme.textMain : theme.textMuted)
             }
             Image {
-                visible: theme.iconSource !== "phosphor" && btn.systemIcon.length > 0
+                visible: btn.customSpec.length === 0 && theme.iconSource !== "phosphor" && btn.systemIcon.length > 0
                 anchors.centerIn: parent
                 source: visible ? window.systemIcon(btn.systemIcon) : ""
                 width: 20

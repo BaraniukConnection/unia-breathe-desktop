@@ -7,5 +7,6 @@
     <file alias="fonts/Phosphor-Light.ttf">fonts/Phosphor-Light.ttf</file>
     <file alias="fonts/Phosphor-Thin.ttf">fonts/Phosphor-Thin.ttf</file>
     <file alias="oxygen-files.svg">oxygen-files.svg</file>
+    <file alias="fonts/MaterialSymbolsOutlined.ttf">fonts/MaterialSymbolsOutlined.ttf</file>
   </qresource>
 </RCC>

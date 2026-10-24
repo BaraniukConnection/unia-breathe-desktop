@@ -33,6 +33,13 @@ sudo dnf install cargo rust cmake ninja-build gcc-c++ pkgconf-pkg-config qt6-qtb
 - **Disks** на сторінці «This PC», між Places і Frequent: картка на кожен диск (`qml/components/DiskCard.qml`) —
   велика іконка, назва, вільно, зайнято / всього, шкала. Клік відкриває диск (або монтує), права кнопка — меню диска.
   Старі секції Internal / External Storage типово сховані.
+- **Власні значки** (як у Kando): права кнопка на теці, пункті бічної панелі чи диску → Change Icon…
+  Набори: системна тема значків, Simple Icons (просто або в кольорах брендів), Material Symbols, emoji,
+  власні теми (теки з SVG/PNG у `~/.config/loaf/icon-themes/<тема>/`) і будь-яке зображення за шляхом, URL
+  чи data: URI. Значок теки видно в сітці, списку й бічній панелі. Набори вбудовані (`assets/icon-sets/`), вибір
+  зберігається в налаштуваннях (`customIcons`).
+- Декоративні плями на тлі показуються лише без скла (Transparency: Off).
+- Меню View відкривається під кнопкою: позиція рахувалась від стрілки, а не від кнопки (баг оригіналу).
 - Диски тепер зчитуються одразу при запуску (`src/core.rs`); в оригіналі — лише після зміни пристроїв,
   тож «This PC» після старту був без дисків.
 
@@ -55,3 +62,6 @@ sudo dnf install cargo rust cmake ninja-build gcc-c++ pkgconf-pkg-config qt6-qtb
 - **Диски не зчитуються при запуску** (знайдено на `dev` 8877dc1). `load_drives()` викликав лише DeviceWatcher при
   зміні пристроїв, тож «This PC» після старту був без дисків, поки щось не підключиш. Фікс — один виклик
   `self.as_mut().load_drives();` в `initialize()` у `src/core.rs`.
+- **Меню View з'їжджає вбік** (`dev` 8877dc1). У `qml/main.qml` позиція рахується `mapToItem` від MouseArea
+  стрілки, а не від `viewDropdownButton`, тож меню зміщене на відстань від краю кнопки до стрілки. Фікс —
+  `viewDropdownButton.mapToItem(...)`.

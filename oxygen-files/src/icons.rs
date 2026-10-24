@@ -211,6 +211,78 @@ pub fn fallback_names(name: &str) -> Vec<String> {
 
 /// Resolves `name` in `theme` (then hicolor), returning a `file://` URL or
 /// an empty string when nothing matches.
+/// Every icon name the theme offers (with its Inherits= chain and hicolor),
+/// sorted, for the icon picker.
+pub fn list_names(theme: &str) -> Vec<String> {
+    let mut names = std::collections::BTreeSet::new();
+    let mut queue = vec![theme.to_string(), "hicolor".to_string()];
+    let mut seen = Vec::new();
+    while let Some(t) = queue.pop() {
+        if seen.contains(&t) || seen.len() > 16 {
+            continue;
+        }
+        seen.push(t.clone());
+        let Some(th) = load_theme(&t) else { continue };
+        queue.extend(th.inherits.iter().cloned());
+        for root in &th.roots {
+            for d in &th.dirs {
+                let Ok(entries) = fs::read_dir(root.join(&d.path)) else { continue };
+                for e in entries.flatten() {
+                    let p = e.path();
+                    let ext = p.extension().and_then(|x| x.to_str()).unwrap_or("");
+                    if EXTS.contains(&ext) {
+                        if let Some(stem) = p.file_stem().and_then(|s| s.to_str()) {
+                            names.insert(stem.to_string());
+                        }
+                    }
+                }
+            }
+        }
+    }
+    names.into_iter().collect()
+}
+
+/// User icon themes, Kando style: every folder in ~/.config/loaf/icon-themes is a
+/// theme, and every svg/png in it (recursively) an icon. Returns
+/// [{ name, icons: [{ name, url }] }].
+pub fn user_themes() -> serde_json::Value {
+    fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
+        let Ok(entries) = fs::read_dir(dir) else { return };
+        for e in entries.flatten() {
+            let p = e.path();
+            if p.is_dir() {
+                walk(&p, out);
+            } else if matches!(p.extension().and_then(|x| x.to_str()), Some("svg" | "png" | "jpg" | "jpeg" | "webp")) {
+                out.push(p);
+            }
+        }
+    }
+    let root = util::config_home().join("loaf/icon-themes");
+    let mut themes = Vec::new();
+    let Ok(entries) = fs::read_dir(&root) else { return serde_json::json!([]) };
+    let mut dirs: Vec<PathBuf> = entries.flatten().map(|e| e.path()).filter(|p| p.is_dir()).collect();
+    dirs.sort();
+    for dir in dirs {
+        let mut files = Vec::new();
+        walk(&dir, &mut files);
+        files.sort();
+        let icons: Vec<serde_json::Value> = files
+            .iter()
+            .map(|p| {
+                serde_json::json!({
+                    "name": p.file_stem().and_then(|s| s.to_str()).unwrap_or(""),
+                    "url": format!("file://{}", crate::trash::encode_path(p)),
+                })
+            })
+            .collect();
+        themes.push(serde_json::json!({
+            "name": dir.file_name().and_then(|s| s.to_str()).unwrap_or(""),
+            "icons": icons,
+        }));
+    }
+    serde_json::Value::Array(themes)
+}
+
 pub fn resolve(theme: &str, name: &str, size: u32) -> String {
     if name.is_empty() {
         return String::new();

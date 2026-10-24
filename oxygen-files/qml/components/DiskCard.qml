@@ -34,6 +34,7 @@ Item {
         return Math.max(0, root.totalBytes - root.usedBytes);
     }
     readonly property real usage: root.totalBytes > 0 ? root.usedBytes / root.totalBytes : 0
+    readonly property string customSpec: theme.customIcon(theme.driveIconKey(root.drive))
 
     function formatBytes(bytes) {
         var b = Number(bytes) || 0;
@@ -87,8 +88,17 @@ Item {
             color: root.isMounted ? theme.primaryContainer : theme.surfaceContainerHigh
 
             LoafIcon {
+                visible: root.customSpec === ""
                 anchors.centerIn: parent
                 name: root.driveIcon()
+                size: 38
+                color: root.isMounted ? theme.primaryContainerFg : theme.textMuted
+            }
+
+            CustomIcon {
+                visible: root.customSpec !== ""
+                anchors.centerIn: parent
+                spec: root.customSpec
                 size: 38
                 color: root.isMounted ? theme.primaryContainerFg : theme.textMuted
             }
