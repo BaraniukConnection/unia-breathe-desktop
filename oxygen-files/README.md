@@ -63,6 +63,12 @@ sudo dnf install cargo rust cmake ninja-build gcc-c++ pkgconf-pkg-config qt6-qtb
 - **Диски не зчитуються при запуску** (знайдено на `dev` 8877dc1). `load_drives()` викликав лише DeviceWatcher при
   зміні пристроїв, тож «This PC» після старту був без дисків, поки щось не підключиш. Фікс — один виклик
   `self.as_mut().load_drives();` в `initialize()` у `src/core.rs`.
+- **Перетягування в Customize Sidebar не працює** (`dev` 8877dc1). ListView забирає рух собі на прокрутку
+  (нема `preventStealing`), а кожен `move_place` перебудовує JS-масив моделі й знищує рядок під мишею. Фікс —
+  ListModel із `move()` наживо і збереження порядку на відпусканні (`qml/main.qml`, `customizePlaces`).
+- **Підменю перекриває меню** (`dev` 8877dc1). Коли праворуч немає місця, `LoafPopup.reposition()` зсуває підменю
+  на власну ширину від правого краю рядка, тобто на батьківське меню. Фікс — `flipRightEdge`: перекидати ліворуч
+  від лівого краю рядка (`openRightOf`).
 - **Меню View з'їжджає вбік** (`dev` 8877dc1). У `qml/main.qml` позиція рахується `mapToItem` від MouseArea
   стрілки, а не від `viewDropdownButton`, тож меню зміщене на відстань від краю кнопки до стрілки. Фікс —
   `viewDropdownButton.mapToItem(...)`.

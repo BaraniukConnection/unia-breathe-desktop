@@ -2760,28 +2760,43 @@ ApplicationWindow {
         id: customizePlaces
         title: qsTr("Customize Sidebar")
         dialogWidth: 440
-        property var all: []
-        onOpened: all = JSON.parse(core.all_places_json() || "[]")
+        // A ListModel (not a JS array) so a drag can move rows live without
+        // recreating the dragged delegate; the order is saved on release.
+        property bool dragging: false
+        function reload() {
+            var all = JSON.parse(core.all_places_json() || "[]");
+            placesOrderModel.clear();
+            for (var i = 0; i < all.length; ++i)
+                placesOrderModel.append({ json: JSON.stringify(all[i]) });
+        }
+        onOpened: reload()
         Connections {
             target: core
             function onPlaces_jsonChanged() {
-                if (customizePlaces.visible)
-                    customizePlaces.all = JSON.parse(core.all_places_json() || "[]");
+                if (customizePlaces.visible && !customizePlaces.dragging)
+                    customizePlaces.reload();
             }
         }
+        ListModel { id: placesOrderModel }
         ListView {
             id: customizePlacesList
             Layout.fillWidth: true
             Layout.preferredHeight: Math.min(380, contentHeight)
             clip: true
-            model: customizePlaces.all
+            model: placesOrderModel
+            interactive: !customizePlaces.dragging
             ScrollBar.vertical: ScrollBar {}
             spacing: 4
+            moveDisplaced: Transition {
+                enabled: theme.animate
+                NumberAnimation { properties: "y"; duration: 140; easing.type: Easing.OutCubic }
+            }
 
             delegate: Rectangle {
                 id: placeRow
-                required property var modelData
+                required property string json
                 required property int index
+                readonly property var modelData: JSON.parse(json)
                 width: ListView.view.width
                 height: 40
                 radius: theme.radiusM
@@ -2807,20 +2822,31 @@ ApplicationWindow {
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.SizeVerCursor
-                            property int startY: 0
+                            // Keep the ListView from taking the drag as a scroll.
+                            preventStealing: true
                             property int startIdx: -1
-                            onPressed: function(mouse) {
-                                startY = mouse.y;
+                            onPressed: {
                                 startIdx = placeRow.index;
+                                customizePlaces.dragging = true;
                             }
                             onPositionChanged: function(mouse) {
-                                if (pressed) {
-                                    var pt = mapToItem(customizePlacesList.contentItem, mouse.x, mouse.y);
-                                    var targetIdx = Math.max(0, Math.min(customizePlaces.all.length - 1, Math.floor(pt.y / 44)));
-                                    if (targetIdx !== placeRow.index) {
-                                        core.move_place(placeRow.modelData.id, targetIdx);
-                                    }
-                                }
+                                if (!pressed)
+                                    return;
+                                var pt = mapToItem(customizePlacesList.contentItem, mouse.x, mouse.y);
+                                var targetIdx = customizePlacesList.indexAt(customizePlacesList.width / 2, pt.y);
+                                if (targetIdx < 0)
+                                    targetIdx = pt.y < 0 ? 0 : placesOrderModel.count - 1;
+                                if (targetIdx !== placeRow.index)
+                                    placesOrderModel.move(placeRow.index, targetIdx, 1);
+                            }
+                            onReleased: {
+                                customizePlaces.dragging = false;
+                                if (placeRow.index !== startIdx)
+                                    core.move_place(placeRow.modelData.id, placeRow.index);
+                            }
+                            onCanceled: {
+                                customizePlaces.dragging = false;
+                                customizePlaces.reload();
                             }
                         }
                     }

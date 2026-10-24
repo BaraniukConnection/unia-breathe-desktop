@@ -100,8 +100,13 @@ Popup {
     // so the clamping is applied right after open().
     property real requestedX: 0
     property real requestedY: 0
+    // Where to put the right edge when flipping left; NaN flips at requestedX.
+    // Submenus set it to the left edge of their row, so a flipped submenu sits
+    // beside the parent menu instead of on top of it.
+    property real flipRightEdge: NaN
 
     function openAt(px, py) {
+        popup.flipRightEdge = NaN;
         popup.requestedX = px;
         popup.requestedY = py;
         popup.x = px;
@@ -121,7 +126,7 @@ Popup {
         var ty = popup.requestedY;
 
         if (tx + w > winW - margin)
-            tx = popup.requestedX - w;
+            tx = (isNaN(popup.flipRightEdge) ? popup.requestedX : popup.flipRightEdge) - w;
         if (ty + h > winH - margin)
             ty = popup.requestedY - h;
 
@@ -143,6 +148,9 @@ Popup {
     function openRightOf(anchorItem) {
         if (!anchorItem || !anchorItem.mapToItem) return;
         var p = anchorItem.mapToItem(null, anchorItem.width, 0);
+        var left = anchorItem.mapToItem(null, 0, 0);
         popup.openAt(p.x, p.y);
+        popup.flipRightEdge = left.x - 4;
+        popup.reposition();
     }
 }
