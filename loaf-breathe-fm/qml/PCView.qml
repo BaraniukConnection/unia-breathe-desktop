@@ -495,8 +495,8 @@ Item {
                                         hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor
                                         onClicked: {
-                                            var homeBase = "/home/" + (engine.current_path.split("/")[2] || "m_uvex");
-                                            var target = modelData.pathSuffix === "" ? homeBase : (homeBase + "/" + modelData.pathSuffix);
+                                            var homeBase = engine.user_dir("");
+                                            var target = modelData.pathSuffix === "" ? homeBase : engine.user_dir(modelData.pathSuffix);
                                             window.showFiles(index + 1);
                                             engine.set_path(target);
                                         }
@@ -544,8 +544,8 @@ Item {
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
-                                        var homeBase = "/home/" + (engine.current_path.split("/")[2] || "m_uvex");
-                                        var target = modelData.pathSuffix === "" ? homeBase : (homeBase + "/" + modelData.pathSuffix);
+                                        var homeBase = engine.user_dir("");
+                                        var target = modelData.pathSuffix === "" ? homeBase : engine.user_dir(modelData.pathSuffix);
                                         window.showFiles(index + 1);
                                         engine.set_path(target);
                                     }

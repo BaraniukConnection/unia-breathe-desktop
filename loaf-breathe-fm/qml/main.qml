@@ -1662,11 +1662,11 @@ ApplicationWindow {
                                             } else {
                                                 window.currentPlaceIndex = index;
                                                 window.activeView = "files";
-                                                var homeBase = "/home/" + (engine.current_path.split("/")[2] || "m_uvex");
+                                                var homeBase = engine.user_dir("");
                                                 if (modelData.pathSuffix === "") {
                                                     engine.set_path(homeBase);
                                                 } else {
-                                                    engine.set_path(homeBase + "/" + modelData.pathSuffix);
+                                                    engine.set_path(engine.user_dir(modelData.pathSuffix));
                                                 }
                                             }
                                         }

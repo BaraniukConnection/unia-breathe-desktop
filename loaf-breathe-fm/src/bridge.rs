@@ -62,6 +62,9 @@ pub mod qobject {
         fn resolve_icon(self: &LoafEngine, name: &QString) -> QString;
 
         #[qinvokable]
+        fn user_dir(self: &LoafEngine, name: &QString) -> QString;
+
+        #[qinvokable]
         fn get_thumbnail(self: &LoafEngine, path: &QString) -> QString;
 
         #[qinvokable]
@@ -741,6 +744,44 @@ fn config_file_path() -> PathBuf {
     }
     let home = std::env::var("HOME").unwrap_or_default();
     PathBuf::from(home).join(".config/loaf/config.json")
+}
+
+// Real path of a standard folder ("Documents", "Downloads", ...) from XDG user-dirs,
+// so localized folders (e.g. ~/Документи) work; falls back to ~/<name>; "" is home itself.
+fn user_dir(name: &str) -> PathBuf {
+    let home = std::env::var("HOME").unwrap_or_default();
+    if name.is_empty() {
+        return PathBuf::from(home);
+    }
+    let key = match name {
+        "Desktop" => "XDG_DESKTOP_DIR",
+        "Downloads" => "XDG_DOWNLOAD_DIR",
+        "Documents" => "XDG_DOCUMENTS_DIR",
+        "Pictures" => "XDG_PICTURES_DIR",
+        "Music" => "XDG_MUSIC_DIR",
+        "Videos" => "XDG_VIDEOS_DIR",
+        "Templates" => "XDG_TEMPLATES_DIR",
+        "Public" => "XDG_PUBLICSHARE_DIR",
+        _ => "",
+    };
+    let config = std::env::var("XDG_CONFIG_HOME")
+        .ok()
+        .filter(|c| !c.is_empty())
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from(&home).join(".config"));
+    if !key.is_empty() {
+        if let Ok(content) = fs::read_to_string(config.join("user-dirs.dirs")) {
+            for line in content.lines() {
+                if let Some(value) = line.trim().strip_prefix(key).and_then(|r| r.strip_prefix('=')) {
+                    let value = value.trim().trim_matches('"').replace("$HOME", &home);
+                    if !value.is_empty() {
+                        return PathBuf::from(value);
+                    }
+                }
+            }
+        }
+    }
+    PathBuf::from(home).join(name)
 }
 
 fn load_settings() -> HashMap<String, String> {
@@ -1632,10 +1673,10 @@ fn get_frequent_dirs() -> Vec<FrequentDirItem> {
     let defaults = [
         ("loaf", format!("{}/Projects/loaf", home), "code"),
         ("Projects", format!("{}/Projects", home), "code"),
-        ("Wallpapers", format!("{}/Pictures/Wallpapers", home), "image"),
-        ("Downloads", format!("{}/Downloads", home), "download"),
+        ("Wallpapers", user_dir("Pictures").join("Wallpapers").to_string_lossy().to_string(), "image"),
+        ("Downloads", user_dir("Downloads").to_string_lossy().to_string(), "download"),
         (".config", format!("{}/.config", home), "gear"),
-        ("Documents", format!("{}/Documents", home), "file-text"),
+        ("Documents", user_dir("Documents").to_string_lossy().to_string(), "file-text"),
     ];
 
     let counts = VISIT_COUNTS.lock().unwrap();
@@ -1940,7 +1981,7 @@ fn build_breadcrumbs(target_path: &Path, forward_target: Option<&str>) -> Vec<Br
     let mut base_matched: Option<(PathBuf, String, &'static str, &'static str)> = None;
 
     for (dir_name, icon, sys_icon) in &known_places {
-        let p = home_path.join(dir_name);
+        let p = if *dir_name == "Projects" { home_path.join(dir_name) } else { user_dir(dir_name) };
         if target_path.starts_with(&p) {
             base_matched = Some((p, dir_name.to_string(), icon, sys_icon));
             break;
@@ -2597,6 +2638,10 @@ impl qobject::LoafEngine {
         self.as_mut().set_search_everywhere_json(QString::from("[]"));
     }
 
+    pub fn user_dir(&self, name: &QString) -> QString {
+        QString::from(&user_dir(&name.to_string()).to_string_lossy().to_string())
+    }
+
     pub fn resolve_icon(&self, name: &QString) -> QString {
         let n = name.to_string();
         let path = resolve_system_icon(&n);
@@ -2615,13 +2660,10 @@ impl qobject::LoafEngine {
 
     pub fn open_terminal(&self, dir_path: &QString) {
         let dir = dir_path.to_string();
-        if Path::new("/etc/profiles/per-user/m_uvex/bin/kitty").exists() {
-            let _ = std::process::Command::new("kitty").arg("--directory").arg(&dir).spawn();
-        } else if Path::new("/etc/profiles/per-user/m_uvex/bin/foot").exists() {
-            let _ = std::process::Command::new("foot").arg("-D").arg(&dir).spawn();
-        } else {
-            let _ = std::process::Command::new("xdg-terminal-exec").current_dir(&dir).spawn();
-        }
+        // spawn() fails when the terminal is not installed, so fall through to the next one
+        let _ = std::process::Command::new("kitty").arg("--directory").arg(&dir).spawn()
+            .or_else(|_| std::process::Command::new("foot").arg("-D").arg(&dir).spawn())
+            .or_else(|_| std::process::Command::new("xdg-terminal-exec").current_dir(&dir).spawn());
     }
 
     pub fn create_folder(mut self: Pin<&mut Self>, dir: &QString, name: &QString) {
