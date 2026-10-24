@@ -133,41 +133,77 @@ Singleton {
 
     // ---------- зміна розміру (як Super+ПКМ) ----------
     // Вікно ділить пунктирний хрест на чверті: тягнеш у чверті — рухаються дві сторони, що до неї прилягають
-    // (у правій верхній — права й верхня). Плаваюче вікно змінюємо точно; розкладеному Hyprland сам вибирає,
-    // яку межу поділу зсунути, — ми лише кажемо, наскільки ширшим чи вищим воно має стати.
+    // (у правій верхній — права й верхня), і саме в той бік, куди тягнеш.
+    // Плаваюче вікно змінюємо точно. У розкладеного межа спільна із сусідом, а Hyprland на «стань ширшим»
+    // завжди зсуває праву (нижню) межу. Тож ліву чи верхню межу рухаємо розміром сусіда з того боку, праву чи
+    // нижню — розміром самого вікна; там, де замість сусіда край екрана, межа стоїть.
     function startResize(a) {
         const c = client(a)
         closeMenu()
         if (!c) return
-        resizing = { address: a, floating: c.floating, quad: "", rect: null, sent: { w: 0, h: 0 } }
+        resizing = { address: a, floating: c.floating, quad: "", rect: null }
     }
     function stopResize() { resizing = null }
-    // натиснули в чверті quad ("lt", "rt", "lb", "rb") — запам'ятати, від чого рахувати
-    function beginResize(quad) {
+    // розкладене вікно, що прилягає до сторони side ("l", "r", "t", "b") вікна c; якщо таких кілька —
+    // те, що навпроти точки натиску (px, py)
+    function neighbour(c, side, px, py) {
+        const L = c.at[0], T = c.at[1], R = L + c.size[0], B = T + c.size[1], tol = 40
+        const across = (a0, a1, b0, b1) => Math.min(a1, b1) - Math.max(a0, b0) > 0
+        const near = clients.filter(o => o.address !== c.address && !o.floating && o.mapped && !o.hidden
+                                         && o.workspace.id === c.workspace.id).filter(o => {
+            const oL = o.at[0], oT = o.at[1], oR = oL + o.size[0], oB = oT + o.size[1]
+            if (side === "l") return oR <= L + 2 && L - oR <= tol && across(T, B, oT, oB)
+            if (side === "r") return oL >= R - 2 && oL - R <= tol && across(T, B, oT, oB)
+            if (side === "t") return oB <= T + 2 && T - oB <= tol && across(L, R, oL, oR)
+            return oT >= B - 2 && oT - B <= tol && across(L, R, oL, oR)
+        })
+        const facing = near.find(o => side === "l" || side === "r" ? py >= o.at[1] && py < o.at[1] + o.size[1]
+                                                                     : px >= o.at[0] && px < o.at[0] + o.size[0])
+        return facing ?? near[0] ?? null
+    }
+    // натиснули в чверті quad ("lt", "rt", "lb", "rb") у точці (px, py) — запам'ятати, від чого рахувати
+    function beginResize(quad, px, py) {
         const c = resizing ? client(resizing.address) : null
         if (!c) return
-        resizing = Object.assign({}, resizing, { quad: quad, rect: { x: c.at[0], y: c.at[1], w: c.size[0], h: c.size[1] }, sent: { w: 0, h: 0 } })
+        const nx = c.floating ? null : neighbour(c, quad[0], px, py)
+        const ny = c.floating ? null : neighbour(c, quad[1], px, py)
+        resizing = Object.assign({}, resizing, {
+            quad: quad, rect: { x: c.at[0], y: c.at[1], w: c.size[0], h: c.size[1] },
+            nx: nx ? { address: nx.address, w: nx.size[0] } : null,
+            ny: ny ? { address: ny.address, h: ny.size[1] } : null,
+            sent: { x: 0, y: 0 } })
     }
     // курсор зсунувся на (dx, dy) від натиску
     function moveResize(dx, dy) {
         const r = resizing
         if (!r || !r.rect) return
         const left = r.quad[0] === "l", top = r.quad[1] === "t"
-        const gw = left ? -dx : dx, gh = top ? -dy : dy                 // наскільки більшим стає вікно
-        const w = Math.max(160, r.rect.w + gw), h = Math.max(120, r.rect.h + gh)
+        const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v))
         if (r.floating) {
+            const w = Math.max(160, r.rect.w + (left ? -dx : dx)), h = Math.max(120, r.rect.h + (top ? -dy : dy))
             const x = left ? r.rect.x + r.rect.w - w : r.rect.x, y = top ? r.rect.y + r.rect.h - h : r.rect.y
             Hyprland.dispatch(`resizewindowpixel exact ${Math.round(w)} ${Math.round(h)},address:${r.address}`)
             Hyprland.dispatch(`movewindowpixel exact ${Math.round(x)} ${Math.round(y)},address:${r.address}`)
-        } else {
-            const dw = Math.round(w - r.rect.w - r.sent.w), dh = Math.round(h - r.rect.h - r.sent.h)
-            if (!dw && !dh) return
-            r.sent = { w: r.sent.w + dw, h: r.sent.h + dh }
-            Hyprland.dispatch(`resizewindowpixel ${dw} ${dh},address:${r.address}`)
+            soon.restart()
+            return
+        }
+        // наскільки зсувається межа (у бік dx, dy), не стискаючи жодне з двох вікон нижче 160×120
+        const ex = !r.nx ? 0 : Math.round(left ? clamp(dx, 160 - r.nx.w, r.rect.w - 160) : clamp(dx, 160 - r.rect.w, r.nx.w - 160))
+        const ey = !r.ny ? 0 : Math.round(top ? clamp(dy, 120 - r.ny.h, r.rect.h - 120) : clamp(dy, 120 - r.rect.h, r.ny.h - 120))
+        const sx = ex - r.sent.x, sy = ey - r.sent.y
+        if (!sx && !sy) return
+        r.sent = { x: ex, y: ey }
+        // ліва/верхня межа — правий/нижній край сусіда; права/нижня — край самого вікна
+        const tx = left ? (r.nx ? r.nx.address : null) : r.address
+        const ty = top ? (r.ny ? r.ny.address : null) : r.address
+        if (sx && sy && tx === ty) Hyprland.dispatch(`resizewindowpixel ${sx} ${sy},address:${tx}`)
+        else {
+            if (sx && tx) Hyprland.dispatch(`resizewindowpixel ${sx} 0,address:${tx}`)
+            if (sy && ty) Hyprland.dispatch(`resizewindowpixel 0 ${sy},address:${ty}`)
         }
         soon.restart()
     }
-    function endResize() { if (resizing) resizing = Object.assign({}, resizing, { quad: "", rect: null }) }
+    function endResize() { if (resizing) resizing = Object.assign({}, resizing, { quad: "", rect: null, nx: null, ny: null }) }
 
     // ---------- перетягування ----------
     // Вікно, яке тягнуть, чекає на схованому столі, а за курсором їде його квадрат. Розкладене вікно

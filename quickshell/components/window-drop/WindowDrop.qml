@@ -130,7 +130,7 @@ PanelWindow {
                 if (!q) { Drops.stopResize(); return }
                 win.quad = q
                 press = Qt.point(m.x, m.y)
-                Drops.beginResize(q)
+                Drops.beginResize(q, m.x + win.ox, m.y + win.oy)
                 return
             }
             menuWasOpen = !!Drops.menuFor
