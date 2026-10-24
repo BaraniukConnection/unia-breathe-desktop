@@ -70,7 +70,7 @@
 
 ### And around it
 - A matching lock screen (hyprlock), GTK 3/4 and kitty palettes
-- [**Oxygen Files**](oxygen-files), a file manager forked from Loaf, with the same glass
+- [**Oxygen Files**](https://github.com/BaraniukConnection/oxygen-files), a file manager forked from Loaf, with the same glass (also in [`oxygen-files/`](oxygen-files))
 - Fixes for two sleep problems on real hardware, in the [FAQ](docs/FAQ.md)
 
 ## Screenshots
@@ -202,7 +202,7 @@ Four components also live in their own repositories, each with a short README on
 
 Unia Breathe Desktop is released under the [Mozilla Public License 2.0](LICENSE). You can use, modify and ship it, including inside larger projects; changes to its own files must stay open under the same license.
 
-[Oxygen Files](oxygen-files) is a fork of [Loaf](https://github.com/m-uvex/loaf-fm) by m_uvex and keeps the upstream license (MIT, as stated in its README).
+[Oxygen Files](https://github.com/BaraniukConnection/oxygen-files) is a fork of [Loaf](https://github.com/m-uvex/loaf-fm) by m_uvex and keeps the upstream license (MIT, as stated in its README).
 
 ## Third-party
 
