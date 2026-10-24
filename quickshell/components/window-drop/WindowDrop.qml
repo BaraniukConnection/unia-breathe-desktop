@@ -196,10 +196,10 @@ PanelWindow {
         client: win.dc
         open: win.here && Drops.menuFor !== "" && Drops.menuFor === Drops.current
         // не вилізти за край екрана
-        // «Стіл» розкривається праворуч від «Розміру»
+        // «Стіл» стоїть у правій половині під панеллю й розкривається праворуч
         shift: {
-            const l = Math.max(w1, resizeOpenW) / 2 + 12
-            const r = Math.max(w1 / 2, resizeOpenW / 2 + gap2 + deskOpenW) + 12
+            const l = w1 / 2 + 12
+            const r = Math.max(w1 / 2, gap2 / 2 + deskOpenW) + 12
             return Math.max(l - win.ax, Math.min(0, win.width - r - win.ax))
         }
     }

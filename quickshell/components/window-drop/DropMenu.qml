@@ -45,7 +45,6 @@ Item {
 
     // розміри таблеток: згорнута — лише значок, розгорнута — з підписом / зі столами
     readonly property real pillW: 48
-    readonly property real resizeOpenW: 132
     readonly property real deskOpenW: pillW + 4 + desks.length * 34 + (desks.length - 1) * 6 + 8
     readonly property real gap2: 8
 
@@ -120,40 +119,37 @@ Item {
         }
     }
 
-    // ---------- таблетки: «Розмір» посередині, «Стіл» праворуч ----------
-    // стікають з-під панелі 1 крапкою; «Стіл» виїжджає з-під «Розміру»
+    // ---------- таблетки: «Розмір» і «Стіл» — порівну під панеллю 1 ----------
+    // стікають з-під панелі 1 крапкою посередині й розходяться на свої половини
     readonly property real t2: grow2
     readonly property real row2Y: lerp(top1 + h1 - 4, top2, Math.min(1, t2 * 1.4))
+    readonly property real halfW: (w1 - gap2) / 2
+    readonly property real cx: shift * grow1                         // середина панелі 1
+    readonly property real appear: Math.max(0, Math.min(1, (t2 - 0.4) / 0.6))
 
     Item {
         id: resizePill
-        readonly property bool open: resizeHover.hovered && root.t2 > 0.9
-        width: root.lerp(12, open ? root.resizeOpenW : root.pillW, root.t2)
+        width: root.lerp(12, root.halfW, Math.min(1, root.t2))
         height: root.lerp(12, root.h2, Math.min(1, root.t2))
-        x: root.shift * root.grow1 - width / 2
+        x: root.lerp(root.cx - width / 2, root.cx - root.w1 / 2, root.appear)
         y: root.row2Y
         visible: root.t2 > 0
-        Behavior on width { enabled: root.t2 >= 1; NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
         Glass { anchors.fill: parent; strong: true; radius: height / 2 }
         Rectangle { anchors.fill: parent; radius: height / 2; color: Theme.accent; opacity: 1 - Math.min(1, root.t2 * 1.6) }
-        Rectangle { anchors.fill: parent; radius: height / 2; color: Theme.paneHover; visible: resizePill.open }
+        Rectangle { anchors.fill: parent; radius: height / 2; color: Theme.paneHover; visible: resizeArea.containsMouse }
         Row {
             anchors.centerIn: parent
             spacing: 6
             opacity: root.fadeIn(root.t2)
             Icon { name: "aspect_ratio"; font.pixelSize: 20; anchors.verticalCenter: parent.verticalCenter }
-            Label {
-                anchors.verticalCenter: parent.verticalCenter
-                text: "Розмір"
-                size: 13
-                weight: Font.Bold
-                visible: resizePill.width > root.pillW + 40
-            }
+            Label { anchors.verticalCenter: parent.verticalCenter; text: "Розмір"; size: 13; weight: Font.Bold }
         }
-        HoverHandler { id: resizeHover; onHoveredChanged: root.tip = hovered ? "Змінити розмір — тягніть у потрібний бік" : "" }
         MouseArea {
+            id: resizeArea
             anchors.fill: parent
+            hoverEnabled: true
             cursorShape: Qt.PointingHandCursor
+            onContainsMouseChanged: root.tip = containsMouse ? "Змінити розмір — тягніть у потрібний бік" : ""
             onClicked: Drops.startResize(Drops.menuFor)
         }
     }
@@ -161,22 +157,33 @@ Item {
     Item {
         id: deskPill
         readonly property bool open: deskHover.hovered && root.t2 > 0.9
-        readonly property real appear: Math.max(0, Math.min(1, (root.t2 - 0.4) / 0.6))   // виїжджає з-під «Розміру»
-        width: open ? root.deskOpenW : root.pillW
+        readonly property real appear: root.appear
+        width: open ? Math.max(root.halfW, root.deskOpenW) : root.halfW
         height: root.h2
-        x: root.lerp(resizePill.x + resizePill.width / 2 - width / 2, resizePill.x + resizePill.width + root.gap2, appear)
+        x: root.lerp(root.cx - root.halfW / 2, root.cx - root.w1 / 2 + root.halfW + root.gap2, appear)
         y: root.row2Y
         opacity: appear
         visible: appear > 0
         clip: true
         Behavior on width { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
         Glass { anchors.fill: parent; strong: true; radius: height / 2 }
-        // голова таблетки: клік — на наступний стіл
+        // голова таблетки: клік — на наступний стіл; розгорнута — лише стрілка, далі столи
         Rectangle {
             id: deskHead
-            width: root.pillW; height: parent.height; radius: height / 2
+            width: deskPill.open ? root.pillW : root.halfW
+            height: parent.height; radius: height / 2
             color: headArea.containsMouse ? Theme.paneHover : "transparent"
-            Icon { anchors.centerIn: parent; name: "arrow_forward"; font.pixelSize: 20 }
+            Behavior on width { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+            Row {
+                anchors.centerIn: parent
+                spacing: 6
+                Label {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "Стіл"; size: 13; weight: Font.Bold
+                    visible: !deskPill.open
+                }
+                Icon { name: "arrow_forward"; font.pixelSize: 20; anchors.verticalCenter: parent.verticalCenter }
+            }
             MouseArea {
                 id: headArea
                 anchors.fill: parent
