@@ -4,7 +4,8 @@ import "../../theme"
 
 // Меню виїмки. Точка (0, 0) — середина рамки, зовнішній край. Відкриття: виїмка втягується в рамку, а крапка
 // з неї падає (detach) і розтікається в панель дій (grow1); з-під неї стікають дві таблетки (grow2):
-// посередині «Розмір» (клік — режим зміни розміру), праворуч «Стіл» (наведення — список столів, клік — наступний стіл).
+// посередині «Розмір» (клік — режим зміни розміру), праворуч «Стіл» (наведення — список столів, клік — наступний стіл),
+// ще правіше — кругла кнопка режиму фокусу.
 Item {
     id: root
     property var client: null
@@ -222,6 +223,29 @@ Item {
             }
         }
         HoverHandler { id: deskHover; onHoveredChanged: if (!hovered) root.tip = "" }
+    }
+
+    // режим фокусу: верхня панель нижча й суцільна (Theme.focusMode)
+    Rectangle {
+        id: focusBtn
+        readonly property bool on: Theme.focusMode
+        width: root.h2; height: root.h2; radius: height / 2
+        x: deskPill.x + deskPill.width + root.gap2
+        y: root.row2Y
+        opacity: deskPill.appear
+        visible: deskPill.visible
+        color: on ? Theme.accent : focusArea.containsMouse ? Qt.rgba(1, 1, 1, 0.2) : Theme.glassStrong
+        border.width: 1
+        border.color: Theme.paneLine
+        Icon { anchors.centerIn: parent; name: "center_focus_strong"; filled: focusBtn.on; font.pixelSize: 20; color: focusBtn.on ? Theme.accentInk : Theme.ink }
+        MouseArea {
+            id: focusArea
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onContainsMouseChanged: root.tip = containsMouse ? (focusBtn.on ? "Вимкнути режим фокусу" : "Режим фокусу — компактна суцільна панель") : ""
+            onClicked: Drops.toggleFocus()
+        }
     }
 
     // підказка — під таблетками

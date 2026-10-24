@@ -124,6 +124,8 @@ Singleton {
             Hyprland.dispatch(`closewindow address:${a}`)
         soon.restart()
     }
+    // режим фокусу — для всієї оболонки (Theme.focusMode), зберігається в налаштуваннях
+    function toggleFocus() { Prefs.set("focusMode", !(Prefs.data.focusMode ?? false)) }
     function moveTo(wsId) {
         const c = client(menuFor)
         closeMenu()

@@ -7,6 +7,7 @@ import "../services"
 import "../components/scenarios"
 
 // Верхня смуга одного монітора: прозора, лише окремі бульбашки. Кліки між ними проходять наскрізь.
+// Режим фокусу (Theme.focusMode): смуга нижча й суцільна — скло на всю ширину з акцентним відтінком.
 PanelWindow {
     id: bar
     required property var modelData
@@ -15,8 +16,9 @@ PanelWindow {
 
     WlrLayershell.namespace: "unia-bar"
     anchors { top: true; left: true; right: true }
-    implicitHeight: Theme.top + Theme.bubbleHeight
-    exclusiveZone: Theme.top + Theme.bubbleHeight
+    readonly property int barHeight: Theme.focusMode ? Theme.top * 2 + Theme.bubbleHeight : Theme.top + Theme.bubbleHeight
+    implicitHeight: barHeight
+    exclusiveZone: barHeight
     color: "transparent"
     // кліки ловлять лише бульбашки; клік повз них (і повз панель) закриває панель через focus grab у shell.qml
     mask: Region {
@@ -25,6 +27,24 @@ PanelWindow {
         Region { item: clock }
         Region { item: media }
         Region { item: right }
+    }
+
+    // суцільне тло режиму фокусу: системне скло (розмиття дає Hyprland) і акцентний відтінок
+    Rectangle {
+        visible: Theme.focusMode
+        width: parent.width
+        height: bar.barHeight
+        color: Theme.glass
+        Rectangle {
+            anchors.fill: parent
+            gradient: Gradient {
+                orientation: Gradient.Horizontal
+                GradientStop { position: 0; color: Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.22) }
+                GradientStop { position: 0.5; color: Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.1) }
+                GradientStop { position: 1; color: Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.22) }
+            }
+        }
+        Rectangle { anchors.bottom: parent.bottom; width: parent.width; height: 1; color: Theme.paneLine }
     }
 
     Connections {

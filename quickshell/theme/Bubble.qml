@@ -19,7 +19,9 @@ Glass {
     height: Theme.bubbleHeight
     radius: height / 2
     implicitWidth: holder.childrenRect.width + padLeft + padRight
-    border.width: active ? 2 : 1
+    // у режимі фокусу тло дає суцільна смуга панелі — бульбашка без власного скла, лише підсвітка
+    color: Theme.focusMode ? (hovered ? Theme.pane : "transparent") : Theme.glass
+    border.width: active ? 2 : Theme.focusMode ? 0 : 1
     border.color: active ? Theme.accent : Theme.paneLine
 
     MouseArea {

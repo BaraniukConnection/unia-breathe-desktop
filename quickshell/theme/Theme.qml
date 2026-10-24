@@ -1,6 +1,7 @@
 pragma Singleton
 import QtQuick
 import Quickshell
+import "../services"
 
 // Палітра, шрифти і «скло» Unia Breathe — одне місце для всіх кольорів і розмірів (з макета).
 Singleton {
@@ -32,9 +33,11 @@ Singleton {
     readonly property int fontSize: 14
 
     // розміри
-    readonly property int bubbleHeight: 44
+    // режим фокусу (кругла кнопка в меню WindowDrop): верхня панель нижча й суцільна — див. bar/Bar.qml
+    readonly property bool focusMode: Prefs.data.focusMode ?? false
+    readonly property int bubbleHeight: focusMode ? 30 : 44
     readonly property int edge: 20          // відступ бульбашок від країв екрана
-    readonly property int top: 16           // відступ бульбашок зверху
+    readonly property int top: focusMode ? 4 : 16           // відступ бульбашок зверху
     readonly property int gap: 10
     readonly property int radiusWindow: 26
     readonly property int radiusTile: 18
