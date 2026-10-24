@@ -1997,8 +1997,18 @@ Item {
     // Frosted glass: the window ground and the panels resting on it are translucent and
     // Hyprland blurs what is behind the window. 1.0 is opaque; Unia's standard glass is 0.35.
     // Light grounds stay denser so dark text keeps its contrast.
+    // Glass needs the compositor's blur: with it switched off (Unia: Theme → Blur) the window is solid,
+    // otherwise it would just be see-through. Checked every couple of seconds, so the switch applies live.
     property real glassOpacity: 0.35
-    readonly property real glassAlpha: isDark ? glassOpacity : glassOpacity + (1 - glassOpacity) * 0.4
+    readonly property bool compositorBlur: typeof core === "undefined" || !core || core.compositor_blur
+    readonly property bool solid: glassOpacity >= 1.0 || !compositorBlur
+    readonly property real glassAlpha: solid ? 1.0 : isDark ? glassOpacity : glassOpacity + (1 - glassOpacity) * 0.4
+    Timer {
+        interval: 2000
+        running: theme.glassOpacity < 1.0 && typeof core !== "undefined" && !!core
+        repeat: true
+        onTriggered: core.refresh_compositor_blur()
+    }
     function glass(c) { return Qt.alpha(c, glassAlpha) }
 
     // Background & Surfaces

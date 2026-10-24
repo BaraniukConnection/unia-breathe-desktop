@@ -201,6 +201,30 @@ pub fn read_wallpaper_colors() -> String {
 }
 
 
+/// Whether the compositor blurs behind translucent windows (Hyprland's `decoration:blur:enabled`,
+/// which Unia's "Blur" switch sets). Glass without blur is merely see-through, so the window goes
+/// solid then. Asks Hyprland over its socket; anything else is assumed to blur.
+pub fn detect_compositor_blur() -> bool {
+    use std::io::{Read, Write};
+    let (Ok(run), Ok(sig)) = (std::env::var("XDG_RUNTIME_DIR"), std::env::var("HYPRLAND_INSTANCE_SIGNATURE")) else {
+        return true;
+    };
+    let Ok(mut sock) = std::os::unix::net::UnixStream::connect(format!("{run}/hypr/{sig}/.socket.sock")) else {
+        return true;
+    };
+    let _ = sock.set_read_timeout(Some(std::time::Duration::from_millis(300)));
+    if sock.write_all(b"j/getoption decoration:blur:enabled").is_err() {
+        return true;
+    }
+    let mut out = String::new();
+    let _ = sock.read_to_string(&mut out);
+    serde_json::from_str::<serde_json::Value>(&out)
+        .ok()
+        .and_then(|v| v["int"].as_i64())
+        .map(|i| i != 0)
+        .unwrap_or(true)
+}
+
 pub fn detect_device_type() -> &'static str {
     if let Ok(chassis) = fs::read_to_string("/sys/class/dmi/id/chassis_type") {
         match chassis.trim() {

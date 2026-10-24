@@ -33,6 +33,8 @@ pub mod qobject {
         #[qproperty(bool, trash_empty)]
         /// Little RAM or few CPU cores: low-power mode's "Auto" turns on.
         #[qproperty(bool, low_end_hardware)]
+        /// The compositor blurs behind translucent windows; without it the glass goes solid.
+        #[qproperty(bool, compositor_blur)]
         type LoafCore = super::CoreRust;
     }
 
@@ -61,6 +63,8 @@ pub mod qobject {
         fn refresh_system_theme(self: Pin<&mut LoafCore>);
         #[qinvokable]
         fn reload_wallpaper_colors(self: Pin<&mut LoafCore>) -> bool;
+        #[qinvokable]
+        fn refresh_compositor_blur(self: Pin<&mut LoafCore>);
         #[qinvokable]
         fn resolve_icon(self: &LoafCore, theme: &QString, name: &QString) -> QString;
         #[qinvokable]
@@ -320,6 +324,7 @@ pub struct CoreRust {
     redo_text: QString,
     trash_empty: bool,
     low_end_hardware: bool,
+    compositor_blur: bool,
 
     ops: Vec<Arc<Op>>,
     next_op: u64,
@@ -352,6 +357,7 @@ impl Default for CoreRust {
             redo_text: QString::default(),
             trash_empty: true,
             low_end_hardware: is_low_end_hardware(),
+            compositor_blur: theme::detect_compositor_blur(),
             ops: Vec::new(),
             next_op: 1,
             undo_stack: Vec::new(),
@@ -716,6 +722,18 @@ impl qobject::LoafCore {
                     core.as_mut().set_is_dark(dark);
                 }
                 core.as_mut().set_icon_theme(q(&icon_theme));
+            });
+        });
+    }
+
+    pub fn refresh_compositor_blur(self: Pin<&mut Self>) {
+        let thread = self.qt_thread();
+        std::thread::spawn(move || {
+            let blur = theme::detect_compositor_blur();
+            let _ = thread.queue(move |mut core| {
+                if *core.compositor_blur() != blur {
+                    core.as_mut().set_compositor_blur(blur);
+                }
             });
         });
     }

@@ -752,7 +752,7 @@ ApplicationWindow {
     // read as stray shapes over the blurred wallpaper).
     Item {
         anchors.fill: parent
-        visible: !theme.lowPower && theme.glassOpacity >= 1.0
+        visible: !theme.lowPower && theme.solid
         Rectangle {
             width: 420; height: 220; radius: 200; x: -40; y: -50
             color: theme.primaryContainer
