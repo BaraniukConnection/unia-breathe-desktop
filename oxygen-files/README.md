@@ -60,9 +60,14 @@ sudo dnf install cargo rust cmake ninja-build gcc-c++ pkgconf-pkg-config qt6-qtb
 Баги Loaf, виправлені в нас, які можуть знадобитися й автору. Спершу перевірити, чи їх уже не виправив хтось у гілці
 `dev` (користувач відкриває дискусію); якщо ні — підготувати PR.
 
-- **Диски не зчитуються при запуску** (знайдено на `dev` 8877dc1). `load_drives()` викликав лише DeviceWatcher при
-  зміні пристроїв, тож «This PC» після старту був без дисків, поки щось не підключиш. Фікс — один виклик
-  `self.as_mut().load_drives();` в `initialize()` у `src/core.rs`.
+- **Диски не зчитуються при запуску** (знайдено на `dev` 8877dc1). `drives_json` стартує як `"[]"`, а `load_drives()`
+  викликають лише дві речі: DeviceWatcher (`src/watcher.rs`) і завершення дії над диском (mount, unmount, eject,
+  rename — `drive_job` → `reload_drives` у `qml/main.qml`). DeviceWatcher спрацьовує тільки на подію: у
+  `/dev/disk/by-uuid` з'явився чи зник вузол (підключили або вийняли пристрій) або змінилась таблиця монтувань
+  (`/proc/self/mountinfo`). Початкового читання немає, тож поки за сеанс програми нічого з цього не сталось,
+  «This PC» показує 0 дисків: секції Internal / External Storage не з'являються взагалі, а пул «System Drive Pool»
+  порожній. Будь-яке монтування в системі (флешка, snap, мережевий диск) — і диски раптом з'являються, що виглядає
+  як випадковість. Фікс — один виклик `self.as_mut().load_drives();` в `initialize()` у `src/core.rs`.
 - **Перетягування в Customize Sidebar не працює** (`dev` 8877dc1). ListView забирає рух собі на прокрутку
   (нема `preventStealing`), а кожен `move_place` перебудовує JS-масив моделі й знищує рядок під мишею. Фікс —
   ListModel із `move()` наживо і збереження порядку на відпусканні (`qml/main.qml`, `customizePlaces`).
