@@ -184,7 +184,12 @@ system/                optional system fixes from the FAQ
 oxygen-files/          the Oxygen Files file manager
 ```
 
-The four components are meant to stand on their own one day; [`quickshell/components/README.md`](quickshell/components/README.md) lists what each one needs from the shell.
+Four components also live in their own repositories, each with a short README on using it in another Quickshell config:
+[TileMenu](https://github.com/BaraniukConnection/unia-tile-menu),
+[SettingsBox](https://github.com/BaraniukConnection/unia-settings-box),
+[WindowDrop](https://github.com/BaraniukConnection/unia-window-drop) and
+[Scenarios](https://github.com/BaraniukConnection/unia-scenarios).
+[`quickshell/components/README.md`](quickshell/components/README.md) lists what each one needs from the shell.
 
 ## FAQ
 

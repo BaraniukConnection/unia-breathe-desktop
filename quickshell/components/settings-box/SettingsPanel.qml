@@ -2,7 +2,6 @@ import QtQuick
 import Quickshell
 import "../../theme"
 import "../../services"
-import "../../popups"
 
 // The settings category panel (304 px on the left of the special workspace).
 // Mouse: click opens, right-click pins to the control centre.
