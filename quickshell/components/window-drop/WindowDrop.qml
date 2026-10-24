@@ -1,4 +1,6 @@
 import QtQuick
+import QtQuick.Shapes
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Widgets
@@ -19,7 +21,7 @@ PanelWindow {
 
     WlrLayershell.namespace: "unia-drop"
     WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: here && Drops.busy ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: (here || resizeHere) && Drops.busy ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Ignore
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"
@@ -98,11 +100,18 @@ PanelWindow {
         anchors.fill: parent
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton
-        cursorShape: Drops.drag ? Qt.ClosedHandCursor : win.near > 0.5 ? Qt.OpenHandCursor : Qt.ArrowCursor
+        cursorShape: Drops.drag ? Qt.ClosedHandCursor
+            : win.resizeHere && win.quad ? (win.quad === "lt" || win.quad === "rb" ? Qt.SizeFDiagCursor : Qt.SizeBDiagCursor)
+            : win.near > 0.5 ? Qt.OpenHandCursor : Qt.ArrowCursor
         property point press
         property string pressed_: ""              // вікно, виїмку якого натиснули
         property bool menuWasOpen: false
         onPositionChanged: m => {
+            if (Drops.resizing) {
+                if (Drops.resizing.rect) { resizeTick.dx = m.x - press.x; resizeTick.dy = m.y - press.y; if (!resizeTick.running) resizeTick.start() }
+                else win.quad = win.resizeHere ? win.quadAt(m.x, m.y) : ""
+                return
+            }
             if (pressed_ && (pressedButtons & Qt.LeftButton)) {
                 // далі курсор і відпускання веде Drops (сокет Hyprland)
                 if (!Drops.drag && Math.hypot(m.x - press.x, m.y - press.y) > 6) Drops.startDrag(pressed_, m.x + win.ox, m.y + win.oy)
@@ -115,6 +124,15 @@ PanelWindow {
         }
         onContainsMouseChanged: if (!containsMouse && !Drops.busy) { win.near = 0; leave.restart() }
         onPressed: m => {
+            if (Drops.resizing) {
+                // у вікні — тягнути з цієї чверті; поза ним чи права кнопка — режим завершено
+                const q = win.resizeHere && m.button === Qt.LeftButton ? win.quadAt(m.x, m.y) : ""
+                if (!q) { Drops.stopResize(); return }
+                win.quad = q
+                press = Qt.point(m.x, m.y)
+                Drops.beginResize(q)
+                return
+            }
             menuWasOpen = !!Drops.menuFor
             if (m.button === Qt.RightButton) { if (Drops.drag) Drops.cancelDrag(); return }
             // запасний шлях: перетягування не закінчилось відпусканням (Hyprland його не передав) — ставимо кліком
@@ -124,13 +142,23 @@ PanelWindow {
             if (pressed_) { win.near = 1; forceActiveFocus() }
         }
         onReleased: m => {
+            if (Drops.resizing) { resizeTick.stop(); Drops.moveResize(m.x - press.x, m.y - press.y); Drops.endResize(); return }
             if (m.button !== Qt.LeftButton) return
             // кінець перетягування ловить Hyprland (drop release); тут лише клік — меню
             if (!Drops.drag && pressed_) Drops.openMenu(pressed_)
             pressed_ = ""
         }
         onClicked: if (menuWasOpen) Drops.closeMenu()     // клік повз меню — закрити
-        Keys.onEscapePressed: if (Drops.drag) Drops.cancelDrag()
+        Keys.onEscapePressed: { if (Drops.drag) Drops.cancelDrag(); else if (Drops.resizing) Drops.stopResize() }
+        Keys.onReturnPressed: if (Drops.resizing) Drops.stopResize()
+    }
+    // зміну розміру шлемо не частіше ніж раз на кадр
+    Timer {
+        id: resizeTick
+        property real dx: 0
+        property real dy: 0
+        interval: 16
+        onTriggered: Drops.moveResize(dx, dy)
     }
     Timer {
         id: leave
@@ -168,7 +196,12 @@ PanelWindow {
         client: win.dc
         open: win.here && Drops.menuFor !== "" && Drops.menuFor === Drops.current
         // не вилізти за край екрана
-        shift: { const half = Math.max(w1, w2) / 2 + 12; return Math.max(half - win.ax, Math.min(0, win.width - half - win.ax)) }
+        // «Стіл» розкривається праворуч від «Розміру»
+        shift: {
+            const l = Math.max(w1, resizeOpenW) / 2 + 12
+            const r = Math.max(w1 / 2, resizeOpenW / 2 + gap2 + deskOpenW) + 12
+            return Math.max(l - win.ax, Math.min(0, win.width - r - win.ax))
+        }
     }
 
     // ---------- вікно, яке тягнемо: квадрат із заокругленими кутами під курсором ----------
@@ -176,6 +209,108 @@ PanelWindow {
     readonly property string shotAddress: Drops.drag ? Drops.drag.address : Drops.hovered
     readonly property var toplevel: Hyprland.toplevels.values.find(t => "0x" + t.address.replace(/^0x/, "") === shotAddress) ?? null
     onToplevelChanged: if (toplevel && !Drops.drag) Qt.callLater(() => shot.captureFrame())
+
+    // ---------- режим зміни розміру: вікно трохи розмите, пунктирний хрест ділить його на чверті ----------
+    readonly property var rc: Drops.resizing ? Drops.client(Drops.resizing.address) : null
+    readonly property bool resizeHere: !!rc && !!mon && rc.monitor === mon.id
+    property string quad: ""                  // чверть під курсором: "lt", "rt", "lb", "rb"
+    function quadAt(x, y) {
+        if (!rc) return ""
+        const rx = rc.at[0] - ox, ry = rc.at[1] - oy
+        if (x < rx || y < ry || x >= rx + rc.size[0] || y >= ry + rc.size[1]) return ""
+        return (x < rx + rc.size[0] / 2 ? "l" : "r") + (y < ry + rc.size[1] / 2 ? "t" : "b")
+    }
+    onResizeHereChanged: { quad = ""; if (resizeHere) base.forceActiveFocus() }
+    readonly property var resizeTop: rc ? Hyprland.toplevels.values.find(t => "0x" + t.address.replace(/^0x/, "") === rc.address) ?? null : null
+
+    Item {
+        id: resizeView
+        visible: win.resizeHere
+        x: win.rc ? win.rc.at[0] - win.ox : 0
+        y: win.rc ? win.rc.at[1] - win.oy : 0
+        width: win.rc ? win.rc.size[0] : 0
+        height: win.rc ? win.rc.size[1] : 0
+
+        // жива копія вікна, розмита не повністю
+        ClippingRectangle {
+            anchors.fill: parent
+            radius: 14
+            color: "transparent"
+            ScreencopyView {
+                id: live
+                anchors.fill: parent
+                captureSource: win.resizeHere && win.resizeTop ? win.resizeTop.wayland : null
+                live: true
+                layer.enabled: true
+                layer.effect: MultiEffect { blurEnabled: true; blur: 0.15; blurMax: 64 }
+            }
+            Rectangle { anchors.fill: parent; color: Qt.rgba(Theme.base.r, Theme.base.g, Theme.base.b, 0.15) }
+        }
+        // чверть під курсором
+        Rectangle {
+            visible: win.quad !== ""
+            x: win.quad[0] === "r" ? parent.width / 2 : 0
+            y: win.quad[1] === "b" ? parent.height / 2 : 0
+            width: parent.width / 2
+            height: parent.height / 2
+            color: Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.12)
+        }
+        // пунктир: хрест і рамка
+        Shape {
+            anchors.fill: parent
+            preferredRendererType: Shape.CurveRenderer
+            ShapePath {
+                strokeColor: Qt.rgba(1, 1, 1, 0.7)
+                strokeWidth: 2
+                strokeStyle: ShapePath.DashLine
+                dashPattern: [4, 4]
+                fillColor: "transparent"
+                startX: resizeView.width / 2; startY: 0
+                PathLine { x: resizeView.width / 2; y: resizeView.height }
+                PathMove { x: 0; y: resizeView.height / 2 }
+                PathLine { x: resizeView.width; y: resizeView.height / 2 }
+            }
+            ShapePath {
+                strokeColor: Theme.accent
+                strokeWidth: 2
+                strokeStyle: ShapePath.DashLine
+                dashPattern: [4, 4]
+                fillColor: "transparent"
+                startX: 1; startY: 1
+                PathLine { x: resizeView.width - 1; y: 1 }
+                PathLine { x: resizeView.width - 1; y: resizeView.height - 1 }
+                PathLine { x: 1; y: resizeView.height - 1 }
+                PathLine { x: 1; y: 1 }
+            }
+        }
+        // стрілки: куди рухаються сторони з кожної чверті
+        Repeater {
+            model: [{ q: "lt", icon: "north_west" }, { q: "rt", icon: "north_east" }, { q: "lb", icon: "south_west" }, { q: "rb", icon: "south_east" }]
+            Rectangle {
+                required property var modelData
+                readonly property bool on: win.quad === modelData.q
+                width: 48; height: 48; radius: 24
+                x: (modelData.q[0] === "l" ? 0.25 : 0.75) * resizeView.width - 24
+                y: (modelData.q[1] === "t" ? 0.25 : 0.75) * resizeView.height - 24
+                color: on ? Theme.accent : Theme.glassStrong
+                border.width: 1
+                border.color: Theme.paneLine
+                opacity: on ? 1 : 0.7
+                Icon { anchors.centerIn: parent; name: parent.modelData.icon; font.pixelSize: 26; color: parent.on ? Theme.accentInk : Theme.ink }
+            }
+        }
+        // підказка посередині
+        Rectangle {
+            anchors.centerIn: parent
+            width: hint.implicitWidth + 28
+            height: 34
+            radius: 17
+            color: Theme.glassStrong
+            border.width: 1
+            border.color: Theme.paneLine
+            Label { id: hint; anchors.centerIn: parent; text: "Тягніть із чверті — зміниться розмір · Esc — готово"; size: 12 }
+        }
+    }
 
     // плаваюче вікно нікого не розсуває — його місце малюємо самі: напівпрозоре порожнє вікно там, де стане
     Rectangle {

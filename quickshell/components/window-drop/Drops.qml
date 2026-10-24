@@ -25,7 +25,8 @@ Singleton {
     property var drag: null                   // { address, floating, wsId, rect, mon, offX, offY, grab } — поки тягнемо
     property real dragX: 0                    // курсор під час перетягування (глобальні координати)
     property real dragY: 0
-    readonly property bool busy: menuFor !== "" || drag !== null
+    property var resizing: null               // { address, floating, quad, rect, sent } — режим зміни розміру
+    readonly property bool busy: menuFor !== "" || drag !== null || resizing !== null
     readonly property string current: drag ? drag.address : menuFor || hovered   // вікно з виїмкою
 
     function client(a) { return clients.find(c => c.address === a) ?? null }
@@ -73,11 +74,14 @@ Singleton {
                     if (!root.drag && !restore.running) root.opts = { ua: ua.int, ss: ss.int, nw: nw.int }
                 } catch (e) {}
                 if (root.menuFor && !root.client(root.menuFor)) root.closeMenu()
+                // вікно закрили чи воно пішло з видимого столу — режим зміни розміру більше нема до чого застосовувати
+                if (root.resizing && !root.visibleOn(root.monitors.find(m => m.id === (root.client(root.resizing.address) ?? {}).monitor))
+                        .some(c => c.address === root.resizing.address)) root.stopResize()
             }
         }
     }
     function refresh() { if (!poll.running) poll.running = true }
-    Timer { interval: root.drag ? 120 : 700; running: true; repeat: true; onTriggered: root.refresh() }
+    Timer { interval: root.drag || root.resizing ? 120 : 700; running: true; repeat: true; onTriggered: root.refresh() }
     Timer { id: soon; interval: 60; onTriggered: root.refresh() }
     Connections {
         target: Hyprland
@@ -114,7 +118,9 @@ Singleton {
         else if (what === "fullscreen") {
             Hyprland.dispatch(`focuswindow address:${a}`)
             Hyprland.dispatch("fullscreen 0")
-        } else if (what === "close")
+        } else if (what === "float")
+            Hyprland.dispatch(`togglefloating address:${a}`)
+        else if (what === "close")
             Hyprland.dispatch(`closewindow address:${a}`)
         soon.restart()
     }
@@ -124,6 +130,44 @@ Singleton {
         if (c) Hyprland.dispatch(`movetoworkspacesilent ${wsId},address:${c.address}`)
         soon.restart()
     }
+
+    // ---------- зміна розміру (як Super+ПКМ) ----------
+    // Вікно ділить пунктирний хрест на чверті: тягнеш у чверті — рухаються дві сторони, що до неї прилягають
+    // (у правій верхній — права й верхня). Плаваюче вікно змінюємо точно; розкладеному Hyprland сам вибирає,
+    // яку межу поділу зсунути, — ми лише кажемо, наскільки ширшим чи вищим воно має стати.
+    function startResize(a) {
+        const c = client(a)
+        closeMenu()
+        if (!c) return
+        resizing = { address: a, floating: c.floating, quad: "", rect: null, sent: { w: 0, h: 0 } }
+    }
+    function stopResize() { resizing = null }
+    // натиснули в чверті quad ("lt", "rt", "lb", "rb") — запам'ятати, від чого рахувати
+    function beginResize(quad) {
+        const c = resizing ? client(resizing.address) : null
+        if (!c) return
+        resizing = Object.assign({}, resizing, { quad: quad, rect: { x: c.at[0], y: c.at[1], w: c.size[0], h: c.size[1] }, sent: { w: 0, h: 0 } })
+    }
+    // курсор зсунувся на (dx, dy) від натиску
+    function moveResize(dx, dy) {
+        const r = resizing
+        if (!r || !r.rect) return
+        const left = r.quad[0] === "l", top = r.quad[1] === "t"
+        const gw = left ? -dx : dx, gh = top ? -dy : dy                 // наскільки більшим стає вікно
+        const w = Math.max(160, r.rect.w + gw), h = Math.max(120, r.rect.h + gh)
+        if (r.floating) {
+            const x = left ? r.rect.x + r.rect.w - w : r.rect.x, y = top ? r.rect.y + r.rect.h - h : r.rect.y
+            Hyprland.dispatch(`resizewindowpixel exact ${Math.round(w)} ${Math.round(h)},address:${r.address}`)
+            Hyprland.dispatch(`movewindowpixel exact ${Math.round(x)} ${Math.round(y)},address:${r.address}`)
+        } else {
+            const dw = Math.round(w - r.rect.w - r.sent.w), dh = Math.round(h - r.rect.h - r.sent.h)
+            if (!dw && !dh) return
+            r.sent = { w: r.sent.w + dw, h: r.sent.h + dh }
+            Hyprland.dispatch(`resizewindowpixel ${dw} ${dh},address:${r.address}`)
+        }
+        soon.restart()
+    }
+    function endResize() { if (resizing) resizing = Object.assign({}, resizing, { quad: "", rect: null }) }
 
     // ---------- перетягування ----------
     // Вікно, яке тягнуть, чекає на схованому столі, а за курсором їде його квадрат. Розкладене вікно

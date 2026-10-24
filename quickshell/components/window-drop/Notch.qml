@@ -48,13 +48,12 @@ Item {
             }
         }
     }
-    // крапка — «камера» у виїмці
+    // крапка у виїмці — біла, без відблиску
     Rectangle {
         width: 7; height: 7; radius: 3.5
         x: root.width / 2 - 3.5
         y: root.dotY - 3.5
-        color: Theme.accentInk
+        color: "white"
         opacity: root.dotOpacity
-        Rectangle { x: 1.5; y: 1.5; width: 2; height: 2; radius: 1; color: Qt.rgba(1, 1, 1, 0.5) }
     }
 }
