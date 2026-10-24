@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Splits each component in quickshell/components/ into its own repository, with the history of its folder.
+# The rewrite is deterministic, so running it again after new commits only adds them on top (fast-forward).
+#   dev/split-components [target-dir]      default target: ~/unia-components
+# Each result lands in <target>/unia-<component> on branch main; push it from there.
+set -euo pipefail
+REPO="$(cd "$(dirname "$0")/.." && pwd)"
+TARGET="${1:-$HOME/unia-components}"
+TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
+mkdir -p "$TARGET"
+for d in tile-menu settings-box window-drop scenarios; do
+    git clone -q --single-branch -b main "$REPO" "$TMP/$d"
+    FILTER_BRANCH_SQUELCH_WARNING=1 git -C "$TMP/$d" filter-branch -f --subdirectory-filter "quickshell/components/$d" -- main >/dev/null
+    dest="$TARGET/unia-$d"
+    [ -d "$dest/.git" ] || git init -q -b main "$dest"
+    git -C "$dest" pull -q --ff-only "$TMP/$d" main
+    echo "unia-$d: $(git -C "$dest" log --oneline -1)"
+done

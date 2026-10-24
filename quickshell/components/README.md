@@ -1,7 +1,7 @@
 # Unia Breathe Desktop components
 
-Parts that also live as standalone repositories. They are developed here, and each folder is split
-into its own repository with `git subtree`:
+Parts that also live as standalone repositories. They are developed here, and `dev/split-components`
+splits each folder, with its history, into its own repository:
 
 - [unia-tile-menu](https://github.com/BaraniukConnection/unia-tile-menu)
 - [unia-settings-box](https://github.com/BaraniukConnection/unia-settings-box)
@@ -17,8 +17,9 @@ into its own repository with `git subtree`:
 
 To take a component out on its own, it only needs what the right-hand column lists.
 
-To publish changes to a component's repository (run from the repository root):
+To publish changes to the component repositories, run from the repository root:
 
 ```bash
-git subtree push --prefix=quickshell/components/window-drop git@github.com:BaraniukConnection/unia-window-drop.git main
+dev/split-components          # updates ~/unia-components/unia-<component>, fast-forward
+cd ~/unia-components/unia-window-drop && git push
 ```
