@@ -26,7 +26,7 @@ Singleton {
         { id: "layout", tab: "main", label: "Розкладка", icon: "keyboard", kind: "own", what: "Мови та клавіша перемикання розкладок" },
         { id: "wall", tab: "custom", label: "Шпалери", icon: "wallpaper", kind: "app", tool: "Waypaper", cmd: ["waypaper"], classes: ["waypaper"] },
         { id: "colors", tab: "custom", label: "Кольори", icon: "palette", kind: "app", tool: "nwg-look", cmd: ["nwg-look"], classes: ["nwg-look"] },
-        { id: "opacity", tab: "custom", label: "Прозорість", icon: "opacity", kind: "own", what: "Прозорість вікон і сила розмиття" },
+        { id: "theme", tab: "custom", label: "Тема", icon: "format_paint", kind: "own", what: "Головний і другорядні кольори, прозорість вікон, розмиття" },
         { id: "borders", tab: "custom", label: "Вікна й межі", icon: "border_style", kind: "own", what: "Відступи між вікнами, рамки, заокруглення" },
         { id: "mouse", tab: "devices", label: "Мишка", icon: "mouse", kind: "own", what: "Швидкість, прискорення, природне прокручування, режим для лівої руки" },
         { id: "kb-layout", tab: "devices", parent: "keyboard", label: "Мова та розкладка", icon: "keyboard", kind: "own", what: "Мови та клавіша перемикання розкладок" },

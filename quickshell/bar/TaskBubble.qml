@@ -42,7 +42,7 @@ Bubble {
                 width: root.cell; height: 34
                 anchors.verticalCenter: parent.verticalCenter
                 radius: 12
-                color: modelData.active ? Qt.rgba(16 / 255, 185 / 255, 129 / 255, 0.28) : root.hoverIndex === index ? Theme.paneHover : "transparent"
+                color: modelData.active ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.28) : root.hoverIndex === index ? Theme.paneHover : "transparent"
                 opacity: modelData.minimized ? 0.45 : 1
                 IconImage { anchors.centerIn: parent; implicitSize: 22; source: Windows.icon(cellItem.modelData); asynchronous: true }
                 Rectangle {     // крапка під активним вікном

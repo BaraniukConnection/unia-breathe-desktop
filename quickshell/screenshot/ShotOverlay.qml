@@ -222,7 +222,7 @@ PanelWindow {
 
         Glass {
             id: bar
-            color: Qt.rgba(8 / 255, 30 / 255, 25 / 255, 0.9)
+            color: Theme.tint(Qt.rgba(8 / 255, 30 / 255, 25 / 255, 0.9))
             radius: 32
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
@@ -269,7 +269,7 @@ PanelWindow {
             anchors.horizontalCenter: bar.horizontalCenter
             anchors.bottom: bar.top
             anchors.bottomMargin: 10
-            color: Qt.rgba(8 / 255, 30 / 255, 25 / 255, 0.85)
+            color: Theme.tint(Qt.rgba(8 / 255, 30 / 255, 25 / 255, 0.85))
             radius: 14
             width: hint.implicitWidth + 24
             height: 28

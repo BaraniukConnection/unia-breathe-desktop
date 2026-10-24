@@ -4,7 +4,7 @@ import "../../theme"
 import "../../services"
 import "pages"
 
-// Власна сторінка налаштування (праворуч від панелі): час, розкладка, прозорість, вікна, мишка.
+// Власна сторінка налаштування (праворуч від панелі): час, розкладка, тема, вікна, мишка.
 FloatingWindow {
     id: win
     title: "Unia · Сторінка"
@@ -29,7 +29,7 @@ FloatingWindow {
 
     Component { id: pTime; TimePage {} }
     Component { id: pLayout; LayoutPage {} }
-    Component { id: pOpacity; OpacityPage {} }
+    Component { id: pTheme; ThemePage {} }
     Component { id: pBorders; BordersPage {} }
     Component { id: pMouse; MousePage {} }
 
@@ -72,7 +72,7 @@ FloatingWindow {
                 switch (Settings.sel) {
                 case "time": return pTime
                 case "layout": case "kb-layout": return pLayout
-                case "opacity": return pOpacity
+                case "theme": return pTheme
                 case "borders": return pBorders
                 case "mouse": return pMouse
                 }

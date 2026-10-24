@@ -242,7 +242,7 @@ PanelWindow {
                 captureSource: win.resizeHere && win.resizeTop ? win.resizeTop.wayland : null
                 live: true
                 layer.enabled: true
-                layer.effect: MultiEffect { blurEnabled: true; blur: 0.15; blurMax: 64 }
+                layer.effect: MultiEffect { blurEnabled: Theme.blur; blur: 0.15; blurMax: 64 }
             }
             Rectangle { anchors.fill: parent; color: Qt.rgba(Theme.base.r, Theme.base.g, Theme.base.b, 0.15) }
         }

@@ -440,7 +440,7 @@ Glass {
         id: folderGhost
         visible: root.dragFolder !== ""
         z: 50
-        color: Qt.rgba(8 / 255, 30 / 255, 25 / 255, 0.94)
+        color: Theme.tint(Qt.rgba(8 / 255, 30 / 255, 25 / 255, 0.94))
         border.color: Theme.accent
         radius: 18
         width: fgRow.implicitWidth + 28
@@ -482,7 +482,7 @@ Glass {
         id: ctx
         visible: false
         z: 60
-        color: Qt.rgba(8 / 255, 30 / 255, 25 / 255, 0.94)    // під меню — плитки тієї ж панелі, розмиття тут не допоможе
+        color: Theme.tint(Qt.rgba(8 / 255, 30 / 255, 25 / 255, 0.94))    // під меню — плитки тієї ж панелі, розмиття тут не допоможе
         radius: 16
         width: 232
         implicitHeight: ctxCol.implicitHeight + 12

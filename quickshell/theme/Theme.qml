@@ -5,27 +5,51 @@ import "../services"
 
 // Палітра, шрифти і «скло» Unia Breathe — одне місце для всіх кольорів і розмірів (з макета).
 Singleton {
-    // кольори
-    readonly property color base: "#0b2a26"
-    readonly property color ink: "#eaf6f0"
-    readonly property color inkMuted: "#bfe3d5"
-    readonly property color accent: "#10b981"
-    readonly property color accentInk: "#04231a"   // текст на акцентному тлі
+    // кольори: головний акцент і другорядні обирають у налаштуваннях («Тема»), решта палітри
+    // (тло, скло, текст) відтінюється під акцент — на стандартному смарагді все як у макеті
+    readonly property color defaultAccent: "#10b981"
+    readonly property var defaultSecondary: ["#13eca4", "#5b9bff", "#f59e0b", "#b57bf9"]
+    readonly property var colors: Prefs.data.theme ?? ({})
+    readonly property color accent: colors.accent ?? defaultAccent
+    readonly property var secondary: colors.secondary ?? defaultSecondary
+    readonly property real hueShift: accent.hslSaturation < 0.08 ? 0 : accent.hslHue - defaultAccent.hslHue
+    readonly property real satK: Math.min(1, accent.hslSaturation / defaultAccent.hslSaturation)
+    function tint(c, a) {
+        c = Qt.lighter(c, 1)                       // рядок "#…" → колір
+        return Qt.hsla((c.hslHue + hueShift + 1) % 1, c.hslSaturation * satK, c.hslLightness, a ?? c.a)
+    }
+    // відносна яскравість (WCAG) — від неї колір тексту на акценті
+    function luminance(c) {
+        const l = v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)
+        return 0.2126 * l(c.r) + 0.7152 * l(c.g) + 0.0722 * l(c.b)
+    }
+    function hex(c, alpha) {
+        const h = v => Math.round(v * 255).toString(16).padStart(2, "0")
+        return h(c.r) + h(c.g) + h(c.b) + (alpha === undefined ? "" : h(alpha))
+    }
 
-    // скло: тло всіх поверхонь, щільніше для меню, плитки й обвідка
-    readonly property color glass: Qt.rgba(8 / 255, 30 / 255, 25 / 255, 0.35)
-    readonly property color glassStrong: Qt.rgba(8 / 255, 30 / 255, 25 / 255, 0.62)
+    readonly property color base: tint("#0b2a26")
+    readonly property color ink: tint("#eaf6f0")
+    readonly property color inkMuted: tint("#bfe3d5")
+    readonly property color accentInk: luminance(accent) > 0.2 ? tint("#04231a") : "#ffffff"   // текст на акцентному тлі
+
+    // розмиття під поверхнями (тумблер «Розмиття» в налаштуваннях)
+    readonly property bool blur: (Prefs.data.hypr ?? {})["decoration:blur:enabled"] !== 0
+
+    // скло: тло всіх поверхонь, щільніше для меню, плитки й обвідка; без розмиття — щільніше, щоб текст читався
+    readonly property color glass: tint(Qt.rgba(8 / 255, 30 / 255, 25 / 255, blur ? 0.35 : 0.72))
+    readonly property color glassStrong: tint(Qt.rgba(8 / 255, 30 / 255, 25 / 255, blur ? 0.62 : 0.86))
     readonly property color pane: Qt.rgba(1, 1, 1, 0.09)
     readonly property color paneHover: Qt.rgba(1, 1, 1, 0.15)
     readonly property color paneLine: Qt.rgba(1, 1, 1, 0.14)
 
-    // кольорові мітки
-    readonly property color mint: "#13eca4"
-    readonly property color blue: "#5b9bff"
-    readonly property color amber: "#f59e0b"
+    // кольорові мітки: другорядні кольори теми (червоний — завжди червоний: закрити, помилки)
+    readonly property color mint: secondary[0] ?? defaultSecondary[0]
+    readonly property color blue: secondary[1] ?? defaultSecondary[1]
+    readonly property color amber: secondary[2] ?? defaultSecondary[2]
+    readonly property color purple: secondary[3] ?? defaultSecondary[3]
     readonly property color red: "#f26464"
-    readonly property color purple: "#b57bf9"
-    readonly property color emerald: "#10b981"
+    readonly property color emerald: accent
 
     // шрифти
     readonly property string font: "Manrope"
@@ -33,7 +57,7 @@ Singleton {
     readonly property int fontSize: 14
 
     // розміри
-    // режим фокусу (кругла кнопка в меню WindowDrop): верхня панель нижча й суцільна — див. bar/Bar.qml
+    // режим фокусу (кругла кнопка на верхній панелі): верхня панель нижча й суцільна — див. bar/Bar.qml
     readonly property bool focusMode: Prefs.data.focusMode ?? false
     readonly property int bubbleHeight: focusMode ? 30 : 44
     readonly property int edge: 20          // відступ бульбашок від країв екрана
