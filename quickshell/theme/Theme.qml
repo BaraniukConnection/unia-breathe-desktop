@@ -36,9 +36,9 @@ Singleton {
     // розмиття під поверхнями (тумблер «Розмиття» в налаштуваннях)
     readonly property bool blur: (Prefs.data.hypr ?? {})["decoration:blur:enabled"] !== 0
 
-    // скло: тло всіх поверхонь, щільніше для меню, плитки й обвідка; без розмиття — щільніше, щоб текст читався
-    readonly property color glass: tint(Qt.rgba(8 / 255, 30 / 255, 25 / 255, blur ? 0.35 : 0.72))
-    readonly property color glassStrong: tint(Qt.rgba(8 / 255, 30 / 255, 25 / 255, blur ? 0.62 : 0.86))
+    // скло: тло всіх поверхонь, щільніше для меню, плитки й обвідка; розмиття вимкнене — тло суцільне
+    readonly property color glass: blur ? tint(Qt.rgba(8 / 255, 30 / 255, 25 / 255, 0.35)) : tint("#0d2a24")
+    readonly property color glassStrong: blur ? tint(Qt.rgba(8 / 255, 30 / 255, 25 / 255, 0.62)) : tint("#081e19")
     readonly property color pane: Qt.rgba(1, 1, 1, 0.09)
     readonly property color paneHover: Qt.rgba(1, 1, 1, 0.15)
     readonly property color paneLine: Qt.rgba(1, 1, 1, 0.14)

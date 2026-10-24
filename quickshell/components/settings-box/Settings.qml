@@ -97,7 +97,9 @@ Singleton {
         Hyprland.dispatch(`resizewindowpixel exact ${Math.round(w)} ${Math.round(h)},${sel}`)
         Hyprland.dispatch(`movewindowpixel exact ${Math.round(x)} ${Math.round(y)},${sel}`)
     }
-    function layout() {
+    // refocus — повернути клавіатуру панелі (при відкритті, виборі категорії); при простому перерозставленні
+    // (Hyprland перечитав конфіг) — ні: focuswindow ще й переносить курсор у середину панелі
+    function layout(refocus) {
         const a = area()
         if (!a) return
         place("title:^(Unia · Налаштування)$", a.x, a.y, panelW, a.h)
@@ -107,7 +109,7 @@ Singleton {
         else if (addrs[it.id]) place(`address:${addrs[it.id]}`, a.toolX, a.y, a.toolW, a.h)
         // фокус — лише коли налаштування відкриті: фокус на вікні схованого спецворкспейсу показує його
         // (так налаштування вискакували при кожному запуску оболонки, коли з'являлось вікно панелі)
-        if (!shown) return
+        if (!shown || refocus === false) return
         focusPanel()        // клавіатура лишається в панелі: Tab — перейти до програми
         refocus.restart()   // щойно відкрите вікно програми забирає фокус собі — повертаємо його панелі
     }
@@ -197,6 +199,6 @@ Singleton {
         }
     }
 
-    Timer { id: relayout; interval: 400; onTriggered: root.layout() }
+    Timer { id: relayout; interval: 400; onTriggered: root.layout(false) }
 
 }

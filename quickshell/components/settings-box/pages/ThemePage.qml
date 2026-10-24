@@ -118,8 +118,8 @@ Page {
         SettingRow {
             label: "Розмиття"
             hint: HyprOpts.get("decoration:blur:enabled", 1) === 1
-                ? "Скляний ефект під прозорими вікнами й панелями"
-                : "Вимкнено: панелі щільніші, щоб текст читався без розмиття"
+                ? "Скляний ефект під прозорими вікнами й панелями. Вимкніть — тло стане суцільним"
+                : "Вимкнено: тло панелей суцільне, без прозорості"
             Toggle { checked: HyprOpts.get("decoration:blur:enabled", 1) === 1; onToggled: v => HyprOpts.set("decoration:blur:enabled", v ? 1 : 0) }
         }
         SettingRow {

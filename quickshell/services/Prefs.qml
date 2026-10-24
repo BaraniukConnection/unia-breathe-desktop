@@ -27,7 +27,10 @@ Singleton {
         store.setText(JSON.stringify(data, null, 2) + "\n")
         const h = data.hypr ?? {}
         const lines = Object.keys(h).sort().map(k => `${k} = ${h[k]}`)
-        conf.setText("# Згенеровано налаштуваннями Unia Breathe — зміни краще робити там\n" + lines.join("\n") + "\n")
+        // конфіг Hyprland переписуємо, лише коли він справді змінився: Hyprland стежить за файлом і на кожен запис
+        // перечитує весь конфіг (миготять рамки, налаштування заново розставляють вікна)
+        const txt = "# Згенеровано налаштуваннями Unia Breathe — зміни краще робити там\n" + lines.join("\n") + "\n"
+        if (txt !== conf.text()) conf.setText(txt)
     }
     Timer { id: saveTimer; interval: 500; onTriggered: root.save() }
 
