@@ -28,6 +28,7 @@ sudo dnf install cargo rust cmake ninja-build gcc-c++ pkgconf-pkg-config qt6-qtb
 - **Скло**: тло вікна й панелі напівпрозорі, Hyprland розмиває те, що за вікном. Налаштування → Interface →
   Transparency (Off · Low · Medium · Unia = 0.35, як у оболонки). Меню й діалоги лишаються щільними: розмиття діє
   лише на те, що за вікном, а не на вміст під меню. Прозорий буфер вмикає `cpp/native.cpp`.
+- **Шрифт Manrope** (за Vision DesignSystem) вбудований і ставиться шрифтом застосунку в `cpp/native.cpp`.
 - **Значок Oxygen Files** з Vision DesignSystem (`assets/oxygen-files.svg`): шапка бічної панелі, «About», пункт меню.
   `app_id` вікна — `oxygen-files`.
 - **Disks** на сторінці «This PC», між Places і Frequent: картка на кожен диск (`qml/components/DiskCard.qml`) —

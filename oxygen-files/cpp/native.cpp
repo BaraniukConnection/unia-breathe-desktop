@@ -8,6 +8,8 @@
 #include <QDBusInterface>
 #include <QDBusReply>
 #include <QFileInfo>
+#include <QFont>
+#include <QFontDatabase>
 #include <QGuiApplication>
 #include <QLocale>
 #include <QMimeData>
@@ -273,6 +275,14 @@ void set_application_identity(rust::Str version)
     QGuiApplication::setDesktopFileName(QStringLiteral("oxygen-files"));
     // Translucent windows (Theme.glassOpacity): the compositor blurs what is behind them.
     QQuickWindow::setDefaultAlphaBuffer(true);
+    // Manrope is the Oxygen Theme (Vision DesignSystem) face; keep the desktop's size.
+    const int id = QFontDatabase::addApplicationFont(QStringLiteral(":/loaf/fonts/Manrope.ttf"));
+    const QStringList families = QFontDatabase::applicationFontFamilies(id);
+    if (!families.isEmpty()) {
+        QFont font = QGuiApplication::font();
+        font.setFamily(families.first());
+        QGuiApplication::setFont(font);
+    }
 }
 
 } // namespace loaf
