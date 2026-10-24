@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Сповіщення про знімок / запис екрана з кнопками «Відкрити» і «Показати в теці».
-# unia-shot-notify <файл> [video]
+# A notification for a screenshot / screencast with Open and Show in Folder buttons.
+# unia-shot-notify <file> [video]
 file="$1"
 [ -f "$file" ] || exit 0
 if [ "$2" = video ]; then
-    title="Запис екрана збережено"; body="${file##*/}"; icon="video-x-generic"
+    title="Screencast saved"; body="${file##*/}"; icon="video-x-generic"
 else
-    title="Знімок екрана зроблено"; body="Скопійовано в буфер обміну"; icon="$file"
+    title="Screenshot taken"; body="Copied to the clipboard"; icon="$file"
 fi
-action=$(notify-send -a "Знімок екрана" -i "$icon" -w \
-    --action=default=Відкрити --action=open=Відкрити --action=folder="Показати в теці" "$title" "$body")
+action=$(notify-send -a "Screenshot" -i "$icon" -w \
+    --action=default=Open --action=open=Open --action=folder="Show in Folder" "$title" "$body")
 case "$action" in
     default|open) xdg-open "$file" ;;
     folder) xdg-open "$(dirname "$file")" ;;

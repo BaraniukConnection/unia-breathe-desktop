@@ -3,14 +3,14 @@ import QtQuick
 import Quickshell
 import Quickshell.Hyprland
 
-// Відкриті вікна для смуги й запуску програм: перейти до вікна, згорнути, розгорнути.
-// Hyprland не має «згортання», тож згорнуте вікно живе на схованому столі special:minimized.
+// Open windows for the bar and app launching: go to a window, minimize, restore.
+// Hyprland has no minimizing, so a minimized window lives on the hidden desk special:minimized.
 Singleton {
     id: root
     readonly property string minimizedWs: "special:minimized"
-    readonly property string dragWs: "special:unia-drop"       // вікно, яке зараз тягнуть краплиною (WindowDrop)
-    property bool moving: false                                  // вікно зараз тягнуть — стіл тимчасово неповний
-    // службові столи оболонки, вікна з яких не показуємо
+    readonly property string dragWs: "special:unia-drop"       // the window being dragged by its drop (WindowDrop)
+    property bool moving: false                                  // a window is being dragged: its desk is temporarily incomplete
+    // the shell's service desks, whose windows are not listed
     readonly property var hiddenWs: ["special:settings", "special:unia-stash"]
 
     readonly property var list: Hyprland.toplevels.values
@@ -32,16 +32,16 @@ Singleton {
 
     function label(w) {
         const name = w.entry ? w.entry.name : w.cls
-        return w.minimized ? `${name} · згорнуто` : `${name} · Стіл ${w.wsId > 0 ? w.wsId : w.wsName.replace(/^name:/, "")}`
+        return w.minimized ? `${name} · minimized` : `${name} · Desk ${w.wsId > 0 ? w.wsId : w.wsName.replace(/^name:/, "")}`
     }
     function icon(w) {
         return Quickshell.iconPath(w.entry ? w.entry.icon : w.cls.toLowerCase(), "application-x-executable")
     }
 
-    // звідки вікно згорнули: адреса → стіл (щоб розгорнути туди ж, як в Ubuntu)
+    // where a window was minimized from: address → desk (to restore it there, as in Ubuntu)
     property var origin: ({})
 
-    // перейти до вікна; згорнуте — спершу повернути на його стіл (або на поточний, якщо невідомо)
+    // go to a window; a minimized one first goes back to its desk (or the current one if unknown)
     function focus(w) {
         if (w.minimized) {
             const m = Hyprland.focusedMonitor
@@ -61,7 +61,7 @@ Singleton {
     }
     function close(w) { Hyprland.dispatch(`closewindow address:${w.address}`) }
 
-    // вікна програми з .desktop-запису (за StartupWMClass, id або евристикою Quickshell)
+    // an app's windows from its .desktop entry (by StartupWMClass, id or Quickshell's heuristics)
     function ofEntry(e) {
         if (!e || !e.id) return []
         return list.filter(w => {
@@ -71,7 +71,7 @@ Singleton {
         })
     }
 
-    // класи вікон (lastIpcObject) оновлюються лише на запит — просимо після змін вікон
+    // window classes (lastIpcObject) update only on request, so ask after window changes
     Connections {
         target: Hyprland
         function onRawEvent(ev) {

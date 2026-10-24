@@ -1,6 +1,6 @@
 import QtQuick
 
-// Текст, що не влазить, повільно їздить туди-назад у своїй рамці (як .mq у макеті).
+// Text that does not fit slowly slides back and forth inside its frame (like .mq in the mockup).
 Item {
     id: root
     property alias text: label.text

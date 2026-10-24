@@ -3,7 +3,7 @@ import Quickshell
 import "../theme"
 import "../services"
 
-// Меню живлення. Вимкнення й перезавантаження просять другий клік для підтвердження.
+// Power menu. Shut Down and Restart ask for a second click to confirm.
 Glass {
     id: root
     strong: true
@@ -31,7 +31,7 @@ Glass {
                     x: 10
                     spacing: 12
                     Icon { name: modelData.icon; color: isArmed ? Theme.ink : Theme.inkMuted; anchors.verticalCenter: parent.verticalCenter }
-                    Label { text: isArmed ? "Точно? Клацніть ще раз" : modelData.label; weight: Font.Medium; anchors.verticalCenter: parent.verticalCenter }
+                    Label { text: isArmed ? "Sure? Click again" : modelData.label; weight: Font.Medium; anchors.verticalCenter: parent.verticalCenter }
                 }
                 MouseArea {
                     id: area

@@ -1,16 +1,16 @@
 import QtQuick
 import "../services"
 
-// Скляна бульбашка верхньої смуги. Вміст кладеться всередину; клік і колесо — сигналами.
+// A glass bubble on the top bar. Content goes inside; click and wheel come out as signals.
 Glass {
     id: root
     default property alias content: holder.data
-    property bool active: false              // відкрите її спливаюче вікно — акцентна обвідка
+    property bool active: false              // its popup is open: accent outline
     property bool interactive: true
     readonly property bool hovered: area.containsMouse
     property int padLeft: 16
     property int padRight: 6
-    // якщо задано: клік відкриває цю панель, а наведення перемикає на неї, коли інша вже відкрита
+    // if set: a click opens this popup, and hovering switches to it while another one is open
     property string popup: ""
     property var popupScreen: null
     signal clicked(var mouse)
@@ -19,7 +19,7 @@ Glass {
     height: Theme.bubbleHeight
     radius: height / 2
     implicitWidth: holder.childrenRect.width + padLeft + padRight
-    // у режимі фокусу тло дає суцільна смуга панелі — бульбашка без власного скла, лише підсвітка
+    // in focus mode the solid bar strip is the ground: the bubble has no glass of its own, only a hover highlight
     color: Theme.focusMode ? (hovered ? Theme.pane : "transparent") : Theme.glass
     border.width: active ? 2 : Theme.focusMode ? 0 : 1
     border.color: active ? Theme.accent : Theme.paneLine

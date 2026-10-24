@@ -3,9 +3,9 @@ import Quickshell
 import Quickshell.Widgets
 import "../../theme"
 
-// «Місце» для розкладеного вікна, яке тягнуть: напівпрозоре порожнє вікно (скло з розмиттям Hyprland),
-// яке Hyprland розкладає як звичайне — сусіди розсуваються, і видно, куди стане вікно.
-// Правила (unia.conf): розкладене, без фокусу при появі, без рамки й тіні, з'являється на схованому столі.
+// The "place" for a dragged tiled window: a translucent empty window (glass blurred by Hyprland)
+// that Hyprland tiles like any other: neighbours make room, and you see where the window will land.
+// Rules (unia.conf): tiled, no focus on open, no border or shadow, opens on a hidden desk.
 FloatingWindow {
     title: Drops.placeTitle
     color: "transparent"

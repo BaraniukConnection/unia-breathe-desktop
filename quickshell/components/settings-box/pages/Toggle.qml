@@ -1,7 +1,7 @@
 import QtQuick
 import "../../../theme"
 
-// Перемикач увімкнено/вимкнено.
+// An on/off switch.
 Rectangle {
     id: root
     property bool checked
@@ -10,7 +10,7 @@ Rectangle {
     activeFocusOnTab: true
     Keys.onSpacePressed: toggled(!checked)
     Keys.onReturnPressed: toggled(!checked)
-    // рамка фокусу клавіатури
+    // keyboard focus ring
     Rectangle { anchors.fill: parent; anchors.margins: -4; radius: parent.radius + 4; color: "transparent"; border.width: 2; border.color: Theme.accent; visible: parent.activeFocus }
     color: checked ? Theme.accent : Theme.paneHover
     border.width: checked ? 0 : 1

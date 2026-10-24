@@ -6,8 +6,8 @@ import "../../theme"
 import "../../services"
 import "../../popups"
 
-// Сценарії: картки з мініатюрою розкладки. Клік — відкрити, права кнопка — видалити,
-// «Зберегти сценарій» — назва прямо тут.
+// Scenarios: cards with a thumbnail of the layout. A click opens one, a right-click deletes it,
+// Save Scenario asks for the name right here.
 Section {
     id: root
     required property var screen
@@ -21,7 +21,7 @@ Section {
     Item {
         width: parent.width
         height: 40
-        Label { anchors.verticalCenter: parent.verticalCenter; text: "Сценарії"; weight: Font.Bold }
+        Label { anchors.verticalCenter: parent.verticalCenter; text: "Scenarios"; weight: Font.Bold }
         Pill {
             visible: !form.visible
             anchors.right: parent.right
@@ -36,7 +36,7 @@ Section {
                 anchors.centerIn: parent
                 spacing: 6
                 Icon { name: "save"; font.pixelSize: 18; color: Theme.inkMuted; anchors.verticalCenter: parent.verticalCenter }
-                Label { text: "Зберегти сценарій"; size: 13; anchors.verticalCenter: parent.verticalCenter }
+                Label { text: "Save Scenario"; size: 13; anchors.verticalCenter: parent.verticalCenter }
             }
             MouseArea {
                 id: saveArea
@@ -45,8 +45,8 @@ Section {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
                     let k = 1
-                    while (Scenarios.find("Сценарій " + k)) k++
-                    nameField.text = Scenarios.nameFor(root.wsId) || "Сценарій " + k
+                    while (Scenarios.find("Scenario " + k)) k++
+                    nameField.text = Scenarios.nameFor(root.wsId) || "Scenario " + k
                     form.visible = true
                     nameField.forceActiveFocus()
                     nameField.selectAll()
@@ -55,7 +55,7 @@ Section {
         }
     }
 
-    // поле назви
+    // name field
     Row {
         id: form
         visible: false
@@ -67,7 +67,7 @@ Section {
             width: parent.width - ok.width - 8
             height: 40
             maximumLength: 14
-            placeholderText: "Назва сценарію"
+            placeholderText: "Scenario name"
             font.family: Theme.font
             font.pixelSize: 14
             color: Theme.ink
@@ -89,7 +89,7 @@ Section {
                 Scenarios.save(n)
                 form.visible = false
             }
-            Label { id: okLabel; anchors.centerIn: parent; text: "Зберегти"; weight: Font.Bold; color: Theme.accentInk; shadow: false }
+            Label { id: okLabel; anchors.centerIn: parent; text: "Save"; weight: Font.Bold; color: Theme.accentInk; shadow: false }
             MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: ok.save() }
         }
     }
@@ -102,7 +102,7 @@ Section {
         spacing: 8
         clip: true
         boundsBehavior: Flickable.StopAtBounds
-        model: [{ name: "", windows: [] }, ...Scenarios.list]      // перша картка — порожній стіл
+        model: [{ name: "", windows: [] }, ...Scenarios.list]      // the first card is an empty desk
 
         delegate: Rectangle {
             id: card
@@ -118,7 +118,7 @@ Section {
             border.width: on ? 2 : 0
             border.color: Theme.accent
 
-            // мініатюра: вікна сценарію, вписані в прямокутник
+            // thumbnail: the scenario's windows fitted into a rectangle
             Rectangle {
                 id: prev
                 x: 8; y: 8
@@ -153,7 +153,7 @@ Section {
                 width: parent.width - 8
                 horizontalAlignment: Text.AlignHCenter
                 elide: Text.ElideRight
-                text: card.del ? "Видалити?" : card.empty ? "Порожній" : Scenarios.loading === card.modelData.name ? "Відкриваю…" : card.modelData.name
+                text: card.del ? "Delete?" : card.empty ? "Empty" : Scenarios.loading === card.modelData.name ? "Opening…" : card.modelData.name
                 size: 12
                 weight: Font.Bold
                 color: card.del ? Theme.red : Theme.ink
@@ -176,7 +176,7 @@ Section {
     }
     Label {
         visible: Scenarios.list.length === 0
-        text: "Розстав вікна і збережи їх як сценарій"
+        text: "Arrange your windows and save them as a scenario"
         size: 12
         muted: true
         bottomPadding: 6

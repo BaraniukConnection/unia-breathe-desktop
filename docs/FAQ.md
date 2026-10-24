@@ -1,59 +1,59 @@
-# Unia Breathe — FAQ
+# Unia Breathe Desktop: FAQ
 
-Готові файли до відповідей лежать у [`system/`](../system). Це системні налаштування, тож встановлюються
-вони з `sudo` і поза `install.sh`, лише якщо у вас та сама проблема.
+Ready-made files for these answers live in [`system/`](../system). They are system settings, so they are installed
+with `sudo` and outside `install.sh`, and only if you have the same problem.
 
 ---
 
-## Після сну екран завис (NVIDIA)
+## The screen hangs after sleep (NVIDIA)
 
-**Як виглядає.** Після пробудження висить останній кадр: екран блокування напівпрозорий або застиглий,
-введення пароля нічого не змінює, курсора не видно. Перезапуск hyprlock з консолі не допомагає,
-бо завис не замок, а вивід зображення.
+**What it looks like.** After resume the last frame stays on screen: the lock screen is half transparent or frozen,
+typing the password changes nothing, and there is no cursor. Restarting hyprlock from a console does not help,
+because it is not the lock that hangs but the display output.
 
-> Курсора не видно на екрані блокування завжди: так задано в `hypr/hyprlock.conf` (`hide_cursor = true`).
-> Сам собою це не ознака зависання.
+> The lock screen never shows a cursor: `hypr/hyprlock.conf` sets `hide_cursor = true`.
+> On its own that is not a sign of a hang.
 
-**Як перевірити, що причина в драйвері.** Після зависання (з консолі Ctrl+Alt+F3 або вже після
-перезавантаження: `-b -1` — попереднє завантаження):
+**How to check that the driver is the cause.** After a hang (from a console with Ctrl+Alt+F3, or after a
+reboot with `-b -1`, the previous boot):
 
 ```bash
 journalctl -b -1 -k | grep -E 'NVRM|nvidia-drm.*ERROR|PM: suspend'
 ```
 
-Ознаки, що це воно:
+Signs that this is it:
 
-- `NVRM: … Out of memory [NV_ERR_NO_MEMORY]` біля `PM: suspend entry`. Драйверу не вистачило
-  оперативної пам'яті, щоб зберегти відеопам'ять на час сну.
-- `[nvidia-drm] … Failed to register auto-value-update on pre-wait value for sync` після пробудження.
-  Hyprland більше не може вивести новий кадр.
+- `NVRM: … Out of memory [NV_ERR_NO_MEMORY]` next to `PM: suspend entry`. The driver did not have enough
+  RAM to save video memory for the duration of sleep.
+- `[nvidia-drm] … Failed to register auto-value-update on pre-wait value for sync` after resume.
+  Hyprland can no longer present a new frame.
 
-**Що робити: зберігати відеопам'ять на диск.**
+**The fix: save video memory to disk.**
 
-1. Переконайтесь, що каталог для файлу на диску, а не в пам'яті (tmpfs), і що на ньому вільного місця
-   не менше, ніж відеопам'яті (`nvidia-smi --query-gpu=memory.total --format=csv`):
+1. Make sure the directory for the file is on disk, not in memory (tmpfs), and that it has at least as much
+   free space as the card has video memory (`nvidia-smi --query-gpu=memory.total --format=csv`):
 
    ```bash
-   findmnt -no FSTYPE -T /var/tmp   # не має бути tmpfs
+   findmnt -no FSTYPE -T /var/tmp   # must not be tmpfs
    df -h /var/tmp
    ```
 
-2. Поставте налаштування драйвера ([`system/nvidia-sleep.conf`](../system/nvidia-sleep.conf)). Якщо
-   `/var/tmp` не підходить, у файлі замініть шлях на інший каталог на диску:
+2. Install the driver settings ([`system/nvidia-sleep.conf`](../system/nvidia-sleep.conf)). If `/var/tmp` does not
+   fit, replace the path in the file with another directory on disk:
 
    ```bash
    sudo cp system/nvidia-sleep.conf /etc/modprobe.d/nvidia-sleep.conf
    ```
 
-3. Перезберіть initramfs своїм дистрибутивом і перезавантажтесь:
+3. Rebuild the initramfs the way your distribution does it, and reboot:
 
-   | Дистрибутив | Команда |
+   | Distribution | Command |
    |---|---|
    | Fedora, RHEL | `sudo dracut -f` |
    | Arch | `sudo mkinitcpio -P` |
    | Debian, Ubuntu | `sudo update-initramfs -u` |
 
-4. Перевірте, що драйвер підхопив налаштування:
+4. Check that the driver picked the settings up:
 
    ```bash
    grep -E 'PreserveVideoMemoryAllocations|TemporaryFilePath' /proc/driver/nvidia/params
@@ -61,58 +61,59 @@ journalctl -b -1 -k | grep -E 'NVRM|nvidia-drm.*ERROR|PM: suspend'
    # TemporaryFilePath: "/var/tmp"
    ```
 
-5. **Лише для систем із SELinux** (Fedora, RHEL; перевірка: `getenforce` показує `Enforcing`). Якщо тепер
-   сон скасовується й у журналі з'явились такі рядки:
+5. **Only on systems with SELinux** (Fedora, RHEL; check with `getenforce`, which prints `Enforcing`). If sleep is
+   now cancelled and these lines show up in the journal:
 
    ```
    NVRM: The temporary file path specified via the NVreg_TemporaryFilePath module parameter could not be opened (error -13)
    NVRM: FBSR: could not reserve space for video memory preservation. Aborting suspend.
    ```
 
-   значить, SELinux не дає драйверу писати файл: це відбувається від імені `systemd-sleep`.
-   Переконайтесь, що відмова саме ця:
+   then SELinux does not let the driver write the file: that happens on behalf of `systemd-sleep`.
+   Make sure this is the denial:
 
    ```bash
    journalctl -b -1 | grep 'avc:  denied' | grep systemd-sleep
    # … scontext=…systemd_sleep_t… tcontext=…tmp_t… tclass=file
    ```
 
-   Зберіть і встановіть невелике правило ([`system/nvidia-sleep.te`](../system/nvidia-sleep.te)). Воно дозволяє
-   `systemd-sleep` лише працювати з файлами в `/var/tmp`:
+   Build and install a small rule ([`system/nvidia-sleep.te`](../system/nvidia-sleep.te)). It only lets
+   `systemd-sleep` work with files in `/var/tmp`:
 
    ```bash
    cd /tmp && cp ~/unia-breathe/system/nvidia-sleep.te .
    checkmodule -M -m -o nvidia-sleep.mod nvidia-sleep.te
    semodule_package -o nvidia-sleep.pp -m nvidia-sleep.mod
-   sudo semodule -i nvidia-sleep.pp      # перезавантаження не потрібне
+   sudo semodule -i nvidia-sleep.pp      # no reboot needed
    ```
 
-   Якщо ви обрали в кроці 2 інший каталог, мітка в ньому може бути іншою, ніж `tmp_t`. Подивіться її
-   (`ls -Zd /ваш/каталог`) і замініть `tmp_t` у `.te`. Якщо відмова в журналі виглядає інакше, правило
-   можна згенерувати з неї: `journalctl -b -1 | grep 'avc:  denied' | audit2allow -M nvidia-sleep`
-   (далі `sudo semodule -i nvidia-sleep.pp`). Таке правило покриває лише ту відмову, що вже сталась.
-   Наприклад, читання файлу після пробудження з'явиться в журналі лише наступного разу, тож крок
-   доведеться повторити.
-   Прибрати правило: `sudo semodule -r nvidia-sleep`.
+   If you picked another directory in step 2, its label may differ from `tmp_t`. Look it up
+   (`ls -Zd /your/directory`) and replace `tmp_t` in the `.te` file. If the denial in your journal looks different, the rule
+   can be generated from it: `journalctl -b -1 | grep 'avc:  denied' | audit2allow -M nvidia-sleep`
+   (then `sudo semodule -i nvidia-sleep.pp`). Such a rule covers only the denial that already happened.
+   For example, reading the file back after resume shows up in the journal only the next time, so the step
+   may need repeating.
+   To remove the rule: `sudo semodule -r nvidia-sleep`.
 
-**А ще — кнопка «Сон».** У Unia Breathe кнопка «Сон» (панель керування, меню ⏻) і автоматичний сон з hypridle
-йдуть через `bin/unia-sleep`: спершу екран повністю блокується, і лише потім система засинає. Якщо у вашому
-конфігу сон викликається напряму через `systemctl suspend`, hyprlock запускається вже посеред засинання,
-не встигає з'явитись і після пробудження зависає так само.
+**And the Sleep button.** In Unia Breathe Desktop the Sleep button (control centre, the ⏻ menu) and automatic sleep
+from hypridle go through `bin/unia-sleep`: the screen locks completely first, and only then does the system sleep. If your
+config calls `systemctl suspend` directly, hyprlock starts in the middle of suspending, does not finish appearing,
+and hangs the same way after resume.
 
 ---
 
-## Після сну не працює бездротовий донгл (клавіатура, миша…)
+## A wireless dongle stops working after sleep (keyboard, mouse…)
 
-**Як виглядає.** Після пробудження бездротова клавіатура чи миша не реагує, а по кабелю той самий пристрій
-працює. Якщо витягнути й вставити донгл, теж запрацює.
+**What it looks like.** After resume a wireless keyboard or mouse does not respond, while the same device works
+over a cable. Unplugging the dongle and plugging it back in also brings it back.
 
-**Чому.** На час сну донгл втрачає живлення чи зв'язок із пристроєм, а ядро (USB persist) вважає його тим самим,
-уже налаштованим, і заново не підключає. Для системи донгл «живий», але натиски від нього не надходять.
+**Why.** During sleep the dongle loses power or its link to the device, but the kernel (USB persist) treats it as the
+same, already configured device and does not reconnect it. To the system the dongle looks alive, but no input comes
+through.
 
-**Що робити: перепідключати донгл після кожного пробудження.**
+**The fix: reconnect the dongle after every resume.**
 
-1. Знайдіть донгл:
+1. Find the dongle:
 
    ```bash
    lsusb
@@ -121,30 +122,30 @@ journalctl -b -1 -k | grep -E 'NVRM|nvidia-drm.*ERROR|PM: suspend'
    #                    idVendor idProduct
    ```
 
-   Не плутайте донгл із самим пристроєм, підключеним кабелем: у них може бути той самий `idVendor`, але інший
-   `idProduct` (у HATOR: донгл `379a:1807`, клавіатура по кабелю `379a:1806`). Якщо не певні, запустіть `lsusb`
-   двічі: з донглом і без нього.
+   Do not confuse the dongle with the device itself plugged in by cable: they may share an `idVendor` but have a
+   different `idProduct` (for the HATOR: the dongle is `379a:1807`, the keyboard on a cable `379a:1806`). If unsure, run
+   `lsusb` twice, with and without the dongle.
 
-2. Впишіть його в `DEVICES` у скрипті [`system/usb-dongle-reset`](../system/usb-dongle-reset). Кілька донглів
-   пишуться через пробіл:
+2. Put it into `DEVICES` in the script [`system/usb-dongle-reset`](../system/usb-dongle-reset). Separate several
+   dongles with spaces:
 
    ```sh
    DEVICES="379a:1807 046d:c548"
    ```
 
-3. Перевірте вручну, що перепідключення допомагає: поки донгл не працює після сну, запустіть
+3. Check by hand that reconnecting helps: while the dongle is dead after sleep, run
 
    ```bash
    sudo sh system/usb-dongle-reset post
    ```
 
-   За пів секунди донгл має запрацювати. У журналі (`journalctl -t usb-dongle-reset`) з'явиться
+   Within half a second the dongle should work. The journal (`journalctl -t usb-dongle-reset`) shows
    `reconnected 379a:1807`.
 
-4. Встановіть скрипт, щоб systemd запускав його після кожного пробудження:
+4. Install the script so systemd runs it after every resume:
 
    ```bash
    sudo install -m 755 system/usb-dongle-reset /usr/lib/systemd/system-sleep/usb-dongle-reset
    ```
 
-   Прибрати: `sudo rm /usr/lib/systemd/system-sleep/usb-dongle-reset`.
+   To remove it: `sudo rm /usr/lib/systemd/system-sleep/usb-dongle-reset`.

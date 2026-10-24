@@ -6,8 +6,8 @@ import "../theme"
 import "../services"
 import "../components/tile-menu"
 
-// Док одного монітора: 5 обраних програм і стрілка меню. Схований; виїжджає, коли курсор торкається
-// нижнього краю екрана (як в Ubuntu), ховається, коли курсор пішов, а меню закрите.
+// The dock of one monitor: 5 favourite apps and the menu arrow. Hidden; it slides up when the cursor touches
+// the bottom edge of the screen (as in Ubuntu) and hides when the cursor leaves and the menu is closed.
 Scope {
     id: root
     required property var modelData
@@ -15,14 +15,14 @@ Scope {
     readonly property bool menuOpen: Popups.isOpen("menu", screen)
     property bool peek: false
     onMenuOpenChanged: if (!menuOpen) hide.restart()
-    // зсув доку вниз (126 — повністю схований); анімуємо окремо, щоб видимість вікна не залежала від анімації y
+    // how far the dock is pushed down (126: fully hidden); animated separately so the window's visibility does not depend on the y animation
     property real offset: 126
     onShownChanged: { slide.to = shown ? 0 : 126; slide.restart() }
     NumberAnimation { id: slide; target: root; property: "offset"; duration: 220; easing.type: Easing.OutCubic }
     readonly property bool shown: peek || menuOpen
     readonly property alias window: win
 
-    // відкриття меню з клавіатури (Super+R) — на моніторі з фокусом
+    // opening the menu from the keyboard (Super+R): on the focused monitor
     Connections {
         target: Popups
         function onRequest(name) {
@@ -31,7 +31,7 @@ Scope {
         }
     }
 
-    // тонка смужка біля нижнього краю — «гачок» для курсора
+    // a thin strip at the bottom edge: the hook for the cursor
     PanelWindow {
         screen: root.screen
         WlrLayershell.namespace: "unia-dock-edge"
@@ -99,7 +99,7 @@ Scope {
                 }
             }
 
-            // стрілка меню
+            // menu arrow
             Glass {
                 id: arrow
                 anchors.horizontalCenter: parent.horizontalCenter
@@ -115,6 +115,6 @@ Scope {
         }
     }
 
-    // ховаємо, коли курсор не на доці й не на краю; інакше перевіряємо знову трохи пізніше
+    // hide when the cursor is neither on the dock nor on the edge; otherwise check again a little later
     Timer { id: hide; interval: 900; onTriggered: if (hover.hovered || edge.containsMouse) restart(); else root.peek = false }
 }

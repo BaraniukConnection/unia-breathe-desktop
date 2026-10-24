@@ -1,4 +1,4 @@
-/* Unia Breathe — палітра для GTK. Назви кольорів libadwaita; adw-gtk3 (GTK3) їх теж розуміє. */
+/* Unia Breathe Desktop: the GTK palette. libadwaita colour names; adw-gtk3 (GTK3) understands them too. */
 @define-color accent_color #13eca4;
 @define-color accent_bg_color #10b981;
 @define-color accent_fg_color #04231a;

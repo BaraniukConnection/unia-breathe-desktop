@@ -1,7 +1,7 @@
 import QtQuick
 import "../theme"
 
-// Кругла бульбашка зі значком (дзвіночок, живлення, режим фокусу).
+// A round bubble with an icon (bell, power, focus mode).
 Bubble {
     id: root
     property string icon

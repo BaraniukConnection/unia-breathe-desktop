@@ -4,12 +4,12 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
 
-// Поточна розкладка клавіатури (з hyprctl і подій Hyprland) та її перемикання.
+// The current keyboard layout (from hyprctl and Hyprland events) and switching it.
 Singleton {
     id: root
     property string name: ""
-    property string code: ""                 // код активної розкладки зі списку kb_layout (us, ua, de…)
-    readonly property var names: ({ "English (US)": "English (US)", "Ukrainian": "Українська" })
+    property string code: ""                 // code of the active layout from kb_layout (us, ua, de…)
+    readonly property var names: ({ "English (US)": "English (US)", "Ukrainian": "Ukrainian" })
     readonly property string label: names[name] ?? name
 
     function next() { switcher.running = true }

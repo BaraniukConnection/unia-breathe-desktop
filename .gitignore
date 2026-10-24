@@ -1,2 +1,2 @@
-# локальні секрети й кеш (адреса Google Calendar тощо) живуть у ~/.config/unia-breathe, не тут
+# local secrets and cache (the Google Calendar address and so on) live in ~/.config/unia-breathe, not here
 *.url

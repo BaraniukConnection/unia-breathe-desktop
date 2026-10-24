@@ -4,15 +4,15 @@ import Quickshell.Hyprland
 import "../../theme"
 import "../../services"
 
-// «Сценарій · OxygenDev» для столу цього монітора; «Порожній» — сценарій не відкривали або програми змінились.
-// Колесо гортає назви (нічого не запускає), клік по вибраній назві — відкриває сценарій.
+// "Scenario · OxygenDev" for this monitor's desk; "Empty" when no scenario was opened or its apps changed.
+// The wheel scrolls through names (launching nothing); a click on the chosen name opens that scenario.
 Bubble {
     id: root
     required property var screen
     readonly property var monitor: Hyprland.monitorFor(screen)
     readonly property int wsId: monitor && monitor.activeWorkspace ? monitor.activeWorkspace.id : 0
     readonly property string current: Scenarios.nameFor(wsId)
-    property string pending: ""             // назва, на яку прогорнули колесом
+    property string pending: ""             // the name scrolled to with the wheel
 
     popup: pending === "" ? "ws" : ""
     popupScreen: screen
@@ -32,7 +32,7 @@ Bubble {
     Row {
         height: parent.height
         spacing: 10
-        Label { text: root.pending ? "Відкрити?" : "Сценарій"; size: 13; muted: true; anchors.verticalCenter: parent.verticalCenter }
+        Label { text: root.pending ? "Open?" : "Scenario"; size: 13; muted: true; anchors.verticalCenter: parent.verticalCenter }
         Pill {
             anchors.verticalCenter: parent.verticalCenter
             width: val.implicitWidth + 28
@@ -45,7 +45,7 @@ Bubble {
                 spacing: 6
                 Label {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: Scenarios.loading ? Scenarios.loading + "…" : root.pending || root.current || "Порожній"
+                    text: Scenarios.loading ? Scenarios.loading + "…" : root.pending || root.current || "Empty"
                     weight: Font.Bold
                     color: root.active ? Theme.accentInk : Theme.ink
                     shadow: !root.active

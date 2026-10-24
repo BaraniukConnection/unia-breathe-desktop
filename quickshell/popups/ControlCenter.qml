@@ -8,13 +8,13 @@ import "../services"
 import "../components/tile-menu"
 import "../components/settings-box"
 
-// Панель керування й сповіщень: Wi-Fi, Bluetooth, закріплені налаштування, гучність, сповіщення, живлення.
+// Control centre and notifications: Wi-Fi, Bluetooth, pinned settings, volume, notifications, power.
 Glass {
     id: root
     width: 448
     height: col.implicitHeight + 24
-    property string sub: ""          // "wifi" | "bt" — розгорнутий список під плитками
-    property string armed: ""        // кнопка живлення, що чекає підтвердження
+    property string sub: ""          // "wifi" | "bt": the list expanded under the tiles
+    property string armed: ""        // the power button waiting for confirmation
 
     component Tile: Rectangle {
         id: tile
@@ -48,7 +48,7 @@ Glass {
         }
     }
 
-    // рядок списку мереж / пристроїв
+    // a row in the network / device list
     component ListRow: Rectangle {
         id: lr
         property string icon
@@ -77,7 +77,7 @@ Glass {
         width: parent.width - 24
         spacing: 12
 
-        // ---------- швидкі налаштування ----------
+        // ---------- quick settings ----------
         Section {
             width: parent.width
             pad: 12
@@ -89,7 +89,7 @@ Glass {
                     width: parent.tileW
                     icon: Net.wired ? "lan" : Net.enabled ? "wifi" : "wifi_off"
                     name: "Wi-Fi"
-                    subText: !Net.enabled ? "Вимкнено" : Net.name || "Не під'єднано"
+                    subText: !Net.enabled ? "Off" : Net.name || "Not connected"
                     on: Net.enabled
                     expanded: root.sub === "wifi"
                     onToggled: Networking.wifiEnabled = !Networking.wifiEnabled
@@ -99,7 +99,7 @@ Glass {
                     width: parent.tileW
                     icon: Bt.enabled ? "bluetooth" : "bluetooth_disabled"
                     name: "Bluetooth"
-                    subText: !Bt.enabled ? "Вимкнено" : Bt.name || "Не під'єднано"
+                    subText: !Bt.enabled ? "Off" : Bt.name || "Not connected"
                     on: Bt.enabled
                     expanded: root.sub === "bt"
                     onToggled: if (Bt.adapter) Bt.adapter.enabled = !Bt.adapter.enabled
@@ -110,7 +110,7 @@ Glass {
                     columns: 3
                     spacing: 4
                     Repeater {
-                        model: 6      // закріплені налаштування (права кнопка в панелі налаштувань)
+                        model: 6      // pinned settings (right-click in the settings panel)
                         Rectangle {
                             required property int index
                             readonly property var it: Settings.find(Settings.pins[index] ?? "")
@@ -132,7 +132,7 @@ Glass {
                 }
             }
 
-            // розгорнутий список мереж Wi-Fi
+            // the expanded list of Wi-Fi networks
             Column {
                 width: parent.width
                 visible: root.sub === "wifi"
@@ -146,7 +146,7 @@ Glass {
                         readonly property bool secure: modelData.security !== WifiSecurityType.Open
                         icon: modelData.signalStrength > 0.75 ? "network_wifi" : modelData.signalStrength > 0.5 ? "network_wifi_3_bar" : modelData.signalStrength > 0.25 ? "network_wifi_2_bar" : "network_wifi_1_bar"
                         text: modelData.name
-                        subText: modelData.connected ? "під'єднано" : secure && !modelData.known ? "🔒" : ""
+                        subText: modelData.connected ? "connected" : secure && !modelData.known ? "🔒" : ""
                         current: modelData.connected
                         onClicked: {
                             if (modelData.connected) modelData.disconnect()
@@ -155,7 +155,7 @@ Glass {
                         }
                     }
                 }
-                // пароль для нової захищеної мережі
+                // password for a new secured network
                 TextField {
                     id: pass
                     property string ssid
@@ -163,7 +163,7 @@ Glass {
                     width: parent.width
                     height: 40
                     echoMode: TextInput.Password
-                    placeholderText: `Пароль для «${ssid}»`
+                    placeholderText: `Password for "${ssid}"`
                     font.family: Theme.font
                     color: Theme.ink
                     placeholderTextColor: Theme.inkMuted
@@ -175,10 +175,10 @@ Glass {
                     }
                     Keys.onEscapePressed: { text = ""; visible = false }
                 }
-                ListRow { icon: "settings"; text: "Параметри мереж…"; onClicked: { Popups.close(); Quickshell.execDetached(["nm-connection-editor"]) } }
+                ListRow { icon: "settings"; text: "Network Settings…"; onClicked: { Popups.close(); Quickshell.execDetached(["nm-connection-editor"]) } }
             }
 
-            // розгорнутий список Bluetooth-пристроїв
+            // the expanded list of Bluetooth devices
             Column {
                 width: parent.width
                 visible: root.sub === "bt"
@@ -189,15 +189,15 @@ Glass {
                         required property var modelData
                         icon: modelData.icon && modelData.icon.indexOf("audio") >= 0 ? "headphones" : modelData.icon && modelData.icon.indexOf("input") >= 0 ? "mouse" : "bluetooth"
                         text: modelData.name
-                        subText: modelData.connected ? (modelData.batteryAvailable ? `${Math.round(modelData.battery * 100)}% · ` : "") + "під'єднано" : ""
+                        subText: modelData.connected ? (modelData.batteryAvailable ? `${Math.round(modelData.battery * 100)}% · ` : "") + "connected" : ""
                         current: modelData.connected
                         onClicked: modelData.connected ? modelData.disconnect() : modelData.connect()
                     }
                 }
-                ListRow { icon: "add"; text: "Додати пристрій…"; onClicked: { Popups.close(); Quickshell.execDetached(["flatpak", "run", "io.github.kaii_lb.Overskride"]) } }
+                ListRow { icon: "add"; text: "Add Device…"; onClicked: { Popups.close(); Quickshell.execDetached(["flatpak", "run", "io.github.kaii_lb.Overskride"]) } }
             }
 
-            // гучність: смуга-заливка, клік/перетягування задає значення
+            // volume: a filled bar; click or drag sets the value
             Rectangle {
                 width: parent.width
                 height: 44
@@ -230,19 +230,19 @@ Glass {
                 Label {
                     anchors.right: parent.right; anchors.rightMargin: 16
                     anchors.verticalCenter: parent.verticalCenter
-                    text: Audio.muted ? "вимк." : `${Audio.volume}%`
+                    text: Audio.muted ? "off" : `${Audio.volume}%`
                     weight: Font.Bold
                 }
             }
         }
 
-        // ---------- сповіщення ----------
+        // ---------- notifications ----------
         Section {
             width: parent.width
             Item {
                 width: parent.width
                 height: 40
-                Label { anchors.verticalCenter: parent.verticalCenter; text: "Сповіщення"; weight: Font.Bold }
+                Label { anchors.verticalCenter: parent.verticalCenter; text: "Notifications"; weight: Font.Bold }
                 Row {
                     anchors.right: parent.right
                     anchors.rightMargin: -6
@@ -252,7 +252,7 @@ Glass {
                         visible: Notifs.count > 0
                         width: clr.implicitWidth + 24
                         hovered: clrArea.containsMouse
-                        Label { id: clr; anchors.centerIn: parent; text: "Очистити"; size: 12; weight: Font.Bold }
+                        Label { id: clr; anchors.centerIn: parent; text: "Clear"; size: 12; weight: Font.Bold }
                         MouseArea { id: clrArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Notifs.clear() }
                     }
                     Pill {
@@ -264,7 +264,7 @@ Glass {
                             anchors.centerIn: parent
                             spacing: 6
                             Icon { name: "do_not_disturb_on"; font.pixelSize: 16; color: Notifs.dnd ? Theme.accentInk : Theme.ink; anchors.verticalCenter: parent.verticalCenter }
-                            Label { text: "Не турбувати"; size: 12; weight: Font.Bold; color: Notifs.dnd ? Theme.accentInk : Theme.ink; shadow: !Notifs.dnd; anchors.verticalCenter: parent.verticalCenter }
+                            Label { text: "Do Not Disturb"; size: 12; weight: Font.Bold; color: Notifs.dnd ? Theme.accentInk : Theme.ink; shadow: !Notifs.dnd; anchors.verticalCenter: parent.verticalCenter }
                         }
                         MouseArea { id: dndArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: Notifs.dnd = !Notifs.dnd }
                     }
@@ -275,7 +275,7 @@ Glass {
                 width: parent.width
                 height: 60
                 horizontalAlignment: Text.AlignHCenter
-                text: "Нових сповіщень немає"
+                text: "No new notifications"
                 muted: true
             }
             ListView {
@@ -295,7 +295,7 @@ Glass {
             }
         }
 
-        // ---------- живлення й налаштування ----------
+        // ---------- power and settings ----------
         Item {
             width: parent.width
             height: 40
@@ -329,7 +329,7 @@ Glass {
                     visible: root.armed !== ""
                     anchors.verticalCenter: parent.verticalCenter
                     leftPadding: 4
-                    text: "Ще раз — підтвердити"
+                    text: "Again to confirm"
                     size: 12
                     muted: true
                 }
@@ -345,7 +345,7 @@ Glass {
                     anchors.centerIn: parent
                     spacing: 8
                     Icon { name: "settings"; anchors.verticalCenter: parent.verticalCenter }
-                    Label { text: "Відкрити налаштування"; size: 13; weight: Font.Bold; anchors.verticalCenter: parent.verticalCenter }
+                    Label { text: "Open Settings"; size: 13; weight: Font.Bold; anchors.verticalCenter: parent.verticalCenter }
                 }
                 MouseArea { id: setArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: { Popups.close(); Settings.open() } }
             }

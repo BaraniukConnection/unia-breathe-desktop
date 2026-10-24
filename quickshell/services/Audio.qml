@@ -3,7 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Services.Pipewire
 
-// Гучність і вимкнення звуку на поточному виході PipeWire.
+// Volume and mute on the current PipeWire output.
 Singleton {
     id: root
     readonly property var sink: Pipewire.defaultAudioSink

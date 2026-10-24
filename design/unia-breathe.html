@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>Unia Breathe</title>
+<title>Unia Breathe Desktop</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400..800&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL@0..1&icon_names=add,alarm,aspect_ratio,bedtime,bluetooth,bluetooth_disabled,border_style,brush,calculate,calendar_month,chat_bubble,check,checklist,chevron_right,close,code,contacts,description,do_not_disturb_on,drag_handle,draw,folder,folder_zip,format_list_bulleted,grid_view,hard_drive,headphones,keyboard,lightbulb,logout,mail,map,menu_book,mic,monitor,monitor_heart,mouse,movie,music_note,notifications,notifications_off,opacity,palette,partly_cloudy_day,pause,photo_camera,photo_library,play_arrow,power_settings_new,print,public,push_pin,restart_alt,save,scanner,schedule,settings,skip_next,skip_previous,slideshow,smart_toy,speaker,sports_esports,star,storefront,terminal,videocam,volume_off,volume_up,wallpaper,wifi,wifi_off&display=block">
 <style>
@@ -604,36 +604,36 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
 
   <div class="scrim" id="setScrim" hidden></div>
   <div class="setwrap" id="setwrap" hidden>
-    <section class="setpanel" aria-label="Налаштування">
-      <div class="set-head"><h2>Налаштування</h2><button class="icon-btn" type="button" id="setClose" aria-label="Закрити налаштування"><span class="ms" aria-hidden="true">close</span></button></div>
-      <div class="seg set-tabs" role="tablist" aria-label="Розділи налаштувань" id="setTabs"></div>
+    <section class="setpanel" aria-label="Settings">
+      <div class="set-head"><h2>Settings</h2><button class="icon-btn" type="button" id="setClose" aria-label="Close Settings"><span class="ms" aria-hidden="true">close</span></button></div>
+      <div class="seg set-tabs" role="tablist" aria-label="Settings sections" id="setTabs"></div>
       <div class="set-list" id="setList"></div>
     </section>
     <section class="settool" id="setTool" aria-live="polite"></section>
   </div>
 
   <div class="wsbar" id="wsbar">
-    <button class="bubble" type="button" id="scPill" aria-expanded="false" aria-controls="wswin" title="Клацніть, щоб відкрити список. Колесо миші перемикає сценарій.">
-      <span class="bubble-label">Сценарій</span><span class="bubble-val"><span id="scVal"></span></span>
+    <button class="bubble" type="button" id="scPill" aria-expanded="false" aria-controls="wswin" title="Click to open the list. The mouse wheel switches the scenario.">
+      <span class="bubble-label">Scenario</span><span class="bubble-val"><span id="scVal"></span></span>
     </button>
-    <button class="bubble" type="button" id="wsPill" aria-expanded="false" aria-controls="wswin" title="Клацніть, щоб відкрити список. Колесо миші перемикає стіл.">
-      <span class="bubble-label">Стіл</span><span class="bubble-val round"><span id="wsVal"></span></span>
+    <button class="bubble" type="button" id="wsPill" aria-expanded="false" aria-controls="wswin" title="Click to open the list. The mouse wheel switches the desk.">
+      <span class="bubble-label">Desk</span><span class="bubble-val round"><span id="wsVal"></span></span>
     </button>
   </div>
-  <section class="wswin" id="wswin" aria-label="Столи та сценарії" hidden>
+  <section class="wswin" id="wswin" aria-label="Desks and scenarios" hidden>
     <div class="sec">
-      <div class="sec-head"><h2>Відкриті столи</h2></div>
+      <div class="sec-head"><h2>Open Desks</h2></div>
       <div class="hscroll" id="wsScroll"><div class="ws-row" id="wsList"></div></div>
       <div class="hrail" id="wsRail" aria-hidden="true"><span class="rail-dot a"></span><span class="rail-dot b"></span><div class="rail-thumb"></div></div>
     </div>
     <div class="sec">
       <div class="sec-head">
-        <h2>Сценарії</h2>
-        <button class="quiet" type="button" id="saveSc"><span class="ms" aria-hidden="true">save</span>Зберегти сценарій</button>
+        <h2>Scenarios</h2>
+        <button class="quiet" type="button" id="saveSc"><span class="ms" aria-hidden="true">save</span>Save Scenario</button>
       </div>
       <form class="save-form" id="saveForm" hidden>
-        <input type="text" id="scName" maxlength="14" autocomplete="off" spellcheck="false" aria-label="Назва сценарію" placeholder="Назва сценарію">
-        <button class="solid" type="submit">Зберегти</button>
+        <input type="text" id="scName" maxlength="14" autocomplete="off" spellcheck="false" aria-label="Scenario name" placeholder="Scenario name">
+        <button class="solid" type="submit">Save</button>
       </form>
       <div class="hscroll" id="scScroll"><div class="sc-grid" id="scList"></div></div>
       <div class="hrail" id="scRail" aria-hidden="true"><span class="rail-dot a"></span><span class="rail-dot b"></span><div class="rail-thumb"></div></div>
@@ -644,44 +644,44 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
     <button class="bubble clockb" type="button" id="clockPill" aria-expanded="false" aria-controls="calwin">
       <span class="clock-date" id="clockDate"></span><span class="clock-time" id="clockTime"></span>
     </button>
-    <section class="calwin" id="calwin" aria-label="Календар" hidden>
+    <section class="calwin" id="calwin" aria-label="Calendar" hidden>
       <div class="sec">
         <div class="sec-head">
           <h2 id="calTitle"></h2>
           <div class="cal-nav">
-            <button class="icon-btn back" type="button" id="calPrev" aria-label="Попередній місяць"><span class="ms" aria-hidden="true">chevron_right</span></button>
-            <button class="icon-btn" type="button" id="calNext" aria-label="Наступний місяць"><span class="ms" aria-hidden="true">chevron_right</span></button>
+            <button class="icon-btn back" type="button" id="calPrev" aria-label="Previous month"><span class="ms" aria-hidden="true">chevron_right</span></button>
+            <button class="icon-btn" type="button" id="calNext" aria-label="Next month"><span class="ms" aria-hidden="true">chevron_right</span></button>
           </div>
         </div>
         <div class="cal-grid" id="calGrid"></div>
       </div>
       <div class="next">
-        <span class="next-over">Наступна подія · приклад</span>
+        <span class="next-over">Next event · sample</span>
         <div class="next-main"><span class="next-title" id="nextTitle"></span><span class="next-when" id="nextWhen"></span></div>
       </div>
     </section>
 
     <div class="mwrap" id="mwrap">
       <div class="bubble mbub">
-        <button class="m-main" type="button" id="mMain" aria-expanded="false" aria-controls="medwin" aria-label="Медіацентр">
+        <button class="m-main" type="button" id="mMain" aria-expanded="false" aria-controls="medwin" aria-label="Media centre">
           <span class="m-cover"><span class="pic" id="mCover"></span></span>
           <span class="mq" id="mText"><span></span></span>
         </button>
         <span class="m-ctl">
-          <button class="m-btn" type="button" data-m="prev" aria-label="Попередній запис"><span class="ms" aria-hidden="true">skip_previous</span></button>
-          <button class="m-btn" type="button" data-m="play" aria-label="Пауза"><span class="ms" aria-hidden="true">pause</span></button>
-          <button class="m-btn" type="button" data-m="next" aria-label="Наступний запис"><span class="ms" aria-hidden="true">skip_next</span></button>
+          <button class="m-btn" type="button" data-m="prev" aria-label="Previous track"><span class="ms" aria-hidden="true">skip_previous</span></button>
+          <button class="m-btn" type="button" data-m="play" aria-label="Pause"><span class="ms" aria-hidden="true">pause</span></button>
+          <button class="m-btn" type="button" data-m="next" aria-label="Next track"><span class="ms" aria-hidden="true">skip_next</span></button>
         </span>
       </div>
       <div class="m-src" id="mSrc" aria-hidden="true"></div>
-      <section class="medwin" id="medwin" aria-label="Медіацентр" hidden>
+      <section class="medwin" id="medwin" aria-label="Media centre" hidden>
         <div class="sec">
           <div class="m-name"><span class="mq" id="mwTitle"><span></span></span><span class="m-artist" id="mwArtist"></span></div>
           <div class="m-art"><div class="pic" id="mwArt"></div></div>
           <div class="m-ctl big">
-            <button class="m-btn" type="button" data-m="prev" aria-label="Попередній запис"><span class="ms" aria-hidden="true">skip_previous</span></button>
-            <button class="m-btn play" type="button" data-m="play" aria-label="Пауза"><span class="ms" aria-hidden="true">pause</span></button>
-            <button class="m-btn" type="button" data-m="next" aria-label="Наступний запис"><span class="ms" aria-hidden="true">skip_next</span></button>
+            <button class="m-btn" type="button" data-m="prev" aria-label="Previous track"><span class="ms" aria-hidden="true">skip_previous</span></button>
+            <button class="m-btn play" type="button" data-m="play" aria-label="Pause"><span class="ms" aria-hidden="true">pause</span></button>
+            <button class="m-btn" type="button" data-m="next" aria-label="Next track"><span class="ms" aria-hidden="true">skip_next</span></button>
           </div>
           <div class="m-source" id="mwSrc"></div>
         </div>
@@ -690,19 +690,19 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
   </div>
 
   <div class="sysbar" id="sysbar">
-    <button class="bubble stat" type="button" id="statPill" aria-expanded="false" aria-controls="ncwin" aria-label="Панель керування">
+    <button class="bubble stat" type="button" id="statPill" aria-expanded="false" aria-controls="ncwin" aria-label="Control centre">
       <span class="st" data-st="kb"><span class="ms" aria-hidden="true">keyboard</span><span class="st-label" id="stKb"></span></span>
       <span class="st" data-st="vol"><span class="ms" aria-hidden="true" id="stVolIcon">volume_up</span><span class="st-label" id="stVol"></span></span>
       <span class="st" data-st="bt"><span class="ms" aria-hidden="true" id="stBtIcon">bluetooth</span><span class="st-label" id="stBt"></span></span>
       <span class="st" data-st="wifi"><span class="ms" aria-hidden="true" id="stWifiIcon">wifi</span><span class="st-label" id="stWifi"></span></span>
     </button>
-    <button class="bubble round" type="button" id="bellBtn" aria-expanded="false" aria-controls="ncwin" aria-label="Сповіщення">
+    <button class="bubble round" type="button" id="bellBtn" aria-expanded="false" aria-controls="ncwin" aria-label="Notifications">
       <span class="ms" aria-hidden="true" id="bellIcon">notifications</span><span class="ms bell-star" aria-hidden="true" id="bellStar">star</span>
     </button>
-    <button class="bubble round" type="button" id="powerBtn" aria-label="Живлення"><span class="ms" aria-hidden="true">power_settings_new</span></button>
+    <button class="bubble round" type="button" id="powerBtn" aria-label="Power"><span class="ms" aria-hidden="true">power_settings_new</span></button>
     <div class="st-hint" id="stHint" aria-hidden="true"></div>
 
-    <section class="ncwin" id="ncwin" aria-label="Сповіщення та керування" hidden>
+    <section class="ncwin" id="ncwin" aria-label="Notifications and controls" hidden>
       <div class="sec">
         <div class="q-top">
           <button class="q-tile" type="button" id="qWifi" aria-pressed="true"><span class="ms" aria-hidden="true">wifi</span><span class="q-text"><span class="q-name">Wi-Fi</span><span class="q-sub" id="qWifiSub"></span></span></button>
@@ -711,15 +711,15 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
         </div>
         <div class="vol">
           <div class="vol-fill" id="volFill"></div>
-          <button class="vol-mute" type="button" id="volMute" aria-label="Вимкнути звук"><span class="ms" aria-hidden="true">volume_up</span></button>
+          <button class="vol-mute" type="button" id="volMute" aria-label="Mute"><span class="ms" aria-hidden="true">volume_up</span></button>
           <span class="vol-val" id="volVal"></span>
-          <input type="range" id="volRange" min="0" max="100" step="1" aria-label="Гучність">
+          <input type="range" id="volRange" min="0" max="100" step="1" aria-label="Volume">
         </div>
       </div>
       <div class="sec">
         <div class="sec-head">
-          <h2>Сповіщення<span class="eg">приклади</span></h2>
-          <button class="dnd" type="button" id="dndBtn" aria-pressed="false"><span class="ms" aria-hidden="true">do_not_disturb_on</span>Не турбувати</button>
+          <h2>Notifications<span class="eg">samples</span></h2>
+          <button class="dnd" type="button" id="dndBtn" aria-pressed="false"><span class="ms" aria-hidden="true">do_not_disturb_on</span>Do Not Disturb</button>
         </div>
         <div class="n-body">
           <div class="rail nrail" id="nRail" aria-hidden="true"><span class="rail-dot top"></span><span class="rail-dot bottom"></span><div class="rail-thumb"></div></div>
@@ -728,12 +728,12 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
       </div>
       <div class="nc-foot">
         <div class="pw-row" id="pwRow"></div>
-        <button class="pill-btn" type="button" id="openSettings"><span class="ms" aria-hidden="true">settings</span>Відкрити налаштування</button>
+        <button class="pill-btn" type="button" id="openSettings"><span class="ms" aria-hidden="true">settings</span>Open Settings</button>
       </div>
     </section>
   </div>
 
-  <section class="panel" id="panel" data-view="tiles" aria-label="Меню програм" hidden>
+  <section class="panel" id="panel" data-view="tiles" aria-label="App menu" hidden>
     <div class="panel-main">
       <div class="rail" id="rail" aria-hidden="true">
         <span class="rail-dot top"></span><span class="rail-dot bottom"></span>
@@ -743,17 +743,17 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
       <div class="allapps scroller" id="allapps"><div class="allapps-in" id="allappsIn"></div></div>
     </div>
     <div class="panel-foot">
-      <button class="quiet" type="button" id="reset"><span class="ms" aria-hidden="true">restart_alt</span>Скинути розкладку</button>
-      <div class="seg" role="tablist" aria-label="Вигляд меню">
-        <button class="seg-btn" type="button" role="tab" id="tabTiles" aria-selected="true">Плитки</button>
-        <button class="seg-btn" type="button" role="tab" id="tabApps" aria-selected="false">Усі програми</button>
+      <button class="quiet" type="button" id="reset"><span class="ms" aria-hidden="true">restart_alt</span>Reset Layout</button>
+      <div class="seg" role="tablist" aria-label="Menu view">
+        <button class="seg-btn" type="button" role="tab" id="tabTiles" aria-selected="true">Tiles</button>
+        <button class="seg-btn" type="button" role="tab" id="tabApps" aria-selected="false">All Apps</button>
       </div>
     </div>
   </section>
 
   <div class="dock" id="dock">
-    <div class="favs" id="favs" aria-label="Обрані програми"></div>
-    <button class="arrow" type="button" id="launch" aria-label="Меню програм" aria-expanded="false" aria-controls="panel">
+    <div class="favs" id="favs" aria-label="Favourite apps"></div>
+    <button class="arrow" type="button" id="launch" aria-label="App menu" aria-expanded="false" aria-controls="panel">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 14.5l6-6 6 6"></path></svg>
     </button>
   </div>
@@ -764,59 +764,59 @@ body.dragging, body.dragging * { cursor: grabbing !important; }
 <script>
 (() => {
 'use strict';
-document.documentElement.lang = 'uk';
+document.documentElement.lang = 'en';
 
 // ---------- Data ----------
 const G = 8, U = 48, GC = 8, MAX_FAVS = 5, MAX_WINS = 6, MAX_WS = 9;
 let maxCols = 2;
 const SIZES = { small: [1, 1], medium: [2, 2], wide: [4, 2], large: [4, 4] };
-const SIZE_LABEL = { small: 'Малий', medium: 'Середній', wide: 'Широкий', large: 'Великий' };
+const SIZE_LABEL = { small: 'Small', medium: 'Medium', wide: 'Wide', large: 'Large' };
 const APPS = [
-  { id: 'alarm', name: 'Будильник', icon: 'alarm', mark: 'amber' },
-  { id: 'archive', name: 'Архіватор', icon: 'folder_zip', mark: 'amber' },
-  { id: 'browser', name: 'Браузер', icon: 'public', mark: 'blue' },
-  { id: 'gallery', name: 'Галерея', icon: 'photo_library', mark: 'pink', live: 'gallery' },
-  { id: 'recorder', name: 'Диктофон', icon: 'mic', mark: 'red' },
-  { id: 'disks', name: 'Диски', icon: 'hard_drive', mark: 'slate' },
-  { id: 'tips', name: 'Підказки', icon: 'lightbulb', mark: 'amber', live: 'tips' },
-  { id: 'calendar', name: 'Календар', icon: 'calendar_month', mark: 'red', live: 'calendar' },
-  { id: 'calc', name: 'Калькулятор', icon: 'calculate', mark: 'slate' },
-  { id: 'camera', name: 'Камера', icon: 'photo_camera', mark: 'purple' },
-  { id: 'maps', name: 'Карти', icon: 'map', mark: 'emerald' },
-  { id: 'contacts', name: 'Контакти', icon: 'contacts', mark: 'blue' },
-  { id: 'monitor', name: 'Монітор', icon: 'monitor_heart', mark: 'emerald' },
-  { id: 'music', name: 'Музика', icon: 'music_note', mark: 'purple' },
-  { id: 'settings', name: 'Параметри', icon: 'settings', mark: 'slate' },
-  { id: 'notes', name: 'Нотатки', icon: 'description', mark: 'mint' },
-  { id: 'mail', name: 'Пошта', icon: 'mail', mark: 'blue' },
-  { id: 'weather', name: 'Погода', icon: 'partly_cloudy_day', mark: 'amber' },
-  { id: 'scanner', name: 'Сканер', icon: 'scanner', mark: 'pink' },
-  { id: 'files', name: 'Файли', icon: 'folder', mark: 'amber' },
-  { id: 'terminal', name: 'Термінал', icon: 'terminal', mark: 'slate' },
-  { id: 'clock', name: 'Годинник', icon: 'schedule', mark: 'mint', live: 'clock' },
-  { id: 'tasks', name: 'Завдання', icon: 'checklist', mark: 'emerald' },
-  { id: 'chat', name: 'Чат', icon: 'chat_bubble', mark: 'mint' },
-  { id: 'video', name: 'Відео', icon: 'movie', mark: 'red' },
-  { id: 'games', name: 'Ігри', icon: 'sports_esports', mark: 'purple' },
-  { id: 'paint', name: 'Малювання', icon: 'brush', mark: 'pink' },
-  { id: 'books', name: 'Книги', icon: 'menu_book', mark: 'emerald' },
-  { id: 'store', name: 'Крамниця', icon: 'storefront', mark: 'blue' },
-  { id: 'code', name: 'Редактор', icon: 'code', mark: 'blue' },
-  { id: 'assistant', name: 'Асистент', icon: 'smart_toy', mark: 'amber' },
-  { id: 'stream', name: 'Трансляція', icon: 'videocam', mark: 'red' },
+  { id: 'alarm', name: 'Alarms', icon: 'alarm', mark: 'amber' },
+  { id: 'archive', name: 'Archives', icon: 'folder_zip', mark: 'amber' },
+  { id: 'browser', name: 'Browser', icon: 'public', mark: 'blue' },
+  { id: 'gallery', name: 'Gallery', icon: 'photo_library', mark: 'pink', live: 'gallery' },
+  { id: 'recorder', name: 'Recorder', icon: 'mic', mark: 'red' },
+  { id: 'disks', name: 'Disks', icon: 'hard_drive', mark: 'slate' },
+  { id: 'tips', name: 'Tips', icon: 'lightbulb', mark: 'amber', live: 'tips' },
+  { id: 'calendar', name: 'Calendar', icon: 'calendar_month', mark: 'red', live: 'calendar' },
+  { id: 'calc', name: 'Calculator', icon: 'calculate', mark: 'slate' },
+  { id: 'camera', name: 'Camera', icon: 'photo_camera', mark: 'purple' },
+  { id: 'maps', name: 'Maps', icon: 'map', mark: 'emerald' },
+  { id: 'contacts', name: 'Contacts', icon: 'contacts', mark: 'blue' },
+  { id: 'monitor', name: 'Monitor', icon: 'monitor_heart', mark: 'emerald' },
+  { id: 'music', name: 'Music', icon: 'music_note', mark: 'purple' },
+  { id: 'settings', name: 'Settings', icon: 'settings', mark: 'slate' },
+  { id: 'notes', name: 'Notes', icon: 'description', mark: 'mint' },
+  { id: 'mail', name: 'Mail', icon: 'mail', mark: 'blue' },
+  { id: 'weather', name: 'Weather', icon: 'partly_cloudy_day', mark: 'amber' },
+  { id: 'scanner', name: 'Scanner', icon: 'scanner', mark: 'pink' },
+  { id: 'files', name: 'Files', icon: 'folder', mark: 'amber' },
+  { id: 'terminal', name: 'Terminal', icon: 'terminal', mark: 'slate' },
+  { id: 'clock', name: 'Clock', icon: 'schedule', mark: 'mint', live: 'clock' },
+  { id: 'tasks', name: 'Tasks', icon: 'checklist', mark: 'emerald' },
+  { id: 'chat', name: 'Chat', icon: 'chat_bubble', mark: 'mint' },
+  { id: 'video', name: 'Videos', icon: 'movie', mark: 'red' },
+  { id: 'games', name: 'Games', icon: 'sports_esports', mark: 'purple' },
+  { id: 'paint', name: 'Paint', icon: 'brush', mark: 'pink' },
+  { id: 'books', name: 'Books', icon: 'menu_book', mark: 'emerald' },
+  { id: 'store', name: 'Store', icon: 'storefront', mark: 'blue' },
+  { id: 'code', name: 'Editor', icon: 'code', mark: 'blue' },
+  { id: 'assistant', name: 'Assistant', icon: 'smart_toy', mark: 'amber' },
+  { id: 'stream', name: 'Stream', icon: 'videocam', mark: 'red' },
 ];
 const APP = Object.fromEntries(APPS.map(a => [a.id, a]));
 const TIPS = [
-  'Права кнопка миші змінює розмір плитки',
-  'Плитку можна перенести в іншу папку',
-  'Проміжок між папками створює нову папку',
-  'Усе несортоване збирається в папці «Інше»',
-  'Клацніть назву папки, щоб змінити її',
-  'Обрані внизу додаються через праву кнопку',
-  'Сценарій відкриває свій набір програм на столі',
-  'Alt + Shift + стрілки рухають плитку',
+  'Right-click a tile to change its size',
+  'Tiles can move to another folder',
+  'The gap between folders makes a new folder',
+  'Everything unsorted gathers in the Other folder',
+  'Click a folder name to change it',
+  'Add favourites at the bottom with a right-click',
+  'A scenario opens its own set of apps on the desk',
+  'Alt + Shift + arrows move a tile',
 ];
-const MISC = 'Інше';
+const MISC = 'Other';
 const KEY = 'unia-breathe-menu-v1';
 
 const $ = id => document.getElementById(id);
@@ -917,7 +917,7 @@ function sanitizeDesk(s) {
   const d = deskSeed();
   const apps = a => [...new Set((Array.isArray(a) ? a : []).filter(x => APP[x]))].slice(0, MAX_WINS);
   if (Array.isArray(s.scenarios) && s.scenarios.length) {
-    d.scenarios = s.scenarios.slice(0, 24).map(c => ({ id: String(c.id || uid()), name: String(c.name || 'Сценарій').slice(0, 14), apps: apps(c.apps) }));
+    d.scenarios = s.scenarios.slice(0, 24).map(c => ({ id: String(c.id || uid()), name: String(c.name || 'Scenario').slice(0, 14), apps: apps(c.apps) }));
   }
   if (s.ws && Array.isArray(s.ws.list) && s.ws.list.length) {
     const seen = new Set();
@@ -935,17 +935,17 @@ function seed() {
     favs: ['browser', 'files', 'terminal', 'mail', 'music'],
     columns: [
       [
-        { id: uid(), name: 'Щодня', tiles: [
+        { id: uid(), name: 'Daily', tiles: [
           T('notes', 'wide', 0, 0), T('calc', 'small', 4, 0), T('camera', 'small', 5, 0), T('recorder', 'small', 4, 1), T('alarm', 'small', 5, 1), T('clock', 'medium', 6, 0),
           T('mail', 'medium', 0, 2), T('browser', 'medium', 2, 2), T('calendar', 'large', 4, 2),
           T('files', 'medium', 0, 4), T('tasks', 'medium', 2, 4),
         ] },
-        { id: uid(), name: 'Творчість', tiles: [
+        { id: uid(), name: 'Create', tiles: [
           T('gallery', 'wide', 0, 0), T('music', 'medium', 4, 0), T('paint', 'medium', 6, 0), T('stream', 'medium', 0, 2),
         ] },
       ],
       [
-        { id: uid(), name: 'Корисне', tiles: [
+        { id: uid(), name: 'Useful', tiles: [
           T('maps', 'wide', 0, 0), T('terminal', 'small', 4, 0), T('settings', 'small', 5, 0), T('contacts', 'small', 4, 1), T('store', 'small', 5, 1), T('weather', 'medium', 6, 0),
           T('chat', 'medium', 0, 2), T('books', 'medium', 2, 2), T('tips', 'large', 4, 2),
           T('code', 'medium', 0, 4), T('assistant', 'medium', 2, 4),
@@ -1048,12 +1048,12 @@ function makeGroup(g) {
   const el = h('section', 'group');
   const head = h('div', 'group-head');
   const input = h('input', 'group-name');
-  input.type = 'text'; input.id = 'gn-' + g.id; input.placeholder = 'Назвіть папку'; input.maxLength = 40;
-  input.autocomplete = 'off'; input.spellcheck = false; input.setAttribute('aria-label', 'Назва папки');
+  input.type = 'text'; input.id = 'gn-' + g.id; input.placeholder = 'Name the folder'; input.maxLength = 40;
+  input.autocomplete = 'off'; input.spellcheck = false; input.setAttribute('aria-label', 'Folder name');
   input.addEventListener('input', () => { const f = locateGroup(state.columns, g.id); if (f) { f.g.name = input.value; save(); syncApps(); } });
   input.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === 'Escape') { e.stopPropagation(); input.blur(); } });
   const grip = h('button', 'group-grip');
-  grip.type = 'button'; grip.setAttribute('aria-label', 'Перетягнути папку'); grip.innerHTML = ms('drag_handle');
+  grip.type = 'button'; grip.setAttribute('aria-label', 'Drag the folder'); grip.innerHTML = ms('drag_handle');
   grip.addEventListener('pointerdown', e => press(e, { kind: 'group', id: g.id, instant: true }));
   head.append(input, grip);
   const grid = h('div', 'grid');
@@ -1080,7 +1080,7 @@ function updateTile(el, t) {
   el.dataset.size = t.size;
   el.style.setProperty('--x', t.x); el.style.setProperty('--y', t.y);
   el.style.setProperty('--w', w); el.style.setProperty('--h', hh);
-  el.setAttribute('aria-label', `${APP[t.app].name}, ${SIZE_LABEL[t.size].toLowerCase()} розмір`);
+  el.setAttribute('aria-label', `${APP[t.app].name}, ${SIZE_LABEL[t.size].toLowerCase()} size`);
   el.classList.toggle('is-slot', !!drag && drag.slotId === t.id);
   const live = isLive(t);
   el.classList.toggle('live', live);
@@ -1118,8 +1118,8 @@ function render(cols = view()) {
 // ---------- Live tiles ----------
 const pad2 = n => String(n).padStart(2, '0');
 const fmtTime = d => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
-const weekday = d => new Intl.DateTimeFormat('uk', { weekday: 'long' }).format(d);
-const monthGen = d => (new Intl.DateTimeFormat('uk', { day: 'numeric', month: 'long' }).formatToParts(d).find(p => p.type === 'month') || {}).value || '';
+const weekday = d => new Intl.DateTimeFormat('en-GB', { weekday: 'long' }).format(d);
+const monthGen = d => (new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long' }).formatToParts(d).find(p => p.type === 'month') || {}).value || '';
 function fillLive(el, now) {
   const a = APP[el.dataset.app], kind = a.live, lv = el._live;
   let key, show = true, fixed = false;
@@ -1136,7 +1136,7 @@ function fillLive(el, now) {
     const badge = h('span', 'lv-app'); badge.innerHTML = ms(a.icon);
     if (kind === 'clock') lv.replaceChildren(badge, part('lv-big', key), part('lv-cap', weekday(now)));
     else if (kind === 'calendar') lv.replaceChildren(badge, part('lv-over', monthGen(now)), part('lv-big', String(now.getDate())), part('lv-cap', weekday(now)));
-    else if (kind === 'tips') lv.replaceChildren(badge, part('lv-over', 'Підказка'), part('lv-text', TIPS[Number(key) % TIPS.length]));
+    else if (kind === 'tips') lv.replaceChildren(badge, part('lv-over', 'Tip'), part('lv-text', TIPS[Number(key) % TIPS.length]));
     else lv.replaceChildren(h('div', 'pic pic-' + (Number(key) % 3)));
   }
   el.classList.toggle('live-static', fixed);
@@ -1150,7 +1150,7 @@ function tick() {
 
 // ---------- All programs ----------
 function buildApps() {
-  const sorted = APPS.slice().sort((a, b) => a.name.localeCompare(b.name, 'uk'));
+  const sorted = APPS.slice().sort((a, b) => a.name.localeCompare(b.name, 'en'));
   let letter = '';
   for (const a of sorted) {
     const L = a.name[0].toUpperCase();
@@ -1167,7 +1167,7 @@ function buildApps() {
 function syncApps() {
   for (const row of $list.querySelectorAll('.app-row')) {
     const f = tileOfApp(row.dataset.app);
-    row._where.textContent = f ? (f.g.name || 'Папка без назви') : '';
+    row._where.textContent = f ? (f.g.name || 'Untitled folder') : '';
   }
 }
 
@@ -1188,7 +1188,7 @@ function renderDock() {
 function toggleFav(app) {
   const i = state.favs.indexOf(app);
   if (i >= 0) state.favs.splice(i, 1);
-  else if (state.favs.length >= MAX_FAVS) { toast('Обраних може бути п’ять. Спершу приберіть одну з них.'); return; }
+  else if (state.favs.length >= MAX_FAVS) { toast('There can be five favourites. Remove one of them first.'); return; }
   else state.favs.push(app);
   save(); renderDock();
 }
@@ -1198,7 +1198,7 @@ function launch(app) {
   if (app === 'settings') { togglePanel(false); toggleSettings(true); return; }   // the settings program is the switcher panel
   const ws = curWs();
   if (!ws.wins.includes(app)) {
-    if (ws.wins.length >= MAX_WINS) { toast('На столі вже шість вікон. Закрийте одне з них.'); return; }
+    if (ws.wins.length >= MAX_WINS) { toast('This desk already has six windows. Close one of them.'); return; }
     ws.wins.push(app);
   }
   togglePanel(false);
@@ -1273,21 +1273,21 @@ function tileKey(e, id) {
     const f = locate(state.columns, id); if (f) launch(f.t.app);
   }
 }
-const favItem = app => ({ label: state.favs.includes(app) ? 'Прибрати з обраних' : 'Додати до обраних', icon: 'star', run: () => toggleFav(app) });
+const favItem = app => ({ label: state.favs.includes(app) ? 'Remove from Favourites' : 'Add to Favourites', icon: 'star', run: () => toggleFav(app) });
 function tileMenu(id, x, y, anchor) {
   const f = locate(state.columns, id); if (!f) return;
   const { t, g } = f, a = APP[t.app];
   const misc = state.columns.flat().find(g => g.misc);
   openMenu([
-    { label: 'Змінити розмір', icon: 'aspect_ratio', sub: Object.keys(SIZES).map(s => ({ label: SIZE_LABEL[s], check: t.size === s, run: () => resize(id, s) })) },
-    !g.misc && { label: `Перенести в «${(misc && misc.name) || MISC}»`, icon: 'folder', run: () => moveToMisc(id) },
+    { label: 'Resize', icon: 'aspect_ratio', sub: Object.keys(SIZES).map(s => ({ label: SIZE_LABEL[s], check: t.size === s, run: () => resize(id, s) })) },
+    !g.misc && { label: `Move to ${(misc && misc.name) || MISC}`, icon: 'folder', run: () => moveToMisc(id) },
     favItem(t.app),
-    a.live && { label: t.live === false ? 'Увімкнути живу плитку' : 'Вимкнути живу плитку', icon: 'slideshow', run: () => toggleLive(id) },
+    a.live && { label: t.live === false ? 'Turn On Live Tile' : 'Turn Off Live Tile', icon: 'slideshow', run: () => toggleLive(id) },
   ].filter(Boolean), x, y, anchor);
 }
 function appMenu(app, x, y, anchor) {
   openMenu([
-    { label: 'Показати на плитках', icon: 'grid_view', run: () => reveal(app) },
+    { label: 'Show on Tiles', icon: 'grid_view', run: () => reveal(app) },
     favItem(app),
   ], x, y, anchor);
 }
@@ -1558,7 +1558,7 @@ function beginGroup(d) {
   const r = ge._head.getBoundingClientRect();
   $tiles.classList.add('collapsed');
   const ghost = d.ghost = h('div', 'group-ghost');
-  ghost.textContent = d.group.name || 'Папка без назви';
+  ghost.textContent = d.group.name || 'Untitled folder';
   ghost.style.width = r.width + 'px';
   d.gw = r.width;
   d.ox = clamp(d.sx - r.left, 0, r.width); d.oy = 22;
@@ -1656,7 +1656,7 @@ function makeWin(app) {
   el.innerHTML = `<div class="win-bar"><span class="chip chip-s" style="--mark:var(--mark-${a.mark})">${ms(a.icon)}</span><span class="win-title"></span><button class="win-close" type="button">${ms('close')}</button></div><div class="win-body">${ms(a.icon)}</div>`;
   el.querySelector('.win-title').textContent = a.name;
   const x = el.querySelector('.win-close');
-  x.setAttribute('aria-label', 'Закрити: ' + a.name);
+  x.setAttribute('aria-label', 'Close: ' + a.name);
   x.addEventListener('click', () => {
     const ws = curWs(); ws.wins = ws.wins.filter(w => w !== app);
     save(); renderDesk(); syncWs();
@@ -1686,33 +1686,33 @@ function setVal(el, text, modified) {
   const changed = el._text !== undefined && el._text !== text;
   el._key = key; el._text = text;
   el.textContent = text;
-  if (modified) { const dot = h('span', 'mod'); dot.title = 'Набір вікон змінено після відкриття сценарію'; el.append(dot); }
+  if (modified) { const dot = h('span', 'mod'); dot.title = 'The set of windows changed after the scenario was opened'; el.append(dot); }
   if (changed && !reduceMotion) el.animate([{ transform: `translateY(${rollDir * 100}%)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 180, easing: 'ease' });
 }
-const winCount = n => (n === 0 ? 'порожній' : n === 1 ? '1 вікно' : n < 5 ? `${n} вікна` : `${n} вікон`);
+const winCount = n => (n === 0 ? 'empty' : n === 1 ? '1 window' : `${n} windows`);
 function syncWs() {
   const ws = curWs(), sc = scenarioOf(ws.scenario);
-  setVal($scVal, sc ? sc.name : 'Власний', !!sc && sc.apps.join() !== ws.wins.join());
+  setVal($scVal, sc ? sc.name : 'Custom', !!sc && sc.apps.join() !== ws.wins.join());
   setVal($wsVal, String(ws.n), false);
   if ($wswin.hidden) return;
   $wsList.replaceChildren();
   for (const w of state.ws.list) {
     const b = h('button', 'ws-dot' + (w.n === ws.n ? ' on' : '')); b.type = 'button'; b.textContent = w.n;
-    const name = (scenarioOf(w.scenario) || {}).name || 'Власний';
-    b.title = `Стіл ${w.n}: ${name}, ${winCount(w.wins.length)}`; b.setAttribute('aria-label', b.title);
+    const name = (scenarioOf(w.scenario) || {}).name || 'Custom';
+    b.title = `Desk ${w.n}: ${name}, ${winCount(w.wins.length)}`; b.setAttribute('aria-label', b.title);
     if (w.n === ws.n) b.setAttribute('aria-current', 'true');
     b.addEventListener('click', () => switchWs(w.n));
     $wsList.append(b);
   }
   if (state.ws.list.length < MAX_WS) {
-    const b = h('button', 'ws-dot add'); b.type = 'button'; b.innerHTML = ms('add'); b.title = 'Відкрити новий стіл'; b.setAttribute('aria-label', b.title);
+    const b = h('button', 'ws-dot add'); b.type = 'button'; b.innerHTML = ms('add'); b.title = 'Open a new desk'; b.setAttribute('aria-label', b.title);
     b.addEventListener('click', addWs);
     $wsList.append(b);
   }
   $scList.replaceChildren();
   for (const c of state.scenarios) {
     const b = h('button', 'sc-card' + (c.id === ws.scenario ? ' on' : '')); b.type = 'button';
-    b.title = c.apps.length ? c.apps.map(a => APP[a].name).join(', ') : 'Порожній стіл';
+    b.title = c.apps.length ? c.apps.map(a => APP[a].name).join(', ') : 'Empty desk';
     const prev = h('div', 'sc-prev');
     dwindle(c.apps.length, { x: 3, y: 3, w: 70, h: 40 }, 3).forEach((r, i) => {
       const q = h('i'); q.style.cssText = `left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px;--mark:var(--mark-${APP[c.apps[i]].mark})`;
@@ -1724,8 +1724,8 @@ function syncWs() {
     b.addEventListener('contextmenu', e => {
       e.preventDefault();
       openMenu([
-        { label: 'Відкрити на цьому столі', icon: 'grid_view', run: () => applyScenario(c.id) },
-        c.id !== 'default' && { label: 'Видалити сценарій', icon: 'close', run: () => deleteScenario(c.id) },
+        { label: 'Open on This Desk', icon: 'grid_view', run: () => applyScenario(c.id) },
+        c.id !== 'default' && { label: 'Delete Scenario', icon: 'close', run: () => deleteScenario(c.id) },
       ].filter(Boolean), e.clientX, e.clientY, b);
     });
     $scList.append(b);
@@ -1752,7 +1752,7 @@ function applyScenario(id, quiet) {
   const sc = scenarioOf(id), ws = curWs(); if (!sc) return;
   ws.scenario = id; ws.wins = sc.apps.slice();
   save(); renderDesk(); syncWs();
-  if (!quiet) toast(`Сценарій «${sc.name}» відкрито на столі ${ws.n}`);
+  if (!quiet) toast(`Scenario "${sc.name}" opened on desk ${ws.n}`);
 }
 function deleteScenario(id) {
   const sc = scenarioOf(id); if (!sc || id === 'default') return;
@@ -1760,7 +1760,7 @@ function deleteScenario(id) {
   state.scenarios = state.scenarios.filter(c => c.id !== id);
   for (const w of state.ws.list) if (w.scenario === id) w.scenario = null;
   save(); syncWs();
-  toast(`Сценарій «${sc.name}» видалено`, { label: 'Повернути', run: () => { Object.assign(state, prev); clearDesk(); save(); renderDesk(); syncWs(); } });
+  toast(`Scenario "${sc.name}" deleted`, { label: 'Undo', run: () => { Object.assign(state, prev); clearDesk(); save(); renderDesk(); syncWs(); } });
 }
 function toggleWs(open) {
   if (!$wswin.hidden === open) return;
@@ -1790,10 +1790,10 @@ $wsPill.addEventListener('wheel', e => wheelStep(e, d => {
   if (j !== i) switchWs(state.ws.list[j].n);
 }), { passive: false });
 $('saveSc').addEventListener('click', () => {
-  if (!curWs().wins.length) { toast('На цьому столі немає відкритих програм. Відкрийте кілька з меню внизу.'); return; }
+  if (!curWs().wins.length) { toast('No apps are open on this desk. Open a few from the menu below.'); return; }
   let k = 1;
-  while (state.scenarios.some(c => c.name === 'Сценарій ' + k)) k++;
-  $saveForm.hidden = false; $scName.value = 'Сценарій ' + k; $scName.focus(); $scName.select();
+  while (state.scenarios.some(c => c.name === 'Scenario ' + k)) k++;
+  $saveForm.hidden = false; $scName.value = 'Scenario ' + k; $scName.focus(); $scName.select();
 });
 $saveForm.addEventListener('submit', e => {
   e.preventDefault();
@@ -1804,7 +1804,7 @@ $saveForm.addEventListener('submit', e => {
   $saveForm.hidden = true;
   save(); syncWs();
   $scScroll.scrollLeft = $scScroll.scrollWidth;
-  toast(`Сценарій «${name}» збережено`);
+  toast(`Scenario "${name}" saved`);
 });
 $scName.addEventListener('keydown', e => { if (e.key === 'Escape') { e.stopPropagation(); $saveForm.hidden = true; $('saveSc').focus(); } });
 
@@ -1819,16 +1819,16 @@ const EVENTS = (() => {
   const b = new Date();
   const at = (d, hh, mm) => new Date(b.getFullYear(), b.getMonth(), b.getDate() + d, hh, mm);
   return [
-    { t: at(-2, 11, 0), title: 'Планування тижня' },
-    { t: at(0, 20, 0), title: 'Вечірній стрім' },
-    { t: at(1, 10, 0), title: 'Дзвінок з командою' },
-    { t: at(3, 14, 30), title: 'Огляд спринту' },
-    { t: at(6, 12, 0), title: 'Реліз збірки' },
-    { t: at(12, 18, 0), title: 'Настільна гра з друзями' },
+    { t: at(-2, 11, 0), title: 'Weekly planning' },
+    { t: at(0, 20, 0), title: 'Evening stream' },
+    { t: at(1, 10, 0), title: 'Team call' },
+    { t: at(3, 14, 30), title: 'Sprint review' },
+    { t: at(6, 12, 0), title: 'Build release' },
+    { t: at(12, 18, 0), title: 'Board games with friends' },
   ];
 })();
 const dayKey = d => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-const shortDate = d => new Intl.DateTimeFormat('uk', { day: 'numeric', month: 'short' }).format(d);
+const shortDate = d => new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }).format(d);
 let calMonth = null, clockKey = '', fitDay = '';
 function syncClock(now) {
   const key = dayKey(now) + fmtTime(now);
@@ -1842,9 +1842,9 @@ function syncClock(now) {
 function renderCal() {
   const now = new Date();
   if (!calMonth) calMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  $('calTitle').textContent = `${new Intl.DateTimeFormat('uk', { month: 'long' }).format(calMonth)} ${calMonth.getFullYear()}`;
+  $('calTitle').textContent = `${new Intl.DateTimeFormat('en-GB', { month: 'long' }).format(calMonth)} ${calMonth.getFullYear()}`;
   const grid = $('calGrid'); grid.replaceChildren();
-  for (const d of ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Нд']) { const c = h('div', 'dow'); c.textContent = d; grid.append(c); }
+  for (const d of ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']) { const c = h('div', 'dow'); c.textContent = d; grid.append(c); }
   const lead = (calMonth.getDay() + 6) % 7;   // weeks start on Monday
   for (let i = 0; i < 42; i++) {
     const d = new Date(calMonth.getFullYear(), calMonth.getMonth(), 1 - lead + i);
@@ -1855,10 +1855,10 @@ function renderCal() {
     grid.append(c);
   }
   const next = EVENTS.filter(e => e.t > now).sort((a, b) => a.t - b.t)[0];
-  if (!next) { $('nextTitle').textContent = 'Подій немає'; $('nextWhen').textContent = ''; return; }
+  if (!next) { $('nextTitle').textContent = 'No events'; $('nextWhen').textContent = ''; return; }
   const days = Math.round((new Date(next.t.getFullYear(), next.t.getMonth(), next.t.getDate()) - new Date(now.getFullYear(), now.getMonth(), now.getDate())) / 864e5);
   $('nextTitle').textContent = next.title;
-  $('nextWhen').textContent = `${days === 0 ? 'сьогодні' : days === 1 ? 'завтра' : shortDate(next.t)}, ${fmtTime(next.t)}`;
+  $('nextWhen').textContent = `${days === 0 ? 'today' : days === 1 ? 'tomorrow' : shortDate(next.t)}, ${fmtTime(next.t)}`;
 }
 function toggleCal(open) {
   if (!$calwin.hidden === open) return;
@@ -1875,10 +1875,10 @@ $('calNext').addEventListener('click', () => { calMonth = new Date(calMonth.getF
 const $medwin = $('medwin'), $mwrap = $('mwrap'), $mMain = $('mMain');
 // Example tracks; `src` is the program the sound comes from.
 const TRACKS = [
-  { title: 'Ранковий туман над Дніпром', artist: 'Мідні Сосни', src: 'music', art: 0 },
-  { title: 'Devlog 12: рушій плиток', artist: 'Pixel Kitchen', src: 'browser', art: 3 },
-  { title: 'Нічний трамвай', artist: 'Тихий Потік', src: 'music', art: 1 },
-  { title: 'Lo-fi для довгої компіляції', artist: 'Kernel Garden', src: 'browser', art: 2 },
+  { title: 'Morning Fog over the River', artist: 'Copper Pines', src: 'music', art: 0 },
+  { title: 'Devlog 12: the tile engine', artist: 'Pixel Kitchen', src: 'browser', art: 3 },
+  { title: 'Night Tram', artist: 'Quiet Stream', src: 'music', art: 1 },
+  { title: 'Lo-fi for a Long Compile', artist: 'Kernel Garden', src: 'browser', art: 2 },
 ];
 const media = { i: 0, playing: true };
 // Text that does not fit scrolls back and forth inside its clipped box.
@@ -1906,7 +1906,7 @@ function renderMedia() {
   $('mwArt').className = 'pic pic-' + t.art;
   for (const b of $mwrap.querySelectorAll('[data-m="play"]')) {
     b.firstElementChild.textContent = media.playing ? 'pause' : 'play_arrow';
-    b.setAttribute('aria-label', media.playing ? 'Пауза' : 'Відтворити');
+    b.setAttribute('aria-label', media.playing ? 'Pause' : 'Play');
   }
   marquee($('mText')); marquee($('mwTitle'));
 }
@@ -1928,21 +1928,21 @@ $mMain.addEventListener('click', () => toggleMedia($medwin.hidden));
 
 // ---------- Status bubble, notifications and control panel ----------
 const $ncwin = $('ncwin'), $statPill = $('statPill'), $bellBtn = $('bellBtn'), $stHint = $('stHint'), $nList = $('nList');
-const LAYOUTS = [{ code: 'ua', name: 'Українська' }, { code: 'us', name: 'English (US)' }];
+const LAYOUTS = [{ code: 'ua', name: 'Ukrainian' }, { code: 'us', name: 'English (US)' }];
 const BT_DEVS = [{ name: 'Lift', icon: 'headphones', audio: true }, { name: 'Wireless controller', icon: 'sports_esports', audio: false }];
 const POWER = [
-  { label: 'Вимкнути', icon: 'power_settings_new' }, { label: 'Перезавантажити', icon: 'restart_alt' },
-  { label: 'Сон', icon: 'bedtime' }, { label: 'Вийти з сеансу', icon: 'logout' },
+  { label: 'Shut Down', icon: 'power_settings_new' }, { label: 'Restart', icon: 'restart_alt' },
+  { label: 'Sleep', icon: 'bedtime' }, { label: 'Log Out', icon: 'logout' },
 ];
 const minsAgo = m => fmtTime(new Date(Date.now() - m * 60000));
 const sys = {
   layout: 0, vol: 34, muted: false, bt: true, btDev: 0, wifi: true, net: 'Northtop', signal: 82, dnd: false,
   notes: [   // example notifications
-    { id: 1, app: 'mail', title: 'Новий лист', text: 'Рахунок за хостинг за жовтень', time: minsAgo(4) },
-    { id: 2, app: 'calendar', title: 'Вечірній стрім', text: 'Початок сьогодні о 20:00', time: minsAgo(18) },
-    { id: 3, app: 'chat', title: 'Команда', text: 'Збірка пройшла, можна тестувати', time: minsAgo(41) },
-    { id: 4, app: 'settings', title: 'Оновлення системи', text: 'Доступно 12 пакетів', time: minsAgo(95) },
-    { id: 5, app: 'files', title: 'Копіювання завершено', text: 'Перенесено 248 файлів на зовнішній диск', time: minsAgo(140) },
+    { id: 1, app: 'mail', title: 'New mail', text: 'Hosting invoice for October', time: minsAgo(4) },
+    { id: 2, app: 'calendar', title: 'Evening stream', text: 'Starts today at 20:00', time: minsAgo(18) },
+    { id: 3, app: 'chat', title: 'Team', text: 'The build passed, ready for testing', time: minsAgo(41) },
+    { id: 4, app: 'settings', title: 'System update', text: '12 packages available', time: minsAgo(95) },
+    { id: 5, app: 'files', title: 'Copy finished', text: '248 files moved to the external drive', time: minsAgo(140) },
   ],
 };
 const volIcon = () => (sys.muted || sys.vol === 0 ? 'volume_off' : 'volume_up');
@@ -1952,39 +1952,39 @@ let hintFor = null;
 function renderSys() {
   const dev = BT_DEVS[sys.btDev];
   $('stKb').textContent = LAYOUTS[sys.layout].code;
-  $('stVol').textContent = sys.muted ? 'вимк.' : sys.vol + '%';
+  $('stVol').textContent = sys.muted ? 'off' : sys.vol + '%';
   $('stVolIcon').textContent = volIcon();
-  $('stBt').textContent = sys.bt ? dev.name : 'вимк.';
+  $('stBt').textContent = sys.bt ? dev.name : 'off';
   $('stBtIcon').textContent = sys.bt ? 'bluetooth' : 'bluetooth_disabled';
-  $('stWifi').textContent = sys.wifi ? sys.net : 'вимк.';
+  $('stWifi').textContent = sys.wifi ? sys.net : 'off';
   $('stWifiIcon').textContent = sys.wifi ? 'wifi' : 'wifi_off';
   $statPill.querySelector('[data-st="bt"]').classList.toggle('off', !sys.bt);
   $statPill.querySelector('[data-st="wifi"]').classList.toggle('off', !sys.wifi);
   $('bellIcon').textContent = sys.dnd ? 'notifications_off' : 'notifications';
   $('bellStar').hidden = !sys.notes.length;
-  $bellBtn.setAttribute('aria-label', sys.notes.length ? `Сповіщення: ${sys.notes.length}` : 'Сповіщень немає');
+  $bellBtn.setAttribute('aria-label', sys.notes.length ? `Notifications: ${sys.notes.length}` : 'No notifications');
   // panel
   $('qWifi').setAttribute('aria-pressed', sys.wifi); $('qWifi').firstElementChild.textContent = sys.wifi ? 'wifi' : 'wifi_off';
-  $('qWifiSub').textContent = sys.wifi ? sys.net : 'Вимкнено';
+  $('qWifiSub').textContent = sys.wifi ? sys.net : 'Off';
   $('qBt').setAttribute('aria-pressed', sys.bt); $('qBt').firstElementChild.textContent = sys.bt ? 'bluetooth' : 'bluetooth_disabled';
-  $('qBtSub').textContent = sys.bt ? dev.name : 'Вимкнено';
+  $('qBtSub').textContent = sys.bt ? dev.name : 'Off';
   $('volFill').style.width = (sys.muted ? 0 : sys.vol) + '%';
-  $('volVal').textContent = sys.muted ? 'вимк.' : sys.vol + '%';
+  $('volVal').textContent = sys.muted ? 'off' : sys.vol + '%';
   $('volRange').value = sys.vol;
   $('volMute').firstElementChild.textContent = volIcon();
-  $('volMute').setAttribute('aria-label', sys.muted ? 'Увімкнути звук' : 'Вимкнути звук');
+  $('volMute').setAttribute('aria-label', sys.muted ? 'Unmute' : 'Mute');
   $('dndBtn').setAttribute('aria-pressed', sys.dnd);
   $nList.replaceChildren();
   for (const n of sys.notes) {
     const a = APP[n.app], el = h('div', 'note');
-    el.innerHTML = `<span class="chip chip-s" style="--mark:var(--mark-${a.mark})">${ms(a.icon)}</span><span class="note-main"><span class="note-title"></span><span class="note-text"></span></span><span class="note-time"></span><button class="icon-btn" type="button" aria-label="Прибрати сповіщення">${ms('close')}</button>`;
+    el.innerHTML = `<span class="chip chip-s" style="--mark:var(--mark-${a.mark})">${ms(a.icon)}</span><span class="note-main"><span class="note-title"></span><span class="note-text"></span></span><span class="note-time"></span><button class="icon-btn" type="button" aria-label="Dismiss notification">${ms('close')}</button>`;
     el.querySelector('.note-title').textContent = n.title;
     el.querySelector('.note-text').textContent = n.text; el.querySelector('.note-text').title = n.text;
     el.querySelector('.note-time').textContent = n.time;
     el.querySelector('button').addEventListener('click', () => { sys.notes = sys.notes.filter(x => x !== n); renderSys(); });
     $nList.append(el);
   }
-  if (!sys.notes.length) { const e = h('p', 'n-empty'); e.textContent = 'Нових сповіщень немає'; $nList.append(e); }
+  if (!sys.notes.length) { const e = h('p', 'n-empty'); e.textContent = 'No new notifications'; $nList.append(e); }
   syncNRail();
   if (hintFor) showHint(hintFor);
   fitTop();
@@ -1995,9 +1995,9 @@ function showHint(st) {
   const row = (icon, text, sub, cur) => `<span class="hint-row${cur ? ' cur' : ''}">${icon ? ms(icon) : ''}<span>${text}</span>${sub ? `<span class="sub">${sub}</span>` : ''}</span>`;
   let html;
   if (kind === 'kb') html = row('', LAYOUTS[sys.layout].name);
-  else if (kind === 'vol') html = sys.bt && dev.audio ? row(dev.icon, dev.name, 'Bluetooth') : row('speaker', 'Динаміки');
-  else if (kind === 'bt') html = sys.bt ? BT_DEVS.map((d, i) => row(d.icon, d.name, i === sys.btDev ? 'під’єднано' : '', i === sys.btDev)).join('') : row('bluetooth_disabled', 'Bluetooth вимкнено');
-  else html = sys.wifi ? row('wifi', sys.net, `сигнал ${sys.signal}%`) : row('wifi_off', 'Wi-Fi вимкнено');
+  else if (kind === 'vol') html = sys.bt && dev.audio ? row(dev.icon, dev.name, 'Bluetooth') : row('speaker', 'Speakers');
+  else if (kind === 'bt') html = sys.bt ? BT_DEVS.map((d, i) => row(d.icon, d.name, i === sys.btDev ? 'connected' : '', i === sys.btDev)).join('') : row('bluetooth_disabled', 'Bluetooth is off');
+  else html = sys.wifi ? row('wifi', sys.net, `signal ${sys.signal}%`) : row('wifi_off', 'Wi-Fi is off');
   $stHint.innerHTML = html;
   hintFor = st;
   const bar = $('sysbar').getBoundingClientRect(), r = st.getBoundingClientRect(), w = $stHint.offsetWidth;
@@ -2026,7 +2026,7 @@ function toggleNc(open) {
 }
 $statPill.addEventListener('click', () => toggleNc($ncwin.hidden));
 $bellBtn.addEventListener('click', () => toggleNc($ncwin.hidden));
-const mockAction = label => toast(`«${label}»: це макет, нічого не станеться`);
+const mockAction = label => toast(`${label}: this is a mockup, nothing will happen`);
 $('powerBtn').addEventListener('click', e => {
   const r = e.currentTarget.getBoundingClientRect();
   openMenu(POWER.map(p => ({ label: p.label, icon: p.icon, run: () => mockAction(p.label) })), r.right - 232, r.bottom + 8, e.currentTarget);
@@ -2037,8 +2037,8 @@ for (const p of POWER) {
   $('pwRow').append(b);
 }
 for (let i = 0; i < 6; i++) {   // placeholders until the settings window exists
-  const b = h('button', 'q-pin'); b.type = 'button'; b.title = 'Місце для закріпленого налаштування'; b.setAttribute('aria-label', b.title); b.innerHTML = ms('push_pin');
-  b.addEventListener('click', () => toast('Закріплені налаштування з’являться разом із вікном налаштувань'));
+  const b = h('button', 'q-pin'); b.type = 'button'; b.title = 'A slot for a pinned setting'; b.setAttribute('aria-label', b.title); b.innerHTML = ms('push_pin');
+  b.addEventListener('click', () => toast('Pinned settings arrive together with the Settings window'));
   $('qPins').append(b);
 }
 $('qWifi').addEventListener('click', () => { sys.wifi = !sys.wifi; renderSys(); });
@@ -2060,33 +2060,33 @@ function fitTop() {
 // ---------- Settings: buttons that each open one program ----------
 // kind 'app': a ready program opens as its own window beside the panel (names are candidates to confirm).
 // kind 'own': no ready GUI exists; the value is set through the command shown.
-const SET_TABS = [{ id: 'main', label: 'Основні' }, { id: 'custom', label: 'Кастомізація' }, { id: 'devices', label: 'Девайси' }];
+const SET_TABS = [{ id: 'main', label: 'General' }, { id: 'custom', label: 'Personalize' }, { id: 'devices', label: 'Devices' }];
 const SETTINGS = {
   main: [
-    { id: 'net', label: 'Інтернет', icon: 'wifi', kind: 'app', tool: 'Редактор мереж', cmd: 'nm-connection-editor' },
-    { id: 'bt', label: 'Блютуз', icon: 'bluetooth', kind: 'app', tool: 'Blueman', cmd: 'blueman-manager' },
-    { id: 'time', label: 'Час і дата', icon: 'schedule', kind: 'own', what: 'часовий пояс, синхронізація, формат годинника', cmd: 'timedatectl' },
-    { id: 'sound', label: 'Звук', icon: 'volume_up', kind: 'app', tool: 'pavucontrol', cmd: 'pavucontrol' },
-    { id: 'display', label: 'Дисплей', icon: 'monitor', kind: 'app', tool: 'nwg-displays', cmd: 'nwg-displays' },
-    { id: 'layout', label: 'Розкладка', icon: 'keyboard', kind: 'own', what: 'мови та спосіб перемикання розкладок', cmd: 'hyprctl keyword input:kb_layout' },
+    { id: 'net', label: 'Network', icon: 'wifi', kind: 'app', tool: 'Network editor', cmd: 'nm-connection-editor' },
+    { id: 'bt', label: 'Bluetooth', icon: 'bluetooth', kind: 'app', tool: 'Blueman', cmd: 'blueman-manager' },
+    { id: 'time', label: 'Date & Time', icon: 'schedule', kind: 'own', what: 'time zone, sync, clock format', cmd: 'timedatectl' },
+    { id: 'sound', label: 'Sound', icon: 'volume_up', kind: 'app', tool: 'pavucontrol', cmd: 'pavucontrol' },
+    { id: 'display', label: 'Displays', icon: 'monitor', kind: 'app', tool: 'nwg-displays', cmd: 'nwg-displays' },
+    { id: 'layout', label: 'Keyboard Layout', icon: 'keyboard', kind: 'own', what: 'languages and how to switch layouts', cmd: 'hyprctl keyword input:kb_layout' },
   ],
   custom: [
-    { id: 'wall', label: 'Шпалери', icon: 'wallpaper', kind: 'app', tool: 'Waypaper', cmd: 'waypaper' },
-    { id: 'colors', label: 'Кольори', icon: 'palette', kind: 'app', tool: 'nwg-look', cmd: 'nwg-look', note: 'Це теми GTK; для програм на Qt є окремий qt6ct.' },
-    { id: 'opacity', label: 'Прозорість', icon: 'opacity', kind: 'own', what: 'прозорість вікон і розмиття', cmd: 'hyprctl keyword decoration:active_opacity' },
-    { id: 'borders', label: 'Вікна й межі', icon: 'border_style', kind: 'own', what: 'відступи між вікнами, рамки, заокруглення', cmd: 'hyprctl keyword general:border_size' },
+    { id: 'wall', label: 'Wallpaper', icon: 'wallpaper', kind: 'app', tool: 'Waypaper', cmd: 'waypaper' },
+    { id: 'colors', label: 'Colours', icon: 'palette', kind: 'app', tool: 'nwg-look', cmd: 'nwg-look', note: 'These are GTK themes; Qt apps have their own qt6ct.' },
+    { id: 'opacity', label: 'Transparency', icon: 'opacity', kind: 'own', what: 'window opacity and blur', cmd: 'hyprctl keyword decoration:active_opacity' },
+    { id: 'borders', label: 'Windows & Borders', icon: 'border_style', kind: 'own', what: 'gaps between windows, borders, rounding', cmd: 'hyprctl keyword general:border_size' },
   ],
   devices: [
-    { id: 'mouse', label: 'Мишка', icon: 'mouse', kids: [
-      { id: 'mouse-speed', label: 'Швидкість і прискорення', kind: 'own', what: 'чутливість і профіль прискорення', cmd: 'hyprctl keyword input:sensitivity' },
-      { id: 'mouse-buttons', label: 'Кнопки та DPI', kind: 'app', tool: 'Piper', cmd: 'piper' },
+    { id: 'mouse', label: 'Mouse', icon: 'mouse', kids: [
+      { id: 'mouse-speed', label: 'Speed & Acceleration', kind: 'own', what: 'sensitivity and the acceleration profile', cmd: 'hyprctl keyword input:sensitivity' },
+      { id: 'mouse-buttons', label: 'Buttons & DPI', kind: 'app', tool: 'Piper', cmd: 'piper' },
     ] },
-    { id: 'keyboard', label: 'Клавіатура', icon: 'keyboard', kids: [
-      { id: 'kb-layout', label: 'Мова та розкладка', kind: 'own', what: 'мови та спосіб перемикання розкладок', cmd: 'hyprctl keyword input:kb_layout' },
-      { id: 'kb-rgb', label: 'Підсвітка', kind: 'app', tool: 'OpenRGB', cmd: 'openrgb' },
+    { id: 'keyboard', label: 'Keyboard', icon: 'keyboard', kids: [
+      { id: 'kb-layout', label: 'Language & Layout', kind: 'own', what: 'languages and how to switch layouts', cmd: 'hyprctl keyword input:kb_layout' },
+      { id: 'kb-rgb', label: 'Backlight', kind: 'app', tool: 'OpenRGB', cmd: 'openrgb' },
     ] },
-    { id: 'printers', label: 'Принтери', icon: 'print', kind: 'app', tool: 'system-config-printer', cmd: 'system-config-printer' },
-    { id: 'tablet', label: 'Графічний планшет', icon: 'draw', kind: 'app', tool: 'OpenTabletDriver', cmd: 'otd-gui' },
+    { id: 'printers', label: 'Printers', icon: 'print', kind: 'app', tool: 'system-config-printer', cmd: 'system-config-printer' },
+    { id: 'tablet', label: 'Drawing Tablet', icon: 'draw', kind: 'app', tool: 'OpenTabletDriver', cmd: 'otd-gui' },
   ],
 };
 const $setwrap = $('setwrap'), $setScrim = $('setScrim');
@@ -2111,7 +2111,7 @@ function renderSettings() {
     const b = h('button', 'set-item' + (it.id === setState.sel ? ' on' : '')); b.type = 'button';
     b.innerHTML = `${icon ? `<span class="set-ico">${ms(icon)}</span>` : ''}<span class="set-text"><span class="set-label"></span><span class="set-sub"></span></span>`;
     b.querySelector('.set-label').textContent = it.label;
-    b.querySelector('.set-sub').textContent = it.kind === 'app' ? it.tool : 'готової програми немає';
+    b.querySelector('.set-sub').textContent = it.kind === 'app' ? it.tool : 'no ready app';
     if (it.id === setState.sel) b.setAttribute('aria-current', 'true');
     b.addEventListener('click', () => { setState.sel = it.id; renderSettings(); });
     return b;
@@ -2131,13 +2131,13 @@ function renderSettings() {
   const leaf = Object.keys(SETTINGS).flatMap(leavesOf).find(l => l.id === setState.sel);
   const tool = $('setTool');
   const app = leaf.kind === 'app';
-  tool.innerHTML = `<div class="win-bar"><span class="chip chip-s" style="--mark:var(--mark-emerald)">${ms(leaf.icon)}</span><span class="win-title"></span><span class="badge">${app ? 'Програма' : 'Немає програми'}</span></div>
-    <div class="tool-body"><div class="tool-ico">${ms(leaf.icon)}</div><h3></h3><p></p><div class="cmd-row"><span class="cmd-cap">${app ? 'Запускається командою' : 'Керується через'}</span><span class="cmd"></span></div></div>`;
+  tool.innerHTML = `<div class="win-bar"><span class="chip chip-s" style="--mark:var(--mark-emerald)">${ms(leaf.icon)}</span><span class="win-title"></span><span class="badge">${app ? 'App' : 'No app'}</span></div>
+    <div class="tool-body"><div class="tool-ico">${ms(leaf.icon)}</div><h3></h3><p></p><div class="cmd-row"><span class="cmd-cap">${app ? 'Launched with' : 'Controlled through'}</span><span class="cmd"></span></div></div>`;
   tool.querySelector('.win-title').textContent = `${leaf.parent ? leaf.parent.label + ': ' + leaf.label.toLowerCase() : leaf.label}`;
-  tool.querySelector('h3').textContent = app ? leaf.tool : 'Готової програми немає';
+  tool.querySelector('h3').textContent = app ? leaf.tool : 'No ready app';
   tool.querySelector('p').textContent = app
-    ? 'Тут відкриється вікно цієї програми. Hyprland тримає його праворуч від панелі, тож разом вони виглядають як одне вікно.' + (leaf.note ? ' ' + leaf.note : '')
-    : `Це налаштування самого Hyprland або системи: ${leaf.what}. Тут потрібна проста власна сторінка або відкриття файлу конфігурації.`;
+    ? 'This app\'s window opens here. Hyprland keeps it to the right of the panel, so together they look like one window.' + (leaf.note ? ' ' + leaf.note : '')
+    : `This is a setting of Hyprland itself or the system: ${leaf.what}. It needs a simple built-in page or opening a config file.`;
   tool.querySelector('.cmd').textContent = leaf.cmd;
 }
 function toggleSettings(open) {
@@ -2206,7 +2206,7 @@ $('reset').addEventListener('click', () => {
   const prev = clone(state);
   state = { ...normalize(seed()), scenarios: prev.scenarios, ws: prev.ws };   // tiles and favourites only
   commit(); renderDock();
-  toast('Розкладку скинуто', { label: 'Повернути', run: () => { state = prev; commit(); renderDock(); } });
+  toast('Layout reset', { label: 'Undo', run: () => { state = prev; commit(); renderDock(); } });
 });
 window.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;

@@ -1,29 +1,32 @@
 pragma Singleton
 import QtQuick
+import QtCore
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
 
-// Знімки й запис екрана (як в Ubuntu): Print відкриває екран вибору — виділення / екран / вікно,
-// знімок або відео, з курсором чи без. Знімок береться із «замороженого» кадру, зробленого в момент відкриття.
+// Screenshots and screen recording (as in Ubuntu): Print opens the picker (area / screen / window,
+// screenshot or video, with or without the pointer). The shot is taken from a frame frozen when the picker opened.
 Singleton {
     id: root
     readonly property string home: Quickshell.env("HOME")
     readonly property string tmp: Quickshell.env("XDG_RUNTIME_DIR") + "/unia-shot"
-    readonly property string shotsDir: home + "/Картинки/Знімки екрана"
-    readonly property string videosDir: home + "/Відео/Записи екрана"
+    // the user's XDG Pictures and Videos folders (localized names included)
+    function dir(loc) { return decodeURIComponent(String(StandardPaths.writableLocation(loc)).replace(/^file:\/\//, "")) }
+    readonly property string shotsDir: dir(StandardPaths.PicturesLocation) + "/Screenshots"
+    readonly property string videosDir: dir(StandardPaths.MoviesLocation) + "/Screencasts"
 
-    property bool active: false              // екран вибору відкрито
+    property bool active: false              // the picker is open
     property string mode: "area"             // "area" | "screen" | "window"
     property bool video: false
     property bool pointer: false
-    property string monitor: ""              // монітор вибраної області / екрана / вікна
-    property string uiMonitor: ""            // де показати панель керування (монітор з фокусом)
-    property string quick: ""                // "screen" | "window" — зняти одразу, без екрана вибору
-    property rect area: Qt.rect(0, 0, 0, 0)  // виділення в координатах монітора (зберігається між відкриттями)
-    property var windowSel: null             // { x, y, w, h, monitor } — глобальні координати
-    property var windows: []                 // вікна видимих столів [{ x, y, w, h, monitor, title }]
-    property int stamp: 0                    // змінюється при кожному відкритті — щоб перечитати кадри
+    property string monitor: ""              // monitor of the chosen area / screen / window
+    property string uiMonitor: ""            // where to show the controls (the focused monitor)
+    property string quick: ""                // "screen" | "window": capture at once, without the picker
+    property rect area: Qt.rect(0, 0, 0, 0)  // selection in monitor coordinates (kept between openings)
+    property var windowSel: null             // { x, y, w, h, monitor }: global coordinates
+    property var windows: []                 // windows on visible desks [{ x, y, w, h, monitor, title }]
+    property int stamp: 0                    // changes on every opening, so the frames are re-read
 
     property bool recording: false
     property date recStart: new Date()
@@ -33,7 +36,7 @@ Singleton {
     function frame(name, withPointer) { return `file://${tmp}/${name}${withPointer ? "-c" : ""}.png?${stamp}` }
     function mon(name) { return Hyprland.monitors.values.find(m => m.name === name) ?? null }
 
-    // ---------- відкриття ----------
+    // ---------- opening ----------
     function open(quickMode) {
         if (active || recording) { if (recording) stopRecording(); return }
         const ms = Hyprland.monitors.values
@@ -50,7 +53,7 @@ Singleton {
         id: freeze
         stdout: StdioCollector {
             onStreamFinished: {
-                // вікна видимих столів (зверху — останні у списку фокусу)
+                // windows on visible desks (the most recently focused on top)
                 const vis = Hyprland.monitors.values.map(m => m.activeWorkspace ? m.activeWorkspace.id : null)
                 try {
                     root.windows = JSON.parse(text).filter(c => c.mapped && !c.hidden && vis.includes(c.workspace.id))
@@ -58,14 +61,14 @@ Singleton {
                         .map(c => ({ x: c.at[0], y: c.at[1], w: c.size[0], h: c.size[1], title: c.title,
                                      monitor: (Hyprland.monitors.values.find(m => m.id === c.monitor) ?? {}).name }))
                 } catch (e) { root.windows = [] }
-                // за замовчуванням — вікно з фокусом (focusHistoryID 0 — останнє після сортування)
+                // the focused window by default (focusHistoryID 0 is last after sorting)
                 if (root.windows.length && (root.quick === "window" || !root.windowSel)) root.windowSel = root.windows[root.windows.length - 1]
                 if (root.area.width < 10) {
                     const m = root.mon(root.monitor)
                     root.area = Qt.rect(m.width / 4, m.height / 4, m.width / 2, m.height / 2)
                 }
                 root.stamp++
-                if (root.quick) {                    // Shift+Print / Alt+Print — без екрана вибору
+                if (root.quick) {                    // Shift+Print / Alt+Print: no picker
                     const keep = root.mode
                     root.mode = root.quick
                     root.video = false
@@ -78,7 +81,7 @@ Singleton {
         }
     }
 
-    // ---------- що саме знімаємо: монітор і прямокутник у його координатах ----------
+    // ---------- what to capture: a monitor and a rectangle in its coordinates ----------
     function target() {
         if (mode === "screen") { const m = mon(monitor); return { mon: monitor, x: 0, y: 0, w: m.width, h: m.height } }
         if (mode === "window" && windowSel) {
@@ -94,28 +97,28 @@ Singleton {
         active = false
         const stampStr = Qt.formatDateTime(new Date(), "yyyy-MM-dd HH-mm-ss")
         if (video) { startRecording(t, stampStr); return }
-        const file = `${shotsDir}/Знімок екрана з ${stampStr}.png`
+        const file = `${shotsDir}/Screenshot from ${stampStr}.png`
         const src = `${tmp}/${t.mon}${pointer ? "-c" : ""}.png`
         const m = mon(t.mon)
         const whole = t.x === 0 && t.y === 0 && t.w === m.width && t.h === m.height
-        // кожне збереження — окремим процесом, щоб два знімки поспіль не заважали одне одному;
-        // увесь екран просто копіюємо (кадр уже готовий), решту обрізаємо
+        // every save runs as its own process, so two quick shots do not get in each other's way;
+        // a whole screen is just copied (the frame is ready), anything else is cropped
         const make = whole ? `cp "$2" "$1"` : `magick "$2" -crop "$3" +repage "$1"`
         Quickshell.execDetached(["sh", "-c", `mkdir -p "$(dirname "$1")" && ${make} && wl-copy --type image/png < "$1" && exec unia-shot-notify "$1"`,
                                  "sh", file, src, `${t.w}x${t.h}+${t.x}+${t.y}`])
     }
 
-    // ---------- запис відео ----------
+    // ---------- video recording ----------
     function startRecording(t, stampStr) {
         const m = mon(t.mon)
-        recFile = `${videosDir}/Запис екрана з ${stampStr}.mp4`
+        recFile = `${videosDir}/Screencast from ${stampStr}.mp4`
         recorder.command = ["sh", "-c", `mkdir -p "$(dirname "$1")" && exec wf-recorder -y -g "$2" -f "$1"`,
                             "sh", recFile, `${m.x + t.x},${m.y + t.y} ${t.w}x${t.h}`]
         recorder.running = true
         recStart = new Date()
         recording = true
     }
-    function stopRecording() { recorder.signal(2) }    // SIGINT — wf-recorder коректно закриває файл
+    function stopRecording() { recorder.signal(2) }    // SIGINT: wf-recorder closes the file properly
     Process {
         id: recorder
         onExited: {

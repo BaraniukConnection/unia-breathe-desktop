@@ -2,12 +2,12 @@ import QtQuick
 import QtQuick.Controls
 import "../../../theme"
 
-// Поле пошуку і список варіантів під ним (часові пояси, мови).
+// A search field with a list of options under it (time zones, languages).
 Column {
     id: root
     property var items: []                 // [{ value, label, sub }]
     property string current: ""
-    property string placeholder: "Пошук…"
+    property string placeholder: "Search..."
     signal picked(var value)
     function focusField() { field.forceActiveFocus() }
     width: parent ? parent.width : 0

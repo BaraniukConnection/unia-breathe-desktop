@@ -3,12 +3,12 @@ import Quickshell
 import "../theme"
 import "../services"
 
-// Розкладка, гучність, Bluetooth, Wi-Fi. Наведення — підказка, колесо — змінити значення під курсором.
+// Layout, volume, Bluetooth, Wi-Fi. Hover shows a hint, the wheel changes the value under the cursor.
 Bubble {
     id: root
     required property var screen
     property bool compact: false
-    property var hint: null                      // сегмент під курсором (для підказки)
+    property var hint: null                      // segment under the cursor (for the hint)
     padLeft: 6
     popup: "nc"
     popupScreen: screen
@@ -59,18 +59,18 @@ Bubble {
         height: parent.height
         spacing: 4
         Seg { kind: "kb"; icon: "keyboard"; label: Keyboard.code; anchors.verticalCenter: parent.verticalCenter }
-        Seg { kind: "vol"; icon: Audio.icon; label: Audio.muted ? "вимк." : `${Audio.volume}%`; anchors.verticalCenter: parent.verticalCenter }
+        Seg { kind: "vol"; icon: Audio.icon; label: Audio.muted ? "off" : `${Audio.volume}%`; anchors.verticalCenter: parent.verticalCenter }
         Seg {
             kind: "bt"; anchors.verticalCenter: parent.verticalCenter
             icon: Bt.enabled ? "bluetooth" : "bluetooth_disabled"
-            label: Bt.enabled ? Bt.name : "вимк."
+            label: Bt.enabled ? Bt.name : "off"
             off: !Bt.enabled
             showLabel: !root.compact
         }
         Seg {
             kind: "wifi"; anchors.verticalCenter: parent.verticalCenter
             icon: Net.wired ? "lan" : Net.enabled && Net.name ? "wifi" : "wifi_off"
-            label: Net.wired ? "кабель" : Net.enabled ? Net.name : "вимк."
+            label: Net.wired ? "cable" : Net.enabled ? Net.name : "off"
             off: !Net.wired && !Net.enabled
             showLabel: !root.compact
         }

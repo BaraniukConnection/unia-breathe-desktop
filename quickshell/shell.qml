@@ -13,7 +13,7 @@ import "components/window-drop"
 import "dock"
 import "screenshot"
 
-// Unia Breathe — корінь оболонки.
+// Unia Breathe Desktop: the root of the shell.
 ShellRoot {
     // qs -c unia ipc call popups toggle cal|media|power|ws|nc|menu
     // qs -c unia ipc call settings toggle | open <id>
@@ -21,23 +21,23 @@ ShellRoot {
         target: "settings"
         function toggle(): void { Settings.toggle() }
         function open(id: string): void { Settings.open(id) }
-        // Super+Tab: у налаштуваннях — повернути клавіатуру в панель; поза ними — наступне вікно
+        // Super+Tab: in Settings, give the keyboard back to the panel; elsewhere, the next window
         function back(): void { if (Settings.shown) Settings.focusPanel(); else Hyprland.dispatch("cyclenext") }
     }
 
-    // qs -c unia ipc call apps launch <id .desktop> — як клік у меню (відкрита «одновіконна» програма — перехід до неї)
+    // qs -c unia ipc call apps launch <.desktop id>: like a click in the menu (an open single-window app is focused instead)
     IpcHandler {
         target: "apps"
         function launch(id: string): void { Apps.launch(id) }
     }
 
-    // qs -c unia ipc call windows minimize — згорнути активне вікно (Super+M)
+    // qs -c unia ipc call windows minimize: minimize the active window (Super+M)
     IpcHandler {
         target: "windows"
         function minimize(): void { const w = Windows.list.find(w => w.active && !w.minimized); if (w) Windows.minimize(w) }
     }
 
-    // знімки екрана: qs -c unia ipc call shot open | screen | window | stop
+    // screenshots: qs -c unia ipc call shot open | screen | window | stop
     IpcHandler {
         target: "shot"
         function open(): void { Shot.open() }
@@ -51,8 +51,9 @@ ShellRoot {
         ShotOverlay {}
     }
 
-    // виїмка-«крапля» на рамці вікна: тягнути, згорнути, на весь екран, закрити, на інший стіл
-    // qs -c unia ipc call drop menu | close — меню виїмки для активного вікна; grab | release — Super+ЛКМ
+    // the drop notch on a window's border: drag, minimize, fullscreen, close, move to another desk
+    // qs -c unia ipc call drop menu | close: the notch menu for the active window; resize: its resize mode;
+    // grab | release: Super+LMB
     Variants {
         model: Quickshell.screens
         WindowDrop {}
@@ -62,7 +63,8 @@ ShellRoot {
         target: "drop"
         function menu(): void { const w = Windows.list.find(w => w.active && !w.minimized); if (w) Drops.openMenu(w.address) }
         function close(): void { Drops.closeMenu() }
-        // Super+ЛКМ (hyprland.conf): узяти вікно під курсором і поставити, відпустивши
+        function resize(): void { if (Drops.resizing) { Drops.stopResize(); return } const w = Windows.list.find(w => w.active && !w.minimized); if (w) Drops.startResize(w.address) }
+        // Super+LMB (hyprland.conf): pick up the window under the cursor and drop it on release
         function grab(): void { Drops.grab() }
         function release(): void { Drops.release() }
     }
@@ -92,7 +94,7 @@ ShellRoot {
         PopupLayer {}
     }
 
-    // Поки відкрита панель: смуги й панель лишаються клікабельними, клік будь-де ще — закриває її
+    // While a popup is open the bars and the popup stay clickable; a click anywhere else closes it
     HyprlandFocusGrab {
         active: Popups.current !== ""
         windows: [...bars.instances, ...layers.instances, ...docks.instances.map(d => d.window)]

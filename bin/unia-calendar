@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Забирає події з Google Calendar (секретні iCal-адреси) і пише їх у JSON для календаря оболонки.
+"""Fetches Google Calendar events (secret iCal addresses) and writes them as JSON for the shell's calendar.
 
-Адреси: ~/.config/unia-breathe/calendar.url — по одній на рядок, # — коментар.
-Результат: ~/.cache/unia-breathe/events.json — [{"start": ISO, "allDay": bool, "title": str}]
-Береться вікно від 40 днів тому до 90 днів уперед; повторювані події розгортаються.
+Addresses: ~/.config/unia-breathe/calendar.url, one per line, # starts a comment.
+Output: ~/.cache/unia-breathe/events.json, [{"start": ISO, "allDay": bool, "title": str}]
+Covers 40 days back to 90 days ahead; recurring events are expanded.
 """
 import json
 import sys
@@ -21,7 +21,7 @@ FROM, TO = NOW - timedelta(days=40), NOW + timedelta(days=90)
 
 
 def as_local(v):
-    """date → (опівночі за місцевим часом, True); datetime → (місцевий час, False)."""
+    """date → (local midnight, True); datetime → (local time, False)."""
     if isinstance(v, datetime):
         return (v if v.tzinfo else v.astimezone()).astimezone(), False
     return datetime.combine(v, time()).astimezone(), True
@@ -32,7 +32,7 @@ def instances(ev):
     if "rrule" not in ev:
         return [(start, all_day)] if FROM <= start <= TO else []
     raw = ev.decoded("dtstart")
-    # rrule рахуємо від оригінального DTSTART (з його часовим поясом), потім переводимо в місцевий
+    # expand the rrule from the original DTSTART (in its time zone), then convert to local time
     base = raw if isinstance(raw, datetime) else datetime.combine(raw, time()).astimezone()
     if base.tzinfo is None:
         base = base.astimezone()
@@ -53,15 +53,15 @@ def main():
             with urllib.request.urlopen(url, timeout=20) as r:
                 cal = Calendar.from_ical(r.read())
         except Exception as e:
-            print(f"не вдалося завантажити календар: {e}", file=sys.stderr)
+            print(f"could not load a calendar: {e}", file=sys.stderr)
             continue
         for ev in cal.walk("VEVENT"):
             if str(ev.get("status", "")).upper() == "CANCELLED":
                 continue
-            title = str(ev.get("summary", "Без назви"))
+            title = str(ev.get("summary", "Untitled"))
             uid = str(ev.get("uid", id(ev)))
             if "recurrence-id" in ev:
-                # перенесений/змінений екземпляр повторюваної події
+                # a moved or changed instance of a recurring event
                 overrides.append((uid, as_local(ev.decoded("recurrence-id"))[0], ev, title))
                 continue
             for start, all_day in instances(ev):

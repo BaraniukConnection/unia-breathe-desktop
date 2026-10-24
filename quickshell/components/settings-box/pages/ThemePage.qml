@@ -5,14 +5,14 @@ import ".."
 
 Page {
     id: page
-    title: "Тема"
-    subtitle: "Кольори оболонки й рамок вікон, прозорість і розмиття. Зміни видно одразу."
+    title: "Theme"
+    subtitle: "Colours of the shell and window borders, opacity and blur. Changes show at once."
 
-    // що зараз редагуємо: -1 — головний акцент, 0… — другорядний, -2 — нічого
+    // what is being edited: -1 the main accent, 0… a secondary colour, -2 nothing
     property int slot: -2
     readonly property color editing: slot === -1 ? Theme.accent : slot >= 0 ? Theme.secondary[slot] : "transparent"
 
-    // зберегти кольори теми й перефарбувати рамки вікон (акцент → перший другорядний)
+    // save the theme colours and repaint window borders (accent → first secondary)
     function save(accent, secondary) {
         Prefs.set("theme", { accent: String(accent), secondary: secondary.map(String) })
         HyprOpts.set("general:col.active_border",
@@ -24,7 +24,7 @@ Page {
         if (slot === -1) save(c, sec)
         else { sec[slot] = c; save(Theme.accent, sec) }
     }
-    // другорядний стає головним, а колишній головний — на його місце серед другорядних
+    // a secondary colour becomes the main one, and the old main one takes its place among the secondary
     function promote() {
         const sec = Theme.secondary.slice()
         const old = Theme.accent
@@ -36,10 +36,10 @@ Page {
     readonly property bool custom: !!Prefs.data.theme
 
     Group {
-        title: "КОЛЬОРИ"
+        title: "COLOURS"
         SettingRow {
-            label: "Головний акцент"
-            hint: "Кнопки, перемикачі, підсвічування, активна рамка вікна"
+            label: "Main accent"
+            hint: "Buttons, switches, highlights, the active window border"
             Swatch {
                 width: 40; height: 40
                 color: Theme.accent
@@ -48,8 +48,8 @@ Page {
             }
         }
         SettingRow {
-            label: "Другорядні"
-            hint: "Другий колір рамки й мітки сценаріїв. Будь-який можна зробити головним"
+            label: "Secondary"
+            hint: "The border's second colour and scenario marks. Any of them can become the main one"
             Row {
                 spacing: 12
                 Repeater {
@@ -65,7 +65,7 @@ Page {
                 }
             }
         }
-        // редактор вибраного кольору — розкривається під рядками
+        // the editor for the chosen colour opens under the rows
         Item {
             width: parent.width
             height: page.slot > -2 ? editor.implicitHeight + 16 : 0
@@ -84,13 +84,13 @@ Page {
         }
         SettingRow {
             visible: page.custom
-            label: "Стандартні кольори"
-            hint: "Повернути смарагдову тему Unia Breathe"
+            label: "Default colours"
+            hint: "Go back to the Unia Breathe Desktop emerald"
             Rectangle {
                 width: resetLbl.implicitWidth + 28; height: 36; radius: 18
                 color: resetArea.containsMouse ? Theme.paneHover : Theme.pane
                 border.width: 1; border.color: Theme.paneLine
-                Label { id: resetLbl; anchors.centerIn: parent; text: "Скинути"; size: 13; weight: Font.Bold }
+                Label { id: resetLbl; anchors.centerIn: parent; text: "Reset"; size: 13; weight: Font.Bold }
                 MouseArea {
                     id: resetArea
                     anchors.fill: parent
@@ -102,35 +102,35 @@ Page {
         }
     }
     Group {
-        title: "ВІКНА"
+        title: "WINDOWS"
         SettingRow {
-            label: "Активне вікно"
+            label: "Active window"
             Slider { from: 0.3; to: 1; step: 0.05; unit: "%"; value: HyprOpts.get("decoration:active_opacity", 1); display: value * 100; onMoved: v => HyprOpts.set("decoration:active_opacity", v) }
         }
         SettingRow {
-            label: "Неактивні вікна"
-            hint: "Вікна, з якими ти зараз не працюєш"
+            label: "Inactive windows"
+            hint: "Windows you are not working in right now"
             Slider { from: 0.3; to: 1; step: 0.05; unit: "%"; value: HyprOpts.get("decoration:inactive_opacity", 1); display: value * 100; onMoved: v => HyprOpts.set("decoration:inactive_opacity", v) }
         }
     }
     Group {
-        title: "РОЗМИТТЯ"
+        title: "BLUR"
         SettingRow {
-            label: "Розмиття"
+            label: "Blur"
             hint: HyprOpts.get("decoration:blur:enabled", 1) === 1
-                ? "Скляний ефект під прозорими вікнами й панелями. Вимкніть — тло стане суцільним"
-                : "Вимкнено: тло панелей суцільне, без прозорості"
+                ? "Frosted glass under translucent windows and panels. Turn it off for solid grounds"
+                : "Off: panels have a solid ground, no transparency"
             Toggle { checked: HyprOpts.get("decoration:blur:enabled", 1) === 1; onToggled: v => HyprOpts.set("decoration:blur:enabled", v ? 1 : 0) }
         }
         SettingRow {
             visible: HyprOpts.get("decoration:blur:enabled", 1) === 1
-            label: "Сила"
+            label: "Strength"
             Slider { from: 1; to: 20; step: 1; decimals: 0; value: HyprOpts.get("decoration:blur:size", 8); onMoved: v => HyprOpts.set("decoration:blur:size", v) }
         }
         SettingRow {
             visible: HyprOpts.get("decoration:blur:enabled", 1) === 1
-            label: "Проходи"
-            hint: "Більше — м'якше, але важче для відеокарти"
+            label: "Passes"
+            hint: "More is softer but harder on the GPU"
             Slider { from: 1; to: 4; step: 1; decimals: 0; value: HyprOpts.get("decoration:blur:passes", 1); onMoved: v => HyprOpts.set("decoration:blur:passes", v) }
         }
     }

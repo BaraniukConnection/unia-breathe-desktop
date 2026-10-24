@@ -1,9 +1,9 @@
 module nvidia-sleep 1.0;
 
-# Лише для систем із SELinux (Fedora, RHEL…). Драйвер NVIDIA (NVreg_TemporaryFilePath=/var/tmp, ядерні
-# сповіщення про сон) зберігає відеопам'ять у файл у /var/tmp від імені systemd-sleep і читає її назад після
-# пробудження. Без цього правила SELinux не дає відкрити файл (NVRM … error -13), і сон скасовується.
-# Збирання й встановлення — див. docs/FAQ.md.
+# Only for systems with SELinux (Fedora, RHEL…). The NVIDIA driver (NVreg_TemporaryFilePath=/var/tmp, kernel
+# suspend notifiers) saves video memory to a file in /var/tmp as systemd-sleep and reads it back after resume.
+# Without this rule SELinux will not let it open the file (NVRM … error -13), and suspend is cancelled.
+# Building and installing: see docs/FAQ.md.
 require {
     type systemd_sleep_t;
     type tmp_t;

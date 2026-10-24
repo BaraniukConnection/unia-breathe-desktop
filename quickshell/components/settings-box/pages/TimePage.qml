@@ -4,11 +4,11 @@ import Quickshell.Io
 import "../../../theme"
 import "../../../services"
 
-// Час і дата: часовий пояс, автоматична синхронізація (timedatectl), формат годинника на смузі.
+// Date and time: time zone, automatic sync (timedatectl), the clock format on the bar.
 Page {
     id: page
-    title: "Час і дата"
-    subtitle: "Зміна часового поясу й синхронізації просить пароль — це системні налаштування."
+    title: "Date & Time"
+    subtitle: "Changing the time zone or sync asks for your password: these are system settings."
     property var info: ({})
     property var zones: []
 
@@ -28,29 +28,29 @@ Page {
             Column {
                 anchors.verticalCenter: parent.verticalCenter
                 Label { text: Qt.formatTime(clock.date, Prefs.data.clock24 ? "HH:mm:ss" : "h:mm:ss AP"); size: 40; weight: Font.ExtraBold }
-                Label { text: Qt.locale("uk_UA").toString(clock.date, "dddd, d MMMM yyyy") + " · " + (page.info.Timezone ?? ""); muted: true }
+                Label { text: Theme.locale.toString(clock.date, "dddd, d MMMM yyyy") + " · " + (page.info.Timezone ?? ""); muted: true }
             }
         }
     }
     Group {
-        title: "ЧАС"
+        title: "TIME"
         SettingRow {
-            label: "Синхронізувати автоматично"
-            hint: page.info.NTPSynchronized === "yes" ? "Час звірено з інтернетом" : "Час не синхронізовано"
+            label: "Set automatically"
+            hint: page.info.NTPSynchronized === "yes" ? "Synced with internet time" : "Not synced"
             Toggle { checked: page.info.NTP === "yes"; onToggled: v => page.run(["timedatectl", "set-ntp", v ? "true" : "false"]) }
         }
         SettingRow {
-            label: "24-годинний формат"
-            hint: "Як показувати час на верхній смузі"
+            label: "24-hour clock"
+            hint: "How the top bar shows the time"
             Toggle { checked: Prefs.data.clock24 !== false; onToggled: v => Prefs.set("clock24", v) }
         }
     }
     Group {
-        title: "ЧАСОВИЙ ПОЯС"
+        title: "TIME ZONE"
         SearchList {
             items: page.zones
             current: page.info.Timezone ?? ""
-            placeholder: "Пошук міста або регіону (напр. Kyiv, Berlin)"
+            placeholder: "Search for a city or region (e.g. Kyiv, Berlin)"
             onPicked: v => page.run(["timedatectl", "set-timezone", v])
         }
     }

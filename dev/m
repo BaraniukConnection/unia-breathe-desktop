@@ -1,3 +1,3 @@
 #!/bin/sh
-# dev/m <команда> — надіслати команду тестовому вводу (див. dev/test-input.py)
+# dev/m <command>: send a command to the test input (see dev/test-input.py)
 echo "$*" > "$XDG_RUNTIME_DIR/unia-test-input.fifo"; sleep 0.4

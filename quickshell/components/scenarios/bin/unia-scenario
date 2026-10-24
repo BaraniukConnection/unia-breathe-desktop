@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Сценарії робочих столів Unia Breathe: зберегти розкладку вікон і відкрити її знову.
+"""Unia Breathe Desktop scenarios: save a layout of windows and open it again.
 
-  unia-scenario list            — усі сценарії у JSON (для оболонки)
-  unia-scenario save <назва>    — зберегти вікна з видимих робочих столів
-  unia-scenario load <назва>    — відкрити програми й розкласти як було
-  unia-scenario delete <назва>  — видалити сценарій
+  unia-scenario list           all scenarios as JSON (for the shell)
+  unia-scenario save <name>    save the windows on the visible desks
+  unia-scenario load <name>    launch the apps and lay them out as they were
+  unia-scenario delete <name>  delete a scenario
 
-Сценарії лежать у ~/.config/hypr/scenarios/<назва>.json — поле "cmd"
-можна правити вручну, якщо програма має запускатись інакше.
-Який сценарій відкрито на якому столі — ~/.cache/unia-breathe/scenario-state.json.
+Scenarios live in ~/.config/hypr/scenarios/<name>.json. The "cmd" field can be
+edited by hand if an app has to be launched differently.
+Which scenario is open on which desk: ~/.cache/unia-breathe/scenario-state.json.
 """
 import configparser, glob, json, os, shlex, subprocess, sys, time
 from pathlib import Path
@@ -21,7 +21,7 @@ APP_DIRS = [
     "/var/lib/flatpak/exports/share/applications",
     "/var/lib/snapd/desktop/applications",
 ]
-TIMEOUT = 120  # секунд на запуск однієї програми (Android Studio повільна)
+TIMEOUT = 120  # seconds to launch one app (Android Studio is slow)
 
 
 def hypr(*args):
@@ -33,7 +33,7 @@ def hj(what):
 
 
 def ws_ref(ws):
-    """Посилання на робочий стіл для dispatch: номер або name:<назва>."""
+    """A desk reference for dispatch: a number or name:<name>."""
     return str(ws["id"]) if ws["id"] > 0 else f"name:{ws['name']}"
 
 
@@ -42,11 +42,11 @@ def dispatch(*args):
 
 
 def notify(text):
-    subprocess.run(["notify-send", "-a", "Сценарії", "-i", "view-grid", "Сценарії", text])
+    subprocess.run(["notify-send", "-a", "Scenarios", "-i", "view-grid", "Scenarios", text])
 
 
 def mark(workspaces, name):
-    """Запам'ятати, що на цих столах відкрито сценарій name (None — прибрати позначку)."""
+    """Remember that scenario name is open on these desks (None clears the mark)."""
     try:
         state = json.loads(STATE.read_text())
     except (OSError, ValueError):
@@ -58,7 +58,7 @@ def mark(workspaces, name):
     STATE.write_text(json.dumps(state, ensure_ascii=False))
 
 
-# ---------- команда запуску за класом вікна ----------
+# ---------- launch command from a window class ----------
 
 def desktop_cmd(cls):
     for d in APP_DIRS:
@@ -93,7 +93,7 @@ def proc_cmd(pid):
         return None
 
 
-# ---------- збереження ----------
+# ---------- saving ----------
 
 def save(name):
     mons = hj("monitors")
@@ -115,14 +115,14 @@ def save(name):
         })
     DIR.mkdir(parents=True, exist_ok=True)
     (DIR / f"{name}.json").write_text(json.dumps({"windows": wins}, ensure_ascii=False, indent=2))
-    # збереження не вмикає сценарій на столі — лише явне «Відкрити» (load)
-    notify(f"Збережено «{name}»: {len(wins)} вікон")
+    # saving does not mark the scenario as open on the desk; only an explicit Open (load) does
+    notify(f"Saved \"{name}\": {len(wins)} windows")
 
 
-# ---------- відновлення ----------
+# ---------- restoring ----------
 
 def split_tree(wins):
-    """Розбиває прямокутники вікон на бінарне дерево розрізів (як у dwindle)."""
+    """Splits the window rectangles into a binary tree of cuts (as dwindle does)."""
     if len(wins) == 1:
         return wins[0]
     for axis, d in ((0, "r"), (1, "d")):
@@ -134,7 +134,7 @@ def split_tree(wins):
                 ratio = 2 * ext(a) / (ext(a) + ext(b))
                 return {"dir": d, "ratio": max(0.1, min(1.9, ratio)),
                         "a": split_tree(a), "b": split_tree(b)}
-    # не вдалось розрізати — просто по черзі праворуч
+    # no clean cut: just place them one after another to the right
     return {"dir": "r", "ratio": 1.0, "a": wins[0], "b": split_tree(wins[1:])}
 
 
@@ -147,7 +147,7 @@ class Opener:
         self.claimed = set()
 
     def open(self, w, tiled):
-        """Відкриває вікно (або забирає вже відкрите) на поточний робочий стіл, повертає адресу."""
+        """Opens the window (or takes one already open) onto the current desk and returns its address."""
         cls = w["class"].lower()
         existing = [c for c in hj("clients")
                     if c["class"].lower() == cls and c["address"] not in self.claimed]
@@ -159,7 +159,7 @@ class Opener:
         else:
             before = {c["address"] for c in hj("clients")}
             if not w.get("cmd"):
-                notify(f"Не знаю, як запустити {w['class']}")
+                notify(f"Don't know how to launch {w['class']}")
                 return None
             dispatch("exec", w["cmd"])
             addr, end = None, time.time() + TIMEOUT
@@ -170,13 +170,13 @@ class Opener:
                             and c["mapped"] and (not tiled or not c["floating"])):
                         addr = c["address"]
             if not addr:
-                notify(f"{w['class']} не відкрився за {TIMEOUT} с")
+                notify(f"{w['class']} did not open within {TIMEOUT} s")
                 return None
         self.claimed.add(addr)
         return addr
 
     def build(self, t, anchor):
-        """anchor — вже відкрите вікно, що зараз займає всю область дерева t."""
+        """anchor: a window already open that now fills the whole area of tree t."""
         if "class" in t:
             return
         dispatch("focuswindow", f"address:{anchor}")
@@ -192,8 +192,8 @@ def load(name):
     wins = json.loads((DIR / f"{name}.json").read_text())["windows"]
     follow = hypr("getoption", "input:follow_mouse", "-j")
     follow = json.loads(follow).get("int", 1) if follow else 1
-    hypr("keyword", "input:follow_mouse", "0")  # щоб рух миші не збивав фокус
-    notify(f"Відкриваю «{name}»…")
+    hypr("keyword", "input:follow_mouse", "0")  # so mouse movement does not steal focus
+    notify(f"Opening \"{name}\"…")
     op = Opener()
     try:
         by_ws = {}
@@ -218,10 +218,10 @@ def load(name):
     finally:
         hypr("keyword", "input:follow_mouse", str(follow))
     mark({w["workspace"] for w in wins}, name)
-    notify(f"«{name}» готово")
+    notify(f"\"{name}\" is ready")
 
 
-# ---------- для оболонки ----------
+# ---------- for the shell ----------
 
 def list_all():
     out = []

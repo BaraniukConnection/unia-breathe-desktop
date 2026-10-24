@@ -5,39 +5,39 @@ import Quickshell.Io
 import Quickshell.Hyprland
 import "../../services"
 
-// WindowDrop: виїмка-«крапля» посередині верхньої рамки вікна (як виріз під фронтальну камеру).
-// Наближення курсора — виїмка росте з рамки; затиснути й тягнути (або Super+ЛКМ будь-де у вікні) —
-// вікно стискається в квадрат і їде за курсором, а там, куди воно стане, вже розсувається місце (DropPlace);
-// клік — меню вікна.
-// Тут стан і дії; малює кожен монітор свій шар (WindowDrop.qml).
+// WindowDrop: a drop notch in the middle of a window's top border (like a front-camera cut-out).
+// As the cursor nears, the notch grows out of the border; press and drag (or Super+LMB anywhere in the window)
+// and the window shrinks to a square that follows the cursor, while room opens where it will land (DropPlace);
+// a click opens the window menu.
+// State and actions live here; each monitor draws its own layer (WindowDrop.qml).
 Singleton {
     id: root
-    readonly property string dragWs: Windows.dragWs      // де вікно чекає, поки його тягнуть
-    // службові столи, на вікнах яких виїмки немає
+    readonly property string dragWs: Windows.dragWs      // where the window waits while it is dragged
+    // service desks whose windows get no notch
     readonly property var skipWs: ["special:settings", "special:unia-stash", Windows.minimizedWs, Windows.dragWs]
 
     property var clients: []
     property var monitors: []
     property int border: 1                    // general:border_size
 
-    property string hovered: ""               // адреса вікна, на рамці якого курсор
-    property string menuFor: ""               // адреса вікна з відкритим меню
-    property var drag: null                   // { address, floating, wsId, rect, mon, offX, offY, grab } — поки тягнемо
-    property real dragX: 0                    // курсор під час перетягування (глобальні координати)
+    property string hovered: ""               // address of the window whose border is under the cursor
+    property string menuFor: ""               // address of the window whose menu is open
+    property var drag: null                   // { address, floating, wsId, rect, mon, offX, offY, grab } while dragging
+    property real dragX: 0                    // cursor while dragging (global coordinates)
     property real dragY: 0
-    property var resizing: null               // { address, floating, quad, rect, sent } — режим зміни розміру
+    property var resizing: null               // { address, floating, quad, rect, sent }: resize mode
     readonly property bool busy: menuFor !== "" || drag !== null || resizing !== null
-    readonly property string current: drag ? drag.address : menuFor || hovered   // вікно з виїмкою
+    readonly property string current: drag ? drag.address : menuFor || hovered   // the window that has the notch
 
     function client(a) { return clients.find(c => c.address === a) ?? null }
-    // товщина рамки вікна: у повноекранного (не просто розгорнутого) рамки немає — виїмка росте з краю екрана
+    // window border width: a fullscreen window (not just maximized) has none, so the notch grows from the screen edge
     function bandOf(c) { return c && c.fullscreen >= 2 ? 0 : border }
     function monitorAt(x, y) {
         return monitors.find(m => x >= m.x && x < m.x + m.width / m.scale && y >= m.y && y < m.y + m.height / m.scale) ?? null
     }
 
-    // вікна, які видно на моніторі, знизу вгору: спершу розкладені, потім плаваючі; давніший фокус — нижче.
-    // Є повноекранне вікно — видно лише його (решта під ним).
+    // windows visible on a monitor, bottom to top: tiled first, then floating; older focus lower.
+    // With a fullscreen window only that one is visible (the rest are under it).
     function visibleOn(m) {
         if (!m) return []
         const ws = m.specialWorkspace.name || m.activeWorkspace.name
@@ -47,7 +47,7 @@ Singleton {
         if (full.length) return [full[0]]
         return list.sort((a, b) => (a.floating - b.floating) || (b.focusHistoryID - a.focusHistoryID))
     }
-    // верхнє вікно під точкою (крім указаного)
+    // the top window under a point (except the given one)
     function windowAt(m, x, y, except) {
         const ws = visibleOn(m).filter(c => c.address !== except)
         for (let i = ws.length - 1; i >= 0; i--) {
@@ -57,8 +57,8 @@ Singleton {
         return null
     }
 
-    // ---------- стан Hyprland: вікна, монітори, товщина рамки ----------
-    // подій про зміну розмірів Hyprland не шле, тож, крім подій, перечитуємо раз на 0,7 с
+    // ---------- Hyprland state: windows, monitors, border width ----------
+    // Hyprland sends no events for size changes, so besides events we re-read every 0.7 s
     Process {
         id: poll
         command: ["hyprctl", "--batch", "j/clients;j/monitors;j/getoption general:border_size;" +
@@ -70,11 +70,11 @@ Singleton {
                     root.clients = c
                     root.monitors = m
                     root.border = b.int ?? 1
-                    // поки тягнемо, ці опції підмінені — пам'ятаємо лише справжні
+                    // these options are swapped while dragging: remember only the real ones
                     if (!root.drag && !restore.running) root.opts = { ua: ua.int, ss: ss.int, nw: nw.int }
                 } catch (e) {}
                 if (root.menuFor && !root.client(root.menuFor)) root.closeMenu()
-                // вікно закрили чи воно пішло з видимого столу — режим зміни розміру більше нема до чого застосовувати
+                // the window closed or left the visible desk: resize mode has nothing left to act on
                 if (root.resizing && !root.visibleOn(root.monitors.find(m => m.id === (root.client(root.resizing.address) ?? {}).monitor))
                         .some(c => c.address === root.resizing.address)) root.stopResize()
             }
@@ -97,17 +97,17 @@ Singleton {
     }
     Component.onCompleted: refresh()
 
-    // ---------- наведення ----------
-    // з нульовою (чи 1 px) рамкою виїмці нема з чого рости — поки вона є, рамка вікна 3 px
+    // ---------- hover ----------
+    // with a 0 (or 1 px) border the notch has nothing to grow from: while it is shown the border is 3 px
     property string thick: ""
     onCurrentChanged: {
         if (thick && thick !== current) { Hyprland.dispatch(`setprop address:${thick} border_size unset`); thick = "" }
         if (current && border < 2 && client(current) && !client(current).fullscreen) { Hyprland.dispatch(`setprop address:${current} border_size 3`); thick = current }
     }
 
-    // ---------- меню ----------
+    // ---------- menu ----------
     function openMenu(a) { hovered = a; menuFor = a }
-    function closeMenu() { menuFor = ""; hovered = "" }    // курсор ще на гачку — наступний рух поверне виїмку
+    function closeMenu() { menuFor = ""; hovered = "" }    // the cursor is still on the hook: the next move brings the notch back
     function act(what) {
         const c = client(menuFor)
         closeMenu()
@@ -131,12 +131,12 @@ Singleton {
         soon.restart()
     }
 
-    // ---------- зміна розміру (як Super+ПКМ) ----------
-    // Вікно ділить пунктирний хрест на чверті: тягнеш у чверті — рухаються дві сторони, що до неї прилягають
-    // (у правій верхній — права й верхня), і саме в той бік, куди тягнеш.
-    // Плаваюче вікно змінюємо точно. У розкладеного межа спільна із сусідом, а Hyprland на «стань ширшим»
-    // завжди зсуває праву (нижню) межу. Тож ліву чи верхню межу рухаємо розміром сусіда з того боку, праву чи
-    // нижню — розміром самого вікна; там, де замість сусіда край екрана, межа стоїть.
+    // ---------- resizing (like Super+RMB) ----------
+    // A dashed cross splits the window into quarters: dragging in a quarter moves the two sides next to it
+    // (top right: the right and top sides), in the direction you drag.
+    // A floating window is resized exactly. A tiled one shares its edge with a neighbour, and on "grow wider"
+    // Hyprland always moves the right (bottom) edge. So the left or top edge is moved by resizing the neighbour on
+    // that side, the right or bottom one by resizing the window itself; an edge at the screen border stays put.
     function startResize(a) {
         const c = client(a)
         closeMenu()
@@ -144,8 +144,8 @@ Singleton {
         resizing = { address: a, floating: c.floating, quad: "", rect: null }
     }
     function stopResize() { resizing = null }
-    // розкладене вікно, що прилягає до сторони side ("l", "r", "t", "b") вікна c; якщо таких кілька —
-    // те, що навпроти точки натиску (px, py)
+    // the tiled window next to side ("l", "r", "t", "b") of window c; if there are several,
+    // the one facing the press point (px, py)
     function neighbour(c, side, px, py) {
         const L = c.at[0], T = c.at[1], R = L + c.size[0], B = T + c.size[1], tol = 40
         const across = (a0, a1, b0, b1) => Math.min(a1, b1) - Math.max(a0, b0) > 0
@@ -161,7 +161,7 @@ Singleton {
                                                                      : px >= o.at[0] && px < o.at[0] + o.size[0])
         return facing ?? near[0] ?? null
     }
-    // натиснули в чверті quad ("lt", "rt", "lb", "rb") у точці (px, py) — запам'ятати, від чого рахувати
+    // pressed in quarter quad ("lt", "rt", "lb", "rb") at (px, py): remember what to measure from
     function beginResize(quad, px, py) {
         const c = resizing ? client(resizing.address) : null
         if (!c) return
@@ -173,7 +173,7 @@ Singleton {
             ny: ny ? { address: ny.address, h: ny.size[1] } : null,
             sent: { x: 0, y: 0 } })
     }
-    // курсор зсунувся на (dx, dy) від натиску
+    // the cursor moved by (dx, dy) since the press
     function moveResize(dx, dy) {
         const r = resizing
         if (!r || !r.rect) return
@@ -187,13 +187,13 @@ Singleton {
             soon.restart()
             return
         }
-        // наскільки зсувається межа (у бік dx, dy), не стискаючи жодне з двох вікон нижче 160×120
+        // how far the edge moves (towards dx, dy) without shrinking either window below 160×120
         const ex = !r.nx ? 0 : Math.round(left ? clamp(dx, 160 - r.nx.w, r.rect.w - 160) : clamp(dx, 160 - r.rect.w, r.nx.w - 160))
         const ey = !r.ny ? 0 : Math.round(top ? clamp(dy, 120 - r.ny.h, r.rect.h - 120) : clamp(dy, 120 - r.rect.h, r.ny.h - 120))
         const sx = ex - r.sent.x, sy = ey - r.sent.y
         if (!sx && !sy) return
         r.sent = { x: ex, y: ey }
-        // ліва/верхня межа — правий/нижній край сусіда; права/нижня — край самого вікна
+        // the left/top edge is the neighbour's right/bottom edge; the right/bottom one is the window's own
         const tx = left ? (r.nx ? r.nx.address : null) : r.address
         const ty = top ? (r.ny ? r.ny.address : null) : r.address
         if (sx && sy && tx === ty) Hyprland.dispatch(`resizewindowpixel ${sx} ${sy},address:${tx}`)
@@ -205,25 +205,25 @@ Singleton {
     }
     function endResize() { if (resizing) resizing = Object.assign({}, resizing, { quad: "", rect: null, nx: null, ny: null }) }
 
-    // ---------- перетягування ----------
-    // Вікно, яке тягнуть, чекає на схованому столі, а за курсором їде його квадрат. Розкладене вікно
-    // заступає «місце» (DropPlace) — напівпрозоре порожнє вікно, яке Hyprland розкладає як звичайне:
-    // сусіди розсуваються, і видно, куди стане вікно. Місце для нього вибирає сам Hyprland — за курсором
-    // (dwindle smart_split: бік вікна під курсором), тож на час перетягування ці опції підмінюємо.
+    // ---------- dragging ----------
+    // The dragged window waits on a hidden desk while its square follows the cursor. A tiled window
+    // is stood in for by a "place" (DropPlace), a translucent empty window that Hyprland tiles like any other:
+    // neighbours make room and you see where the window will land. Hyprland itself picks the spot from the cursor
+    // (dwindle smart_split: the side of the window under the cursor), so these options are swapped while dragging.
     readonly property string placeTitle: "unia-drop-place"
-    property string placeAddr: ""             // адреса вікна-місця, коли воно відкрите
-    // місце живе й трохи після кидка — поки Hyprland ставить на нього вікно (зникни воно раніше, команда
-    // «прибрати місце» не знайшла б його й спрацювала б на активному вікні)
+    property string placeAddr: ""             // address of the place window while it is open
+    // the place lives a little after the drop, while Hyprland puts the window on it (if it vanished earlier, the
+    // "remove the place" command would not find it and would hit the active window instead)
     readonly property bool placeWanted: !!drag && !drag.floating || placeHold.running
-    property string placeKey: ""              // куди зараз поставлене місце: «адреса:бік» або «ws:N»
-    property var opts: ({ ua: 1, ss: 0, nw: 0 })   // справжні dwindle:use_active_for_splits, smart_split, cursor:no_warps
+    property string placeKey: ""              // where the place is now: "address:side" or "ws:N"
+    property var opts: ({ ua: 1, ss: 0, nw: 0 })   // the real dwindle:use_active_for_splits, smart_split, cursor:no_warps
 
     function hypr(cmds) { Quickshell.execDetached(["hyprctl", "--batch", cmds.join(" ; ")]) }
     function restoreOpts() {
         return [`keyword dwindle:use_active_for_splits ${opts.ua}`, `keyword dwindle:smart_split ${opts.ss}`,
                 `keyword cursor:no_warps ${opts.nw}`]
     }
-    Timer { id: restore; interval: 400 }      // щойно повернули опції — опитування ще могло прочитати підмінені
+    Timer { id: restore; interval: 400 }      // options were just restored: a poll may still have read the swapped ones
     Timer { id: placeHold; interval: 500 }
 
     function startDrag(a, x, y, grab) {
@@ -231,20 +231,20 @@ Singleton {
         if (!c) return
         dragX = x; dragY = y
         const cmds = []
-        // повноекранне спершу повертаємо у звичайне — тягнути його як квадрат, а поставити звичайним вікном
+        // a fullscreen window goes back to normal first: it is dragged as a square and dropped as a normal window
         if (c.fullscreen) cmds.push(`dispatch focuswindow address:${a}`, "dispatch fullscreen 0")
         drag = { address: a, floating: c.floating, wsId: c.workspace.id, mon: c.monitor, grab: !!grab,
                  rect: { x: c.at[0], y: c.at[1], w: c.size[0], h: c.size[1] },
-                 // де саме тримаємо вікно (для плаваючого — щоб стало так само під курсором)
+                 // where exactly the window is held (so a floating one lands the same way under the cursor)
                  offX: Math.max(0, Math.min(c.size[0], x - c.at[0])), offY: Math.max(0, Math.min(c.size[1], y - c.at[1])) }
         placeKey = ""
         Windows.remember(a, c.workspace.id)
         Windows.moving = true
         if (!c.floating) cmds.push("keyword dwindle:use_active_for_splits 0", "keyword dwindle:smart_split 1", "keyword cursor:no_warps 1")
-        // відпускання кнопки ловить Hyprland (не наш шар: поки вікна перескакують, шар може втратити курсор)
+        // Hyprland catches the button release (not our layer: while windows jump around, the layer can lose the cursor)
         cmds.push("keyword bindrn ,mouse:272,exec,qs -c unia ipc call drop release")
-        // поки тягнемо, саме вікно чекає на схованому столі (у смузі — як згорнуте, сценарій його не втрачає).
-        // Фокусу йому не можна: фокус на вікні схованого столу показує весь стіл
+        // while dragging, the window itself waits on a hidden desk (on the bar it shows as minimized; the scenario keeps it).
+        // It must not get focus: focusing a window on a hidden desk reveals the whole desk
         cmds.push(`dispatch setprop address:${a} no_focus 1`, `dispatch movetoworkspacesilent ${dragWs},address:${a}`)
         hypr(cmds)
     }
@@ -254,7 +254,7 @@ Singleton {
         const k = placeKeyAt(x, y)
         if (k !== null && k !== placeKey) { placeKey = k; reloc.restart() }
     }
-    // куди стало б вікно, якби відпустили тут; null — лишити як є (курсор на самому місці чи в проміжку)
+    // where the window would land if dropped here; null keeps things as they are (cursor on the place itself or in a gap)
     function placeKeyAt(x, y) {
         const m = monitorAt(x, y)
         if (!m) return null
@@ -268,7 +268,7 @@ Singleton {
         return `${t.address}:${Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? "l" : "r") : (dy < 0 ? "u" : "d")}`
     }
     Timer { id: reloc; interval: 70; onTriggered: root.relocate() }
-    // переставити місце під курсор: прибрати й вставити знову (Hyprland сам вибере бік)
+    // move the place under the cursor: remove it and insert it again (Hyprland picks the side)
     function relocate() {
         const m = monitorAt(dragX, dragY)
         if (!placeAddr || !m || !placeWanted) return
@@ -287,14 +287,14 @@ Singleton {
         const p = client(placeAddr)
         let cmds
         if (d.floating) {
-            // плаваюче — туди, де відпустили, тим самим місцем під курсором, що й тримали
+            // floating: to where it was dropped, with the same point under the cursor it was held by
             const mw = m.width / m.scale, mh = m.height / m.scale
             const x = Math.round(Math.max(m.x, Math.min(dragX - d.offX, m.x + mw - d.rect.w)))
             const y = Math.round(Math.max(m.y, Math.min(dragY - d.offY, m.y + mh - d.rect.h)))
             cmds = [`dispatch movetoworkspacesilent ${ws},address:${a}`, `dispatch movewindowpixel exact ${x} ${y},address:${a}`,
                     back, `dispatch focuswindow address:${a}`]
         } else if (p && p.workspace.id === ws) {
-            // розкладене — рівно на місце: ділить його (воно у фокусі), а потім місце зникає й вікно забирає весь його простір
+            // tiled: exactly onto the place: it splits the place (which has focus), then the place goes and the window takes its whole space
             cmds = [`dispatch setprop address:${placeAddr} no_focus 0`, `dispatch focuswindow address:${placeAddr}`,
                     "keyword dwindle:use_active_for_splits 1",
                     `dispatch movetoworkspacesilent ${ws},address:${a}`,
@@ -318,7 +318,7 @@ Singleton {
     }
     function finish(cmds) {
         if (!drag.floating) { restore.restart(); placeHold.restart() }
-        drag = null                           // місце (DropPlace) зникає саме, щойно мине placeHold
+        drag = null                           // the place (DropPlace) goes away by itself once placeHold passes
         hypr([...cmds, "keyword unbind ,mouse:272"])
         Windows.moving = false
         hovered = ""
@@ -326,8 +326,8 @@ Singleton {
         soon.restart()
     }
 
-    // курсор під час перетягування — прямо з сокета Hyprland: поки кнопку затиснуто (Super+ЛКМ перехопив
-    // Hyprland) чи вікна перескакують, наш шар руху курсора може й не отримувати
+    // the cursor while dragging comes straight from Hyprland's socket: while the button is held (Super+LMB is taken
+    // by Hyprland) or windows jump around, our layer may not get cursor motion at all
     Process {
         id: cursorStream
         running: !!root.drag
@@ -348,7 +348,7 @@ while True:
         }
     }
 
-    // Super+ЛКМ: узяти вікно під курсором (замість звичайного перетягування Hyprland), Super+відпустити — поставити
+    // Super+LMB: pick up the window under the cursor (instead of Hyprland's own drag); release to drop it
     property bool grabbing: false
     property bool releaseEarly: false
     function grab() {
@@ -372,7 +372,7 @@ while True:
                 const m = p ? root.monitorAt(p.x, p.y) : null
                 const t = m ? root.windowAt(m, p.x, p.y) : null
                 if (!t) { root.grabbing = false; return }
-                root.hovered = t.address           // знімок вікна для квадрата
+                root.hovered = t.address           // a snapshot of the window for the square
                 grabStart.pos = p
                 grabStart.restart()
             }
@@ -381,7 +381,7 @@ while True:
     Timer {
         id: grabStart
         property var pos
-        interval: 90                          // дати знімку вікна з'явитись, поки вікно ще видно
+        interval: 90                          // let the window snapshot appear while the window is still visible
         onTriggered: {
             root.grabbing = false
             root.startDrag(root.hovered, pos.x, pos.y, true)

@@ -5,11 +5,11 @@ import "../../../theme"
 import "../../../services"
 import ".."
 
-// Розкладки клавіатури: список мов (порядок, видалення, додавання) і клавіша перемикання.
+// Keyboard layouts: the language list (order, remove, add) and the switch key.
 Page {
     id: page
-    title: "Мова та розкладка"
-    subtitle: "Порядок мов — порядок перемикання. Зміни діють одразу."
+    title: "Language & Layout"
+    subtitle: "The order of languages is the switching order. Changes apply at once."
     property var all: []                     // [{ value: "us", label: "English (US)" }]
     readonly property var layouts: String(HyprOpts.get("input:kb_layout", "us")).split(",").filter(x => x)
     readonly property var variants: String(HyprOpts.get("input:kb_variant", "")).split(",")
@@ -51,14 +51,14 @@ Page {
     }
 
     Group {
-        title: "МОВИ"
+        title: "LANGUAGES"
         Repeater {
             model: page.layouts
             SettingRow {
                 required property var modelData
                 required property int index
                 label: page.nameOf(modelData)
-                hint: modelData + (page.variants[index] ? ` (${page.variants[index]})` : "") + (index === 0 ? " · основна" : "")
+                hint: modelData + (page.variants[index] ? ` (${page.variants[index]})` : "") + (index === 0 ? " · main" : "")
                 Row {
                     IconButton { focusable: true; implicitWidth: 32; implicitHeight: 32; icon: "arrow_upward"; muted: true; opacity: index > 0 ? 1 : 0.3; onClicked: page.move(index, -1) }
                     IconButton { focusable: true; implicitWidth: 32; implicitHeight: 32; icon: "arrow_downward"; muted: true; opacity: index < page.layouts.length - 1 ? 1 : 0.3; onClicked: page.move(index, 1) }
@@ -82,7 +82,7 @@ Page {
                 border.color: activeFocus ? Theme.accent : Theme.paneLine
                 Row { id: addRow; anchors.centerIn: parent; spacing: 8
                     Icon { name: "add"; anchors.verticalCenter: parent.verticalCenter }
-                    Label { text: "Додати мову"; weight: Font.Bold; anchors.verticalCenter: parent.verticalCenter } }
+                    Label { text: "Add Language"; weight: Font.Bold; anchors.verticalCenter: parent.verticalCenter } }
                 MouseArea { id: addArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: page.adding = true }
             }
         }
@@ -90,17 +90,17 @@ Page {
             id: addList
             visible: page.adding
             items: page.all
-            placeholder: "Пошук мови (напр. German, Polish, de)"
+            placeholder: "Search languages (e.g. German, Polish, de)"
             onPicked: v => page.add(v)
         }
     }
     Group {
-        title: "ПЕРЕМИКАННЯ"
+        title: "SWITCHING"
         SettingRow {
-            label: "Клавіші"
+            label: "Keys"
             Choice {
                 options: [
-                    { value: "grp:win_space_toggle", label: "Win+Пробіл" },
+                    { value: "grp:win_space_toggle", label: "Win+Space" },
                     { value: "grp:alt_shift_toggle", label: "Alt+Shift" },
                     { value: "grp:ctrl_shift_toggle", label: "Ctrl+Shift" },
                     { value: "grp:caps_toggle", label: "Caps Lock" },

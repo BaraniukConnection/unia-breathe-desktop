@@ -1,6 +1,6 @@
 import QtQuick
 
-// Значок Material Symbols за назвою (наприклад "wifi", "volume_up").
+// A Material Symbols icon by name (for example "wifi", "volume_up").
 Text {
     property string name
     property bool filled: false

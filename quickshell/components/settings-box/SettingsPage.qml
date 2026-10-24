@@ -4,17 +4,17 @@ import "../../theme"
 import "../../services"
 import "pages"
 
-// Власна сторінка налаштування (праворуч від панелі): час, розкладка, тема, вікна, мишка.
+// The shell's own settings page (right of the panel): time, layout, theme, windows, mouse.
 FloatingWindow {
     id: win
-    title: "Unia · Сторінка"
+    title: "Unia · Page"
     color: "transparent"
     visible: !!Settings.current && Settings.current.kind === "own"
     implicitWidth: 900
     implicitHeight: 800
 
-    // закрили ззовні (Super+C) — закриваємо налаштування; прив'язку видимості повертаємо,
-    // лише коли налаштування знову відкриють (інакше нове вікно саме показало б їх)
+    // closed from outside (Super+C): close Settings; the visibility binding comes back
+    // only when Settings opens again (otherwise the new window would show Settings by itself)
     property bool gone: false
     onClosed: { gone = true; Settings.close() }
     Connections {
@@ -33,7 +33,7 @@ FloatingWindow {
     Component { id: pBorders; BordersPage {} }
     Component { id: pMouse; MousePage {} }
 
-    // Tab з панелі — фокус на перший елемент сторінки
+    // Tab from the panel: focus the first control on the page
     Connections {
         target: Settings
         function onPageFocusRequested() {
@@ -44,7 +44,7 @@ FloatingWindow {
             })
         }
     }
-    // елемент у фокусі має бути видно — прокручуємо сторінку до нього
+    // the focused control must be visible: scroll the page to it
     Item {
         readonly property Item focused: win.contentItem ? win.contentItem.Window.activeFocusItem : null
         onFocusedChanged: {
@@ -67,7 +67,7 @@ FloatingWindow {
             anchors.margins: 6
             active: win.visible
             focus: true
-            Keys.onEscapePressed: Settings.focusPanel()       // назад до списку категорій
+            Keys.onEscapePressed: Settings.focusPanel()       // back to the category list
             sourceComponent: {
                 switch (Settings.sel) {
                 case "time": return pTime

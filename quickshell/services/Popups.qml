@@ -2,7 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 
-// Одночасно відкрите лише одне спливаюче вікно: назва, екран і де стоїть бульбашка, з якої його відкрили.
+// Only one popup is open at a time: its name, its screen, and where the bubble that opened it sits.
 Singleton {
     id: root
     property string current: ""
@@ -24,6 +24,6 @@ Singleton {
 
     function close() { current = "" }
 
-    // Відкрити з клавіатури/IPC: кожна смуга сама підставить свою бульбашку на моніторі з фокусом
+    // Opened from the keyboard or IPC: each bar fills in its own bubble on the focused monitor
     signal request(string name)
 }

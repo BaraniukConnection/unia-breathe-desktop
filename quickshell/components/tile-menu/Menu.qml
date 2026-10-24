@@ -3,8 +3,8 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// Меню програм: обрані в доці й папки з плитками (~/.config/unia-breathe/menu.json).
-// Сітка папки — 8 клітинок завширшки; логіка розкладки (settle/dropInto/freeSlot) — з макета.
+// The app menu: dock favourites and folders of tiles (~/.config/unia-breathe/menu.json).
+// A folder grid is 8 cells wide; the layout logic (settle/dropInto/freeSlot) comes from the mockup.
 Singleton {
     id: root
     readonly property int cols: 8
@@ -13,7 +13,7 @@ Singleton {
     property var data: ({ favs: [], columns: [[], []] })
     property bool ready: false
 
-    // ---------- сітка (з макета) ----------
+    // ---------- grid (from the mockup) ----------
     function dims(t) { return sizes[t.size] }
     function stepOf(t) { return t.size === "small" ? 1 : 2 }
     function hit(a, b) {
@@ -21,7 +21,7 @@ Singleton {
         return a.x < b.x + bw && b.x < a.x + aw && a.y < b.y + bh && b.y < a.y + ah
     }
     function rowsOf(tiles) { return tiles.reduce((m, t) => Math.max(m, t.y + dims(t)[1]), 0) }
-    // first лишається на місці, усе, що він накрив, з'їжджає вниз, потім усі плитки спливають угору
+    // first stays put, everything it covers slides down, then all tiles float up
     function settle(tiles, first) {
         for (const t of tiles) {
             if (stepOf(t) === 2) { t.x -= t.x % 2; t.y -= t.y % 2 }
@@ -45,7 +45,7 @@ Singleton {
             done.push(t)
         }
     }
-    // плитки, на які впала t, переїжджають на її старе місце (якщо влазять), решту зсуває settle
+    // tiles that t landed on move to its old spot (if they fit); settle shifts the rest
     function dropInto(tiles, t, origin) {
         if (origin) {
             for (const c of tiles.filter(c => hit(c, t))) {
@@ -66,9 +66,9 @@ Singleton {
     }
     function uid() { return "i" + Math.random().toString(36).slice(2, 10) }
 
-    // ---------- стан ----------
+    // ---------- state ----------
     function clone() { return JSON.parse(JSON.stringify(data)) }
-    function all() { return [].concat(...data.columns) }        // усі папки одним списком
+    function all() { return [].concat(...data.columns) }        // all folders as one list
     function groups(d) { return [].concat(...d.columns) }
     function commit(d) {
         data = d
@@ -79,22 +79,22 @@ Singleton {
         return null
     }
 
-    // кожна встановлена програма живе на плитках: нові — маленькими плитками в «Інше», видалені — геть
+    // every installed app lives on a tile: new ones as small tiles in Other, removed ones go away
     function normalize(d) {
         const have = new Set(Apps.ids)
         for (const g of groups(d)) g.tiles = g.tiles.filter(t => have.has(t.app))
         d.favs = d.favs.filter(a => have.has(a))
         const placed = new Set([].concat(...groups(d).map(g => g.tiles.map(t => t.app))))
         let misc = groups(d).find(g => g.misc)
-        if (!misc) { misc = { id: uid(), name: "Інше", misc: true, tiles: [] }; d.columns[d.columns.length - 1].push(misc) }
+        if (!misc) { misc = { id: uid(), name: "Other", misc: true, tiles: [] }; d.columns[d.columns.length - 1].push(misc) }
         for (const id of Apps.ids) if (!placed.has(id)) misc.tiles.push(Object.assign({ id: uid(), app: id, size: "small" }, freeSlot(misc.tiles, "small")))
         for (const g of groups(d)) settle(g.tiles)
         return d
     }
 
-    // перший запуск: папки за категоріями, головні програми — середніми плитками
+    // first run: folders by category, the main apps as medium tiles
     function seed() {
-        // найкраща програма для слова: точний id, потім id, що з нього починається, потім будь-яке входження
+        // the best app for a word: exact id, then an id starting with it, then any match
         const best = k => Apps.list.find(e => e.id.toLowerCase() === k) ?? Apps.list.find(e => e.id.toLowerCase().startsWith(k))
                           ?? Apps.list.find(e => e.id.toLowerCase().includes(k)) ?? null
         const pick = (cats) => Apps.list.filter(e => (e.categories ?? []).some(c => cats.includes(c)))
@@ -110,16 +110,16 @@ Singleton {
             }
             return g
         }
-        const daily = folder("Щодня", pick(["Network", "Office", "Utility", "FileManager", "TerminalEmulator"]))
-        const create = folder("Творчість", pick(["Graphics", "AudioVideo", "Audio", "Video"]))
-        const dev = folder("Розробка", pick(["Development"]))
-        const games = folder("Ігри", pick(["Game"]))
-        const sys = folder("Система", pick(["Settings", "System"]))
+        const daily = folder("Daily", pick(["Network", "Office", "Utility", "FileManager", "TerminalEmulator"]))
+        const create = folder("Create", pick(["Graphics", "AudioVideo", "Audio", "Video"]))
+        const dev = folder("Develop", pick(["Development"]))
+        const games = folder("Games", pick(["Game"]))
+        const sys = folder("System", pick(["Settings", "System"]))
         const favs = ["vivaldi", "thunar", "kitty", "claude", "telegram"].map(best).filter(e => e).map(e => e.id)
         return normalize({ favs: favs, columns: [[daily, create], [dev, games, sys].filter(g => g.tiles.length)] })
     }
 
-    // ---------- дії ----------
+    // ---------- actions ----------
     function moveTile(tileId, toGroup, x, y) {
         const d = clone(), from = locate(d, tileId), to = groups(d).find(g => g.id === toGroup)
         if (!from || !to) return
@@ -136,7 +136,7 @@ Singleton {
         from.g.tiles = from.g.tiles.filter(t => t !== from.t)
         settle(from.g.tiles)
         from.t.x = 0; from.t.y = 0
-        d.columns[column].splice(index, 0, { id: uid(), name: "Нова папка", tiles: [from.t] })
+        d.columns[column].splice(index, 0, { id: uid(), name: "New Folder", tiles: [from.t] })
         commit(d)
     }
     function resize(tileId, size) {
@@ -177,12 +177,12 @@ Singleton {
         commit(d)
         return true
     }
-    // папки: створити (у коротшу колонку), видалити (плитки — в «Інше»), перемістити
+    // folders: create (in the shorter column), delete (tiles go to Other), move
     function addFolder() {
         const d = clone()
         const height = c => c.reduce((h, g) => h + Math.max(1, rowsOf(g.tiles)) + 1, 0)
         const col = d.columns.length > 1 && height(d.columns[1]) < height(d.columns[0]) ? 1 : 0
-        const g = { id: uid(), name: "Нова папка", tiles: [] }
+        const g = { id: uid(), name: "New Folder", tiles: [] }
         d.columns[col].push(g)
         commit(d)
         return g.id
@@ -194,7 +194,7 @@ Singleton {
         d.columns = d.columns.map(c => c.filter(x => x !== g))
         commit(d)
     }
-    function moveFolder(id, dir) {        // dir: -1 вгору, 1 вниз, "other" — в іншу колонку
+    function moveFolder(id, dir) {        // dir: -1 up, 1 down, "other": to the other column
         const d = clone()
         const ci = d.columns.findIndex(c => c.some(g => g.id === id))
         if (ci < 0) return
@@ -210,7 +210,7 @@ Singleton {
         }
         commit(d)
     }
-    // поставити папку в колонку col на позицію index (index — серед решти папок колонки)
+    // put a folder into column col at position index (index among the column's other folders)
     function placeFolder(id, col, index) {
         const d = clone()
         let g = null
@@ -221,7 +221,7 @@ Singleton {
     }
     function reset() { data = seed(); saveTimer.restart() }
 
-    // ---------- збереження ----------
+    // ---------- saving ----------
     Timer { id: saveTimer; interval: 400; onTriggered: store.setText(JSON.stringify(root.data, null, 1) + "\n") }
     FileView {
         id: store
@@ -230,8 +230,8 @@ Singleton {
         onLoaded: { try { root.raw = JSON.parse(text()) } catch (e) { root.raw = null } root.fileDone = true; root.sync() }
         onLoadFailed: { root.raw = null; root.fileDone = true; root.sync() }
     }
-    // Список програм з'являється не одразу: звіряємо розкладку лише коли є і файл, і програми,
-    // інакше normalize() викинув би всі плитки як «невстановлені»
+    // The app list does not arrive at once: reconcile the layout only when both the file and the apps are there,
+    // or normalize() would drop every tile as not installed
     property var raw: null
     property bool fileDone: false
     function sync() {
@@ -244,6 +244,6 @@ Singleton {
     }
     Connections {
         target: Apps
-        function onIdsChanged() { root.sync() }       // встановили/видалили програму — оновити плитки
+        function onIdsChanged() { root.sync() }       // an app was installed or removed: update the tiles
     }
 }

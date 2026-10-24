@@ -1,7 +1,7 @@
 import QtQuick
 import "../theme"
 
-// Внутрішня секція спливаючого вікна (.sec у макеті).
+// An inner section of a popup (.sec in the mockup).
 Rectangle {
     default property alias content: col.data
     property int pad: 14

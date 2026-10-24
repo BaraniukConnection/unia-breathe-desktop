@@ -1,7 +1,7 @@
 import QtQuick
 import "../../../theme"
 
-// Рядок налаштування: назва (+ пояснення) ліворуч, елемент керування праворуч.
+// A setting row: the name (and a hint) on the left, the control on the right.
 Item {
     default property alias control: slot.data
     property string label

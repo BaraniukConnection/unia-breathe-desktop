@@ -1,13 +1,13 @@
 import QtQuick
 
-// Кругла кнопка зі значком (m-btn / icon-btn у макеті).
+// A round icon button (m-btn / icon-btn in the mockup).
 Rectangle {
     id: root
     property string icon
     property int iconSize: 20
     property bool accent: false
     property bool muted: false
-    property bool focusable: false            // брати участь у Tab (сторінки налаштувань)
+    property bool focusable: false            // take part in Tab navigation (settings pages)
     signal clicked()
     activeFocusOnTab: focusable
     Keys.onSpacePressed: clicked()

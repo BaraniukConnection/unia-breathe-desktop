@@ -4,7 +4,7 @@ import Quickshell.Widgets
 import "../theme"
 import "../services"
 
-// Медіацентр: назва, виконавець, велика обкладинка, великі кнопки, джерело звуку.
+// Media centre: title, artist, large cover, large buttons, audio source.
 Glass {
     width: 300
     height: sec.implicitHeight + 24

@@ -6,13 +6,13 @@ import "../services"
 import "../dock"
 import "../components/tile-menu"
 
-// Шар під смугою для спливаючих вікон. Ловить кліки лише в межах самого вікна;
-// клік деінде закриває його через focus grab (shell.qml), Esc — з клавіатури.
+// The layer under the bar that holds popups. It takes clicks only inside the popup itself;
+// a click elsewhere closes it through the focus grab (shell.qml), Esc from the keyboard.
 PanelWindow {
     id: pl
     required property var modelData
     screen: modelData
-    // шар існує завжди: focus grab має знати про нього заздалегідь, інакше клік у панелі вважається «повз»
+    // the layer always exists: the focus grab must know it in advance, or a click inside the popup counts as outside
     readonly property bool open: Popups.current !== "" && Popups.screen === modelData
 
     WlrLayershell.namespace: "unia-popup"
@@ -34,7 +34,7 @@ PanelWindow {
         focus: true
         Keys.onEscapePressed: Popups.close()
 
-        // обгортка лише трохи «виїжджає» при появі; де стоїть саме вікно — задає його компонент нижче
+        // the wrapper only slides in a little on show; where the popup sits is set by its component below
         Item {
             id: wrap
             width: parent.width
@@ -55,7 +55,7 @@ PanelWindow {
                 }
                 onLoaded: {
                     wrap.opacity = 0
-                    wrap.y = Popups.current === "menu" ? 12 : -8      // меню — знизу, решта — згори
+                    wrap.y = Popups.current === "menu" ? 12 : -8      // the menu comes from below, the rest from above
                     appear.restart()
                 }
             }

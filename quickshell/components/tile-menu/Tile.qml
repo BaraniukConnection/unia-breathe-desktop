@@ -4,12 +4,12 @@ import Quickshell.Widgets
 import "../../theme"
 import "../../services"
 
-// Плитка програми. Малий розмір — лише іконка; середній і більші — скляна плитка з назвою,
-// «живі» показують вміст (календар, годинник, що грає).
+// An app tile. Small is just the icon; medium and larger are glass tiles with the name,
+// and live tiles show content (calendar, clock, now playing).
 Item {
     id: root
     required property var tile            // { id, app, size, x, y, live? }
-    required property var panel           // MenuPanel — для перетягування й контекстного меню
+    required property var panel           // MenuPanel: for dragging and the context menu
     readonly property var entry: Apps.byId(tile.app)
     readonly property bool small: tile.size === "small"
     readonly property string live: !small && tile.live !== false ? Apps.liveKind(entry) : ""
@@ -34,7 +34,7 @@ Item {
         border.color: Theme.paneLine
     }
 
-    // іконка (малий розмір — по центру; більші — у кутку або по центру, якщо плитка не «жива»)
+    // icon (small: centred; larger: in the corner, or centred if the tile is not live)
     AppIcon {
         app: root.tile.app
         implicitSize: root.small ? 36 : root.tile.size === "large" ? 72 : 44
@@ -42,7 +42,7 @@ Item {
         y: root.small ? (root.height - height) / 2 : (root.height - height) / 2 - 8
         width: implicitSize
         height: implicitSize
-        visible: root.live === ""          // «жива» плитка показує вміст без іконки, щоб іконка його не перекривала
+        visible: root.live === ""          // a live tile shows its content without the icon, so the icon does not cover it
     }
     Label {
         visible: !root.small
@@ -57,20 +57,20 @@ Item {
         horizontalAlignment: root.live === "" ? Text.AlignHCenter : Text.AlignLeft
     }
 
-    // живі грані
+    // live faces
     Column {
         visible: root.live === "calendar"
         x: 12; y: 10
         width: root.width - 24
-        Label { text: Qt.locale("uk_UA").toString(clock.date, "dddd"); size: 11; muted: true; weight: Font.Bold }
+        Label { text: Theme.locale.toString(clock.date, "dddd"); size: 11; muted: true; weight: Font.Bold }
         Label { text: clock.date.getDate(); size: root.tile.size === "large" ? 40 : 28; weight: Font.ExtraBold }
-        Label { width: parent.width; visible: root.tile.size !== "medium"; text: Events.next ? Events.next.title : "Подій немає"; size: 12; muted: true; elide: Text.ElideRight }
+        Label { width: parent.width; visible: root.tile.size !== "medium"; text: Events.next ? Events.next.title : "No events"; size: 12; muted: true; elide: Text.ElideRight }
     }
     Column {
         visible: root.live === "clock"
         x: 12; y: 12
         Label { text: Qt.formatTime(clock.date, Prefs.data.clock24 !== false ? "HH:mm" : "h:mm AP"); size: root.tile.size === "large" ? 40 : 26; weight: Font.ExtraBold }
-        Label { text: Qt.locale("uk_UA").toString(clock.date, "d MMM"); size: 12; muted: true }
+        Label { text: Theme.locale.toString(clock.date, "d MMM"); size: 12; muted: true }
     }
     Item {
         visible: root.live === "media"
@@ -90,7 +90,7 @@ Item {
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         cursorShape: Qt.PointingHandCursor
-        preventStealing: true          // інакше прокрутка панелі забирає перетягування собі
+        preventStealing: true          // otherwise the panel's scrolling steals the drag
         property point start
         property bool dragging: false
         onPressed: m => { start = Qt.point(m.x, m.y); dragging = false }

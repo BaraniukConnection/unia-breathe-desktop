@@ -1,7 +1,7 @@
 import QtQuick
 import "../../../theme"
 
-// Кружечок кольору: клік — вибрати; selected — обведений.
+// A colour dot: click to pick; selected adds a ring.
 Rectangle {
     id: root
     property bool selected: false

@@ -3,7 +3,7 @@ import Quickshell
 import "../theme"
 import "../services"
 
-// Календар: місяць, перемикання ‹ ›, сітка днів з понеділка, сьогодні підсвічено.
+// Calendar: the month, ‹ › to switch, a grid of days from Monday, today highlighted.
 Glass {
     id: root
     width: 328
@@ -11,7 +11,7 @@ Glass {
     property date today: new Date()
     property int year: today.getFullYear()
     property int month: today.getMonth()
-    readonly property var loc: Qt.locale("uk_UA")
+    readonly property var loc: Theme.locale
 
     function shift(d) {
         const m = month + d
@@ -48,7 +48,7 @@ Glass {
                 columns: 7
                 width: parent.width
                 Repeater {
-                    model: ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"]
+                    model: ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
                     Label { required property string modelData; text: modelData; width: col.width / 7 - 4; height: 28; horizontalAlignment: Text.AlignHCenter; size: 12; muted: true; weight: Font.Bold }
                 }
                 Repeater {
@@ -86,7 +86,7 @@ Glass {
             }
         }
 
-        // Наступна подія (або підказка, як підключити Google Calendar)
+        // The next event (or a hint on connecting Google Calendar)
         Rectangle {
             width: parent.width
             height: nextCol.implicitHeight + 20
@@ -99,13 +99,13 @@ Glass {
                 x: 18; y: 10
                 width: parent.width - 36
                 spacing: 2
-                Label { text: Events.configured ? "НАСТУПНА ПОДІЯ" : "GOOGLE CALENDAR"; size: 11; weight: Font.Bold; muted: true; font.letterSpacing: 1.2 }
+                Label { text: Events.configured ? "NEXT EVENT" : "GOOGLE CALENDAR"; size: 11; weight: Font.Bold; muted: true; font.letterSpacing: 1.2 }
                 Item {
                     width: parent.width
                     height: 20
                     Label {
                         width: parent.width - when.implicitWidth - 12
-                        text: !Events.configured ? "Не підключено" : Events.next ? Events.next.title : "Подій немає"
+                        text: !Events.configured ? "Not connected" : Events.next ? Events.next.title : "No events"
                         weight: Font.Bold
                         elide: Text.ElideRight
                         anchors.verticalCenter: parent.verticalCenter
@@ -121,7 +121,7 @@ Glass {
                             if (!Events.configured || !e) return ""
                             const d0 = new Date(root.today.getFullYear(), root.today.getMonth(), root.today.getDate())
                             const days = Math.round((new Date(e.start.getFullYear(), e.start.getMonth(), e.start.getDate()) - d0) / 864e5)
-                            const day = days === 0 ? "сьогодні" : days === 1 ? "завтра" : root.loc.toString(e.start, "d MMM")
+                            const day = days === 0 ? "today" : days === 1 ? "tomorrow" : root.loc.toString(e.start, "d MMM")
                             return e.allDay ? day : `${day}, ${Qt.formatTime(e.start, "HH:mm")}`
                         }
                     }

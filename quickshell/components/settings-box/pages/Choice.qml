@@ -1,7 +1,7 @@
 import QtQuick
 import "../../../theme"
 
-// Вибір одного з варіантів (сегменти).
+// Pick one of several options (segments).
 Rectangle {
     id: root
     property var options: []          // [{ value, label }]

@@ -6,7 +6,7 @@ import "../theme"
 import "../services"
 import "../popups"
 
-// Нові сповіщення у правому верхньому куті монітора з фокусом. Ховаються самі (крім важливих).
+// New notifications in the top-right corner of the focused monitor. They hide on their own (except critical ones).
 PanelWindow {
     id: win
     required property var modelData
@@ -22,7 +22,7 @@ PanelWindow {
     implicitWidth: 380
     implicitHeight: Math.max(1, stack.implicitHeight)
     color: "transparent"
-    mask: Region { item: stack }        // область кліків росте разом із картками
+    mask: Region { item: stack }        // the click area grows with the cards
 
     Column {
         id: stack

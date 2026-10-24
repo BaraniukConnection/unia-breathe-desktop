@@ -4,8 +4,8 @@ import Quickshell
 import Quickshell.Io
 import "../../services"
 
-// Параметри Hyprland для власних сторінок: читає поточні значення (hyprctl getoption),
-// змінює наживо (hyprctl keyword) і запам'ятовує в Prefs, щоб пережили перезапуск.
+// Hyprland options for the shell's own pages: reads current values (hyprctl getoption),
+// changes them live (hyprctl keyword) and stores them in Prefs so they survive a restart.
 Singleton {
     id: root
     readonly property var keys: [

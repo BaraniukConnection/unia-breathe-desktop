@@ -3,7 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Networking
 
-// Wi-Fi: увімкнено, назва мережі, сила сигналу.
+// Wi-Fi: power, network name, signal strength.
 Singleton {
     id: root
     readonly property bool enabled: Networking.wifiEnabled

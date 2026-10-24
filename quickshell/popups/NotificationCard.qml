@@ -4,7 +4,7 @@ import Quickshell.Widgets
 import "../theme"
 import "../services"
 
-// Одне сповіщення: іконка програми, заголовок, текст, час, ✕, кнопки дій. Клік — дія за замовчуванням.
+// One notification: app icon, title, body, time, ✕ and action buttons. A click runs the default action.
 Rectangle {
     id: root
     required property var entry

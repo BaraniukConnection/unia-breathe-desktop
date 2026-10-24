@@ -5,8 +5,8 @@ import "../theme"
 import "../services"
 import "../components/scenarios"
 
-// «Столи та сценарії»: відкриті столи — окремий ряд для кожного монітора («+» — новий стіл саме на ньому),
-// нижче — сценарії.
+// "Desks and scenarios": open desks, one row per monitor ("+" makes a new desk on that monitor),
+// with scenarios below.
 Glass {
     id: root
     required property var screen
@@ -21,7 +21,7 @@ Glass {
         spacing: 12
         Section {
             width: parent.width
-            Item { width: parent.width; height: 40; Label { anchors.verticalCenter: parent.verticalCenter; text: "Відкриті столи"; weight: Font.Bold } }
+            Item { width: parent.width; height: 40; Label { anchors.verticalCenter: parent.verticalCenter; text: "Open Desks"; weight: Font.Bold } }
 
             Repeater {
                 model: root.monitors
@@ -33,7 +33,7 @@ Glass {
                     spacing: 6
                     bottomPadding: 8
 
-                    // назва монітора: модель з опису (DELL 2208WFP) або ім'я виходу
+                    // monitor name: the model from its description (DELL 2208WFP) or the output name
                     Row {
                         spacing: 6
                         Icon { name: "monitor"; font.pixelSize: 16; color: mon.here ? Theme.accent : Theme.inkMuted; anchors.verticalCenter: parent.verticalCenter }
@@ -41,7 +41,7 @@ Glass {
                             anchors.verticalCenter: parent.verticalCenter
                             text: {
                                 const d = mon.modelData.lastIpcObject ? mon.modelData.lastIpcObject.model : ""
-                                return (d || mon.modelData.name) + (mon.here ? " · цей монітор" : "")
+                                return (d || mon.modelData.name) + (mon.here ? " · this monitor" : "")
                             }
                             size: 12
                             muted: true

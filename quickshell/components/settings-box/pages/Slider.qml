@@ -1,7 +1,7 @@
 import QtQuick
 import "../../../theme"
 
-// Повзунок зі значенням праворуч. Зміни йдуть наживо, поки тягнеш.
+// A slider with its value on the right. Changes apply live while dragging.
 Item {
     id: root
     property real value
@@ -10,7 +10,7 @@ Item {
     property real step: 0.05
     property int decimals: 2
     property string unit: ""
-    property real display: value              // що показувати (напр. у відсотках)
+    property real display: value              // what to show (e.g. as a percentage)
     signal moved(real value)
     width: 300
     height: 32

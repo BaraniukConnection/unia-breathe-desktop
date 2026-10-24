@@ -3,7 +3,7 @@ import Quickshell
 import "../theme"
 import "../services"
 
-// Йде запис екрана: червона крапка й час; клік — зупинити.
+// Screen recording in progress: a red dot and the time; a click stops it.
 Bubble {
     id: root
     visible: Shot.recording

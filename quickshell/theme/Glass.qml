@@ -1,6 +1,6 @@
 import QtQuick
 
-// Скляна поверхня: напівпрозоре тло + тонка світла обвідка. Розмиття дає Hyprland (layerrule blur).
+// A glass surface: translucent ground and a thin light outline. Hyprland does the blur (layerrule blur).
 Rectangle {
     property bool strong: false
     color: strong ? Theme.glassStrong : Theme.glass

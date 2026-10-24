@@ -3,7 +3,7 @@ import Quickshell
 import "../theme"
 import "../services"
 
-// Дата й час по центру; клік — календар.
+// Date and time in the middle; a click opens the calendar.
 Bubble {
     id: root
     required property var screen
@@ -20,7 +20,7 @@ Bubble {
         spacing: 12
         Label {
             anchors.verticalCenter: parent.verticalCenter
-            text: Qt.locale("uk_UA").toString(clock.date, "d MMM")
+            text: Theme.locale.toString(clock.date, "d MMM")
             muted: true
         }
         Label {

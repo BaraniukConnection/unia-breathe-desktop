@@ -1,10 +1,10 @@
 #!/bin/sh
-# Після пробудження перепідключити бездротові USB-донгли (клавіатура, миша, геймпад…), які після сну
-# лишаються «живими» для системи, але натиски від них не надходять. Це те саме, що витягнути й вставити донгл.
-# Ставиться в /usr/lib/systemd/system-sleep/ — systemd-sleep викликає його з «pre» перед сном і «post» після.
+# After resume, reconnect wireless USB dongles (keyboard, mouse, gamepad…) that still look alive to the system
+# after sleep but deliver no input. It is the same as unplugging the dongle and plugging it back in.
+# Goes into /usr/lib/systemd/system-sleep/: systemd-sleep calls it with "pre" before sleep and "post" after.
 #
-# DEVICES — пристрої через пробіл у форматі idVendor:idProduct (взяти з `lsusb`, див. docs/FAQ.md).
-DEVICES="379a:1807"      # HATOR 2.4G 1K — донгл клавіатури
+# DEVICES: devices separated by spaces, as idVendor:idProduct (take them from `lsusb`, see docs/FAQ.md).
+DEVICES="379a:1807"      # example: HATOR 2.4G 1K keyboard dongle
 
 [ "$1" = post ] || exit 0
 for d in /sys/bus/usb/devices/*; do

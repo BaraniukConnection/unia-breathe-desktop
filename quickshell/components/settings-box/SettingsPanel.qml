@@ -4,22 +4,22 @@ import "../../theme"
 import "../../services"
 import "../../popups"
 
-// Панель категорій налаштувань (304 px зліва на спецворкспейсі).
-// Миша: клік — відкрити, права кнопка — закріпити в панелі керування.
-// Клавіатура: Tab — вкладки → список → програма праворуч; ←→ — вкладки; ↑↓ — список;
-// Enter/Пробіл — відкрити (групу — розгорнути); P — закріпити; Esc — закрити налаштування.
+// The settings category panel (304 px on the left of the special workspace).
+// Mouse: click opens, right-click pins to the control centre.
+// Keyboard: Tab goes tabs → list → the app on the right; ←→ tabs; ↑↓ list;
+// Enter/Space opens (expands a group); P pins; Esc closes Settings.
 FloatingWindow {
     id: win
-    title: "Unia · Налаштування"
+    title: "Unia · Settings"
     color: "transparent"
     implicitWidth: Settings.panelW
     implicitHeight: 800
-    property var open: ({ keyboard: true })      // розгорнуті групи
+    property var open: ({ keyboard: true })      // expanded groups
 
-    property string zone: "list"                 // де клавіатура: "tabs" | "list"
-    property int cursor: 0                       // рядок списку під клавіатурою
+    property string zone: "list"                 // where the keyboard is: "tabs" | "list"
+    property int cursor: 0                       // list row under the keyboard
 
-    // плоский список рядків: окремі пункти, заголовки груп, пункти розгорнутих груп
+    // a flat list of rows: single items, group headers, items of expanded groups
     readonly property var rows: {
         const out = []
         const seen = {}
@@ -50,7 +50,7 @@ FloatingWindow {
         if (r.type === "group") toggleGroup(r.id)
         else Settings.select(r.it.id)
     }
-    // курсор — на вибраному пункті, щоб Tab/↓ починали звідти
+    // the cursor sits on the selected item, so Tab/↓ start from there
     function syncCursor() {
         const i = rows.findIndex(r => r.it && r.it.id === Settings.sel)
         cursor = i >= 0 ? i : 0
@@ -58,8 +58,8 @@ FloatingWindow {
     onRowsChanged: cursor = Math.min(cursor, rows.length - 1)
     Connections { target: Settings; function onSelChanged() { win.syncCursor() } }
 
-    // вікно закрили ззовні (Super+C, Alt+F4) — це «закрити налаштування»; панель створимо знову
-    // при наступному відкритті (інакше воно покаже лише затемнений порожній спецворкспейс)
+    // the window was closed from outside (Super+C, Alt+F4): that means "close Settings"; the panel is created again
+    // on the next opening (otherwise it would show only a dimmed, empty special workspace)
     onClosed: { Settings.panelGone = true; Settings.close() }
     Connections {
         target: Settings
@@ -108,11 +108,11 @@ FloatingWindow {
             width: parent.width - 24
             spacing: 10
 
-            // заголовок
+            // header
             Item {
                 width: parent.width
                 height: 40
-                Label { x: 6; anchors.verticalCenter: parent.verticalCenter; text: "Налаштування"; size: 16; weight: Font.ExtraBold }
+                Label { x: 6; anchors.verticalCenter: parent.verticalCenter; text: "Settings"; size: 16; weight: Font.ExtraBold }
                 IconButton {
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
@@ -123,7 +123,7 @@ FloatingWindow {
                 }
             }
 
-            // розділи
+            // sections
             Rectangle {
                 width: parent.width
                 height: 40
@@ -157,7 +157,7 @@ FloatingWindow {
                 }
             }
 
-            // категорії
+            // categories
             Column {
                 width: parent.width
                 spacing: 4
@@ -176,10 +176,10 @@ FloatingWindow {
                         height: 56
                         radius: 16
                         color: on ? Theme.accent : rowArea.containsMouse || kbd ? Theme.paneHover : "transparent"
-                        border.width: kbd ? 2 : 0                      // рамка — де зараз клавіатура
+                        border.width: kbd ? 2 : 0                      // outline: where the keyboard is now
                         border.color: on ? Theme.ink : Theme.accent
 
-                        Rectangle {   // значок у плитці
+                        Rectangle {   // icon in its tile
                             visible: modelData.type !== "kid"
                             x: 8
                             anchors.verticalCenter: parent.verticalCenter
@@ -205,7 +205,7 @@ FloatingWindow {
                                 size: 12
                                 weight: Font.Medium
                                 text: row.isGroup ? Settings.items.filter(i => i.parent === modelData.id).map(i => i.label.toLowerCase()).join(", ")
-                                    : row.it.kind === "app" ? row.it.tool : "власна сторінка"
+                                    : row.it.kind === "app" ? row.it.tool : "built-in page"
                                 color: row.on ? Theme.accentInk : Theme.inkMuted
                                 shadow: !row.on
                                 opacity: row.on ? 0.8 : 1
@@ -245,8 +245,8 @@ FloatingWindow {
             anchors.bottomMargin: 12
             anchors.horizontalCenter: parent.horizontalCenter
             spacing: 2
-            Label { anchors.horizontalCenter: parent.horizontalCenter; text: "Права кнопка або P — закріпити"; size: 11; muted: true }
-            Label { anchors.horizontalCenter: parent.horizontalCenter; text: "Tab — до програми · Super+Tab — назад"; size: 11; muted: true }
+            Label { anchors.horizontalCenter: parent.horizontalCenter; text: "Right-click or P to pin"; size: 11; muted: true }
+            Label { anchors.horizontalCenter: parent.horizontalCenter; text: "Tab: to the app · Super+Tab: back"; size: 11; muted: true }
         }
     }
 }

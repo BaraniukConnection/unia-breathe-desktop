@@ -6,14 +6,14 @@ import "../theme"
 import "../services"
 import "../components/scenarios"
 
-// Верхня смуга одного монітора: прозора, лише окремі бульбашки. Кліки між ними проходять наскрізь.
-// Режим фокусу (Theme.focusMode, кругла кнопка зліва від столу): смуга нижча й суцільна — скло на всю ширину
-// з акцентним відтінком.
+// The top bar of one monitor: transparent, only separate bubbles. Clicks between them pass through.
+// Focus mode (Theme.focusMode, the round button left of the desk): the bar gets lower and solid, full-width glass
+// with an accent tint.
 PanelWindow {
     id: bar
     required property var modelData
     screen: modelData
-    readonly property bool compact: width < 2200      // вузький монітор: менше підписів
+    readonly property bool compact: width < 2200      // narrow monitor: fewer labels
 
     WlrLayershell.namespace: "unia-bar"
     anchors { top: true; left: true; right: true }
@@ -21,7 +21,7 @@ PanelWindow {
     implicitHeight: barHeight
     exclusiveZone: barHeight
     color: "transparent"
-    // кліки ловлять лише бульбашки; клік повз них (і повз панель) закриває панель через focus grab у shell.qml
+    // only bubbles take clicks; a click outside them (and outside the popup) closes the popup through the focus grab in shell.qml
     mask: Region {
         Region { item: left }
         Region { item: tasks }
@@ -30,7 +30,7 @@ PanelWindow {
         Region { item: right }
     }
 
-    // суцільне тло режиму фокусу: системне скло (розмиття дає Hyprland) і акцентний відтінок
+    // the solid ground of focus mode: system glass (Hyprland blurs) and an accent tint
     Rectangle {
         visible: Theme.focusMode
         width: parent.width
@@ -63,7 +63,7 @@ PanelWindow {
         y: Theme.top
         spacing: Theme.gap
         ScenarioBubble { screen: bar.screen }
-        // режим фокусу: смуга нижча й суцільна (зберігається в налаштуваннях)
+        // focus mode: the bar gets lower and solid (saved in settings)
         RoundBubble {
             icon: "center_focus_strong"
             filled: Theme.focusMode
@@ -73,7 +73,7 @@ PanelWindow {
         WorkspaceBubble { id: ws; screen: bar.screen }
     }
 
-    // відкриті вікна — ліворуч від годинника, не заходячи на сценарій і стіл
+    // open windows: left of the clock, without running into the scenario and desk bubbles
     TaskBubble {
         id: tasks
         barWindow: bar
@@ -120,7 +120,7 @@ PanelWindow {
         }
     }
 
-    // Підказка під сегментом статусу або джерело звуку під медіа
+    // A hint under a status segment, or the audio source under media
     PopupWindow {
         id: hint
         readonly property var seg: status.hint
@@ -152,13 +152,13 @@ PanelWindow {
                     model: {
                         const k = hint.seg ? hint.seg.kind : "media"
                         if (k === "kb") return [{ text: Keyboard.label }]
-                        if (k === "vol") return [{ icon: "speaker", text: Audio.device || "Немає виходу" }]
-                        if (k === "bt") return !Bt.enabled ? [{ icon: "bluetooth_disabled", text: "Bluetooth вимкнено" }]
-                            : Bt.paired.length ? Bt.paired.map(d => ({ icon: d.icon && d.icon.indexOf("audio") >= 0 ? "headphones" : d.icon && d.icon.indexOf("input") >= 0 ? "sports_esports" : "bluetooth", text: d.name, sub: d.connected ? "під’єднано" : "", cur: d.connected }))
-                            : [{ icon: "bluetooth", text: "Немає спарених пристроїв" }]
-                        if (k === "wifi") return Net.wired ? [{ icon: "lan", text: "Дротове з'єднання" }]
-                            : Net.enabled && Net.name ? [{ icon: "wifi", text: Net.name, sub: `сигнал ${Net.signal}%` }]
-                            : [{ icon: "wifi_off", text: Net.enabled ? "Не під'єднано" : "Wi-Fi вимкнено" }]
+                        if (k === "vol") return [{ icon: "speaker", text: Audio.device || "No output" }]
+                        if (k === "bt") return !Bt.enabled ? [{ icon: "bluetooth_disabled", text: "Bluetooth is off" }]
+                            : Bt.paired.length ? Bt.paired.map(d => ({ icon: d.icon && d.icon.indexOf("audio") >= 0 ? "headphones" : d.icon && d.icon.indexOf("input") >= 0 ? "sports_esports" : "bluetooth", text: d.name, sub: d.connected ? "connected" : "", cur: d.connected }))
+                            : [{ icon: "bluetooth", text: "No paired devices" }]
+                        if (k === "wifi") return Net.wired ? [{ icon: "lan", text: "Wired connection" }]
+                            : Net.enabled && Net.name ? [{ icon: "wifi", text: Net.name, sub: `signal ${Net.signal}%` }]
+                            : [{ icon: "wifi_off", text: Net.enabled ? "Not connected" : "Wi-Fi is off" }]
                         return [{ icon: "music_note", text: Media.source }]
                     }
                     Row {

@@ -1,7 +1,7 @@
 import QtQuick
 import "../../../theme"
 
-// Картка-група на сторінці налаштувань: заголовок і рядки.
+// A group card on a settings page: a title and rows.
 Rectangle {
     default property alias content: col.data
     property string title

@@ -3,21 +3,21 @@ import QtQuick
 import Quickshell
 import Quickshell.Services.Notifications
 
-// Власний сервер сповіщень (замість SwayNC): історія для панелі й спливаючі картки.
+// Our own notification server (instead of SwayNC): history for the panel and pop-up cards.
 Singleton {
     id: root
     property bool dnd: false
-    property var history: []          // [{ n: Notification, time: Date }], нові зверху
-    property var toasts: []           // ті, що зараз показані у кутку
+    property var history: []          // [{ n: Notification, time: Date }], newest first
+    property var toasts: []           // the ones shown in the corner right now
     readonly property int count: history.length
 
     function remove(n) {
         history = history.filter(e => e.n !== n)
         toasts = toasts.filter(e => e.n !== n)
     }
-    // записи приходять у делегати копіями, тож порівнюємо за самим сповіщенням
+    // entries reach delegates as copies, so compare by the notification itself
     function hideToast(e) { toasts = toasts.filter(x => x.n !== e.n) }
-    function dismiss(e) { e.n.dismiss() }               // далі спрацює closed → remove
+    function dismiss(e) { e.n.dismiss() }               // closed → remove follows
     function clear() { for (const e of history.slice()) e.n.dismiss() }
     function activate(e) {
         const def = Array.from(e.n.actions).find(a => a.identifier === "default")

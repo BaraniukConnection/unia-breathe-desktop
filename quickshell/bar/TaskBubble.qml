@@ -4,8 +4,8 @@ import Quickshell.Widgets
 import "../theme"
 import "../services"
 
-// Відкриті й згорнуті вікна ліворуч від годинника. Наведення — «Назва · Стіл N»;
-// клік — перейти (по активному — згорнути), середня кнопка — закрити, права — згорнути/розгорнути.
+// Open and minimized windows left of the clock. Hover shows "Title · Desk N";
+// a click goes to the window (minimizes the active one), the middle button closes it, the right one minimizes or restores.
 Bubble {
     id: root
     required property var barWindow
@@ -14,8 +14,8 @@ Bubble {
     readonly property int fit: Math.max(1, Math.floor((maxWidth - 12) / cell))
     readonly property var shown: Windows.list.length > fit ? Windows.list.slice(0, fit - 1) : Windows.list
     readonly property int extra: Windows.list.length - shown.length
-    // іконка під курсором: рахуємо за координатою — список вікон часто перебудовується,
-    // і власний hover кожної іконки губився б разом з нею
+    // the icon under the cursor is found by coordinate: the window list is rebuilt often,
+    // and each icon's own hover would be lost with it
     property int hoverIndex: -1
     readonly property var tipFor: hoverIndex >= 0 && hoverIndex < shown.length ? shown[hoverIndex] : null
     visible: Windows.list.length > 0
@@ -45,7 +45,7 @@ Bubble {
                 color: modelData.active ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.28) : root.hoverIndex === index ? Theme.paneHover : "transparent"
                 opacity: modelData.minimized ? 0.45 : 1
                 IconImage { anchors.centerIn: parent; implicitSize: 22; source: Windows.icon(cellItem.modelData); asynchronous: true }
-                Rectangle {     // крапка під активним вікном
+                Rectangle {     // dot under the active window
                     visible: cellItem.modelData.active
                     width: 10; height: 3; radius: 2
                     color: Theme.accent
@@ -79,7 +79,7 @@ Bubble {
         }
     }
 
-    // підказка під іконкою
+    // hint under the icon
     PopupWindow {
         visible: root.tipFor !== null && Popups.current === ""
         anchor.window: root.barWindow

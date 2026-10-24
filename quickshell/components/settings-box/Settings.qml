@@ -5,49 +5,49 @@ import Quickshell.Io
 import Quickshell.Hyprland
 import "../../services"
 
-// Налаштування: спецворкспейс special:settings, панель категорій зліва, програма праворуч.
-// Клік по категорії показує її програму (запускає, якщо треба) і ховає попередню в special:unia-stash.
+// Settings: the special workspace special:settings, the category panel on the left, the app on the right.
+// A click on a category shows its app (launching it if needed) and hides the previous one in special:unia-stash.
 Singleton {
     id: root
 
     readonly property var tabs: [
-        { id: "main", label: "Основні" },
-        { id: "custom", label: "Кастомізація" },
-        { id: "devices", label: "Девайси" },
+        { id: "main", label: "General" },
+        { id: "custom", label: "Personalize" },
+        { id: "devices", label: "Devices" },
     ]
-    // kind "app" — готова програма (classes — класи її вікна; порожньо — перше нове вікно),
-    // kind "own" — власна сторінка оболонки
+    // kind "app": an existing app (classes: its window classes; empty means the first new window),
+    // kind "own": the shell's own page
     readonly property var items: [
-        { id: "net", tab: "main", label: "Інтернет", icon: "wifi", kind: "app", tool: "Редактор мереж", cmd: ["nm-connection-editor"], classes: ["nm-connection-editor"] },
-        { id: "bt", tab: "main", label: "Блютуз", icon: "bluetooth", kind: "app", tool: "Overskride", cmd: ["flatpak", "run", "io.github.kaii_lb.Overskride"], classes: ["io.github.kaii_lb.overskride"] },
-        { id: "time", tab: "main", label: "Час і дата", icon: "schedule", kind: "own", what: "Часовий пояс, синхронізація часу, 24-годинний формат" },
-        { id: "sound", tab: "main", label: "Звук", icon: "volume_up", kind: "app", tool: "pavucontrol", cmd: ["pavucontrol"], classes: ["pavucontrol", "org.pulseaudio.pavucontrol"] },
-        { id: "display", tab: "main", label: "Дисплей", icon: "monitor", kind: "app", tool: "nwg-displays", cmd: ["nwg-displays"], classes: ["nwg-displays"] },
-        { id: "layout", tab: "main", label: "Розкладка", icon: "keyboard", kind: "own", what: "Мови та клавіша перемикання розкладок" },
-        { id: "wall", tab: "custom", label: "Шпалери", icon: "wallpaper", kind: "app", tool: "Waypaper", cmd: ["waypaper"], classes: ["waypaper"] },
-        { id: "colors", tab: "custom", label: "Кольори", icon: "palette", kind: "app", tool: "nwg-look", cmd: ["nwg-look"], classes: ["nwg-look"] },
-        { id: "theme", tab: "custom", label: "Тема", icon: "format_paint", kind: "own", what: "Головний і другорядні кольори, прозорість вікон, розмиття" },
-        { id: "borders", tab: "custom", label: "Вікна й межі", icon: "border_style", kind: "own", what: "Відступи між вікнами, рамки, заокруглення" },
-        { id: "mouse", tab: "devices", label: "Мишка", icon: "mouse", kind: "own", what: "Швидкість, прискорення, природне прокручування, режим для лівої руки" },
-        { id: "kb-layout", tab: "devices", parent: "keyboard", label: "Мова та розкладка", icon: "keyboard", kind: "own", what: "Мови та клавіша перемикання розкладок" },
-        { id: "kb-rgb", tab: "devices", parent: "keyboard", label: "Підсвітка", icon: "keyboard", kind: "app", tool: "OpenRGB", cmd: ["openrgb"], classes: ["openrgb", "org.openrgb.openrgb"] },
-        { id: "printers", tab: "devices", label: "Принтери", icon: "print", kind: "app", tool: "system-config-printer", cmd: ["system-config-printer"], classes: ["system-config-printer"] },
-        { id: "tablet", tab: "devices", label: "Графічний планшет", icon: "draw", kind: "app", tool: "OpenTabletDriver", cmd: ["otd-gui"], classes: ["opentabletdriver.ux"] },
+        { id: "net", tab: "main", label: "Network", icon: "wifi", kind: "app", tool: "Network editor", cmd: ["nm-connection-editor"], classes: ["nm-connection-editor"] },
+        { id: "bt", tab: "main", label: "Bluetooth", icon: "bluetooth", kind: "app", tool: "Overskride", cmd: ["flatpak", "run", "io.github.kaii_lb.Overskride"], classes: ["io.github.kaii_lb.overskride"] },
+        { id: "time", tab: "main", label: "Date & Time", icon: "schedule", kind: "own", what: "Time zone, time sync, 24-hour clock" },
+        { id: "sound", tab: "main", label: "Sound", icon: "volume_up", kind: "app", tool: "pavucontrol", cmd: ["pavucontrol"], classes: ["pavucontrol", "org.pulseaudio.pavucontrol"] },
+        { id: "display", tab: "main", label: "Displays", icon: "monitor", kind: "app", tool: "nwg-displays", cmd: ["nwg-displays"], classes: ["nwg-displays"] },
+        { id: "layout", tab: "main", label: "Keyboard Layout", icon: "keyboard", kind: "own", what: "Languages and the layout switch key" },
+        { id: "wall", tab: "custom", label: "Wallpaper", icon: "wallpaper", kind: "app", tool: "Waypaper", cmd: ["waypaper"], classes: ["waypaper"] },
+        { id: "colors", tab: "custom", label: "App Theme", icon: "palette", kind: "app", tool: "nwg-look", cmd: ["nwg-look"], classes: ["nwg-look"] },
+        { id: "theme", tab: "custom", label: "Theme", icon: "format_paint", kind: "own", what: "Main and secondary colours, window opacity, blur" },
+        { id: "borders", tab: "custom", label: "Windows & Borders", icon: "border_style", kind: "own", what: "Gaps between windows, borders, rounding" },
+        { id: "mouse", tab: "devices", label: "Mouse", icon: "mouse", kind: "own", what: "Speed, acceleration, natural scrolling, left-handed mode" },
+        { id: "kb-layout", tab: "devices", parent: "keyboard", label: "Language & Layout", icon: "keyboard", kind: "own", what: "Languages and the layout switch key" },
+        { id: "kb-rgb", tab: "devices", parent: "keyboard", label: "Backlight", icon: "keyboard", kind: "app", tool: "OpenRGB", cmd: ["openrgb"], classes: ["openrgb", "org.openrgb.openrgb"] },
+        { id: "printers", tab: "devices", label: "Printers", icon: "print", kind: "app", tool: "system-config-printer", cmd: ["system-config-printer"], classes: ["system-config-printer"] },
+        { id: "tablet", tab: "devices", label: "Drawing Tablet", icon: "draw", kind: "app", tool: "OpenTabletDriver", cmd: ["otd-gui"], classes: ["opentabletdriver.ux"] },
     ]
-    readonly property var groups: ({ keyboard: { label: "Клавіатура", icon: "keyboard" } })
+    readonly property var groups: ({ keyboard: { label: "Keyboard", icon: "keyboard" } })
 
     property string tab: "main"
     property string sel: "net"
     readonly property var current: find(sel)
-    property bool shown: false                 // спецворкспейс settings зараз видно
-    property string monitorName: ""           // на якому моніторі його показано
-    property var addrs: ({})                   // id → адреса вікна програми
-    property var pending: null                 // { id, classes, until } — чекаємо на нове вікно
-    readonly property var pins: Prefs.data.pins ?? []      // закріплені в панелі керування (до 6)
+    property bool shown: false                 // the settings special workspace is visible now
+    property string monitorName: ""           // which monitor shows it
+    property var addrs: ({})                   // id → address of the app's window
+    property var pending: null                 // { id, classes, until }: waiting for a new window
+    readonly property var pins: Prefs.data.pins ?? []      // pinned to the control centre (up to 6)
 
     function find(id) { return items.find(i => i.id === id) ?? null }
 
-    // ---------- відкриття / закриття ----------
+    // ---------- open / close ----------
     function toggle() {
         if (!shown && panelGone) { restorePanel(); return }
         Hyprland.dispatch("togglespecialworkspace settings")
@@ -58,8 +58,8 @@ Singleton {
     }
     function close() { if (shown) toggle() }
 
-    // панель закрили ззовні (Super+C) — не створюємо її одразу (нове вікно знову показало б налаштування),
-    // а лише при наступному відкритті; поява вікна на спецворкспейсі сама його показує
+    // the panel was closed from outside (Super+C): do not recreate it at once (a new window would show Settings again),
+    // only on the next opening; a window appearing on the special workspace reveals it by itself
     property bool panelGone: false
     signal panelRestoreRequested()
     function restorePanel() {
@@ -69,7 +69,7 @@ Singleton {
     }
     Timer { id: ensureShown; interval: 400; onTriggered: if (!root.shown) Hyprland.dispatch("togglespecialworkspace settings") }
 
-    // ---------- геометрія: панель 304 px зліва, програма — решта ----------
+    // ---------- geometry: the panel is 304 px on the left, the app takes the rest ----------
     readonly property int panelW: 304
     function area() {
         const m = Hyprland.monitors.values.find(m => m.name === monitorName) ?? Hyprland.focusedMonitor
@@ -79,8 +79,8 @@ Singleton {
         return { x: m.x + side, y: m.y + top, h: h - top - bottom,
                  toolX: m.x + side + panelW + 10, toolW: w - 2 * side - panelW - 10 }
     }
-    // чи є вікно під селектором: для неіснуючого вікна Hyprland застосовує movetoworkspace/setfloating
-    // до АКТИВНОГО вікна — так у налаштування затягувало браузер
+    // whether a window matches the selector: for a missing window Hyprland applies movetoworkspace/setfloating
+    // to the ACTIVE window, which once pulled the browser into Settings
     function exists(sel) {
         const ts = Hyprland.toplevels.values
         if (sel.startsWith("address:")) {
@@ -97,35 +97,35 @@ Singleton {
         Hyprland.dispatch(`resizewindowpixel exact ${Math.round(w)} ${Math.round(h)},${sel}`)
         Hyprland.dispatch(`movewindowpixel exact ${Math.round(x)} ${Math.round(y)},${sel}`)
     }
-    // refocus — повернути клавіатуру панелі (при відкритті, виборі категорії); при простому перерозставленні
-    // (Hyprland перечитав конфіг) — ні: focuswindow ще й переносить курсор у середину панелі
+    // refocus: give the keyboard back to the panel (on opening, on choosing a category); not on a plain relayout
+    // (Hyprland reloaded its config): focuswindow also warps the cursor to the middle of the panel
     function layout(refocus) {
         const a = area()
         if (!a) return
-        place("title:^(Unia · Налаштування)$", a.x, a.y, panelW, a.h)
+        place("title:^(Unia · Settings)$", a.x, a.y, panelW, a.h)
         const it = current
         if (!it) return
-        if (it.kind === "own") place("title:^(Unia · Сторінка)$", a.toolX, a.y, a.toolW, a.h)
+        if (it.kind === "own") place("title:^(Unia · Page)$", a.toolX, a.y, a.toolW, a.h)
         else if (addrs[it.id]) place(`address:${addrs[it.id]}`, a.toolX, a.y, a.toolW, a.h)
-        // фокус — лише коли налаштування відкриті: фокус на вікні схованого спецворкспейсу показує його
-        // (так налаштування вискакували при кожному запуску оболонки, коли з'являлось вікно панелі)
+        // focus only while Settings is open: focusing a window on a hidden special workspace reveals it
+        // (that is how Settings used to pop up on every shell start, when the panel window appeared)
         if (!shown || refocus === false) return
-        focusPanel()        // клавіатура лишається в панелі: Tab — перейти до програми
-        refocus.restart()   // щойно відкрите вікно програми забирає фокус собі — повертаємо його панелі
+        focusPanel()        // the keyboard stays in the panel: Tab goes to the app
+        refocus.restart()   // a freshly opened app window takes focus: give it back to the panel
     }
     Timer { id: refocus; interval: 350; onTriggered: if (root.shown) root.focusPanel() }
 
-    // ---------- фокус клавіатури: панель ↔ програма праворуч ----------
-    signal pageFocusRequested()        // власній сторінці — поставити фокус на перший елемент
-    function focusPanel() { Hyprland.dispatch("focuswindow title:^(Unia · Налаштування)$") }
+    // ---------- keyboard focus: panel ↔ the app on the right ----------
+    signal pageFocusRequested()        // tells a built-in page to focus its first control
+    function focusPanel() { Hyprland.dispatch("focuswindow title:^(Unia · Settings)$") }
     function focusTool() {
         const it = current
         if (!it) return
-        if (it.kind === "own") { Hyprland.dispatch("focuswindow title:^(Unia · Сторінка)$"); pageFocusRequested() }
+        if (it.kind === "own") { Hyprland.dispatch("focuswindow title:^(Unia · Page)$"); pageFocusRequested() }
         else if (addrs[it.id]) Hyprland.dispatch(`focuswindow address:${addrs[it.id]}`)
     }
 
-    // ---------- вибір категорії ----------
+    // ---------- choosing a category ----------
     function select(id) {
         const it = find(id)
         if (!it) return
@@ -139,7 +139,7 @@ Singleton {
     }
 
     function adoptOrLaunch(it) {
-        // уже відкрита деінде? забираємо її вікно
+        // already open elsewhere? take its window
         const c = clients.find(c => it.classes.includes(c.class.toLowerCase()))
         if (c) { setAddr(it.id, c.address.replace(/^0x/, "")); return }
         pending = { id: it.id, classes: it.classes, until: Date.now() + 30000 }
@@ -151,13 +151,13 @@ Singleton {
         addrs = m
     }
 
-    // ---------- закріплення в панелі керування ----------
+    // ---------- pinning to the control centre ----------
     function togglePin(id) {
         Prefs.set("pins", pins.includes(id) ? pins.filter(x => x !== id) : [...pins, id].slice(0, 6))
     }
 
-    // ---------- стан Hyprland ----------
-    property var clients: []                   // [{ address, class }] — оновлюємо через hyprctl
+    // ---------- Hyprland state ----------
+    property var clients: []                   // [{ address, class }]: refreshed through hyprctl
     Process {
         id: clientsProc
         command: ["hyprctl", "clients", "-j"]
@@ -168,8 +168,8 @@ Singleton {
     Connections {
         target: Hyprland
         function onRawEvent(ev) {
-            // Hyprland перечитав конфіг (напр. Apply у nwg-displays) або змінились монітори —
-            // правила вікон могли пересунути програму під панель, тож розставляємо заново
+            // Hyprland reloaded its config (e.g. Apply in nwg-displays) or monitors changed:
+            // window rules may have moved the app under the panel, so lay things out again
             if (["configreloaded", "monitoradded", "monitorremoved"].includes(ev.name)) {
                 if (root.shown) relayout.restart()
             } else if (ev.name === "activespecial") {
@@ -179,10 +179,10 @@ Singleton {
             } else if (ev.name === "openwindow") {
                 const [addr, ws, cls, ...t] = ev.data.split(",")
                 clientsProc.running = true
-                // власні вікна (панель, сторінка) з'являються вже після select() — розставляємо ще раз
+                // our own windows (panel, page) appear after select(): lay out once more
                 if (t.join(",").startsWith("Unia · ")) { root.layout(); return }
                 const p = root.pending
-                // своє вікно впізнаємо за класом; запасний варіант — перше нове вікно на спецворкспейсі
+                // recognise the app's window by class; the fallback is the first new window on the special workspace
                 if (p && Date.now() < p.until && (p.classes.includes(cls.toLowerCase()) || ws === "special:settings" && !cls.startsWith("org.quickshell"))) {
                     root.pending = null
                     root.setAddr(p.id, addr)

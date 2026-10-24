@@ -4,27 +4,27 @@ import "../../../services"
 import ".."
 
 Page {
-    title: "Вікна й межі"
-    subtitle: "Відступи між вікнами, рамки й заокруглення кутів."
+    title: "Windows & Borders"
+    subtitle: "Gaps between windows, borders and corner rounding."
     Group {
-        title: "ВІДСТУПИ"
+        title: "GAPS"
         SettingRow {
-            label: "Між вікнами"
+            label: "Between windows"
             Slider { from: 0; to: 30; step: 1; decimals: 0; unit: " px"; value: HyprOpts.get("general:gaps_in", 5); onMoved: v => HyprOpts.set("general:gaps_in", v) }
         }
         SettingRow {
-            label: "Від країв екрана"
+            label: "From screen edges"
             Slider { from: 0; to: 40; step: 1; decimals: 0; unit: " px"; value: HyprOpts.get("general:gaps_out", 20); onMoved: v => HyprOpts.set("general:gaps_out", v) }
         }
     }
     Group {
-        title: "ВИГЛЯД"
+        title: "LOOK"
         SettingRow {
-            label: "Товщина рамки"
+            label: "Border width"
             Slider { from: 0; to: 6; step: 1; decimals: 0; unit: " px"; value: HyprOpts.get("general:border_size", 1); onMoved: v => HyprOpts.set("general:border_size", v) }
         }
         SettingRow {
-            label: "Заокруглення кутів"
+            label: "Corner rounding"
             Slider { from: 0; to: 30; step: 1; decimals: 0; unit: " px"; value: HyprOpts.get("decoration:rounding", 10); onMoved: v => HyprOpts.set("decoration:rounding", v) }
         }
     }

@@ -1,7 +1,7 @@
 import QtQuick
 import "../../../theme"
 
-// Каркас сторінки: заголовок, підзаголовок, прокручуваний стовпчик груп шириною до 680 px по центру.
+// Page frame: title, subtitle and a scrolling column of groups up to 680 px wide, centred.
 Flickable {
     id: root
     default property alias content: col.data

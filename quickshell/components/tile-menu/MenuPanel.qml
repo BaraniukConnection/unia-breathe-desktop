@@ -4,7 +4,7 @@ import Quickshell
 import "../../theme"
 import "../../services"
 
-// Меню програм над доком: пошук, папки з плитками (перетягування, розміри, обрані), «Усі програми».
+// The app menu above the dock: search, folders of tiles (drag, sizes, favourites), All Apps.
 Glass {
     id: root
     required property var screen
@@ -25,12 +25,12 @@ Glass {
         Apps.launch(app)
     }
 
-    // ---------- перетягування плиток ----------
+    // ---------- dragging tiles ----------
     property string dragTile: ""
     property var dragData: null
     property point grab
-    property var dropSlot: null             // { group, x, y, size } або { newFolder: column }
-    property var folders: []                // зареєстровані сітки папок
+    property var dropSlot: null             // { group, x, y, size } or { newFolder: column }
+    property var folders: []                // registered folder grids
 
     function beginDrag(tile, grabPoint, p) {
         dragData = tile
@@ -44,7 +44,7 @@ Glass {
             if (!g || !g.visible) continue
             const q = g.mapFromItem(root, tl.x, tl.y)
             const c = g.mapFromItem(root, p.x, p.y)
-            // трохи нижче останнього рядка теж рахується — так плитку можна покласти в кінець папки
+            // a little below the last row counts too, so a tile can be dropped at the end of a folder
             if (c.x < -16 || c.x > g.width + 16 || c.y < -24 || c.y > g.height + 52) continue
             const d = Menu.sizes[dragData.size], step = dragData.size === "small" ? 1 : 2
             let x = Math.round(q.x / 56), y = Math.round(q.y / 56)
@@ -76,8 +76,8 @@ Glass {
     }
     function cancelDrag() { dragTile = ""; dragData = null; dropSlot = null; scrollSpeed = 0 }
 
-    // ---------- автопрокрутка під час перетягування ----------
-    // курсор біля верхнього/нижнього краю списку — прокручуємо в той бік (ближче до краю — швидше)
+    // ---------- autoscroll while dragging ----------
+    // with the cursor near the top or bottom edge of the list, scroll that way (faster closer to the edge)
     readonly property int edgeZone: 64
     property real scrollSpeed: 0
     property point lastDrag
@@ -97,16 +97,16 @@ Glass {
             const y = Math.max(0, Math.min(max, tilesView.contentY + root.scrollSpeed))
             if (y === tilesView.contentY) return
             tilesView.contentY = y
-            // під нерухомим курсором тепер інше місце — оновлюємо ціль
+            // the still cursor is now over another spot: update the target
             if (root.dragTile !== "") root.dropSlot = root.targetAt(root.lastDrag)
             else root.folderDrop = root.folderTarget(root.lastDrag)
         }
     }
 
-    // ---------- перетягування папок ----------
+    // ---------- dragging folders ----------
     property string dragFolder: ""
     property string dragFolderName: ""
-    property var folderDrop: null           // { col, index, x, y } — куди стане папка і де намалювати лінію
+    property var folderDrop: null           // { col, index, x, y }: where the folder goes and where to draw the line
 
     function beginFolderDrag(g, p) { dragFolder = g.id; dragFolderName = g.name; moveFolderDrag(p) }
     function moveFolderDrag(p) {
@@ -122,7 +122,7 @@ Glass {
     }
     function cancelFolderDrag() { dragFolder = ""; folderDrop = null; scrollSpeed = 0 }
     function folderTarget(p) {
-        // колонка — за x; на вузькому екрані одна видима колонка, яка насправді — дві підряд
+        // the column comes from x; on a narrow screen one visible column is really two in a row
         const c0 = cols.mapToItem(root, 0, 0)
         const vcol = ncols === 2 && p.x > c0.x + colW + 16 ? 1 : 0
         const visible = folderItems().filter(f => f.group.id !== dragFolder)
@@ -135,35 +135,35 @@ Glass {
         const lineX = c0.x + vcol * (colW + 32)
         if (ncols === 2) {
             const others = Menu.data.columns[vcol].filter(g => g.id !== dragFolder)
-            // індекс серед папок саме цієї колонки (видимих — усі папки колонки, у тому ж порядку)
+            // index among this column's folders (all of the column's folders are visible, in the same order)
             return { col: vcol, index: i, x: lineX, y: lineY, n: others.length }
         }
-        // одна видима колонка: позиція в загальному списку → (колонка, позиція)
+        // one visible column: position in the combined list → (column, position)
         const c0len = Menu.data.columns[0].filter(g => g.id !== dragFolder).length
         return i <= c0len ? { col: 0, index: i, x: lineX, y: lineY } : { col: 1, index: i - c0len, x: lineX, y: lineY }
     }
 
-    // ---------- контекстне меню ----------
+    // ---------- context menu ----------
     property var menuItems: []
     function tileMenu(tile, p) {
-        const sizes = [["small", "Малий"], ["medium", "Середній"], ["wide", "Широкий"], ["large", "Великий"]]
+        const sizes = [["small", "Small"], ["medium", "Medium"], ["wide", "Wide"], ["large", "Large"]]
         const e = Apps.byId(tile.app)
         const items = sizes.map(([s, l]) => ({ label: l, icon: tile.size === s ? "radio_button_checked" : "radio_button_unchecked",
                                                run: () => Menu.resize(tile.id, s) }))
         if (Apps.liveKind(e) && tile.size !== "small")
-            items.push({ label: tile.live === false ? "Показувати вміст" : "Лише іконка", icon: "auto_awesome", run: () => Menu.toggleLive(tile.id) })
+            items.push({ label: tile.live === false ? "Show Content" : "Icon Only", icon: "auto_awesome", run: () => Menu.toggleLive(tile.id) })
         items.push(favItem(tile.app))
         const misc = Menu.all().find(g => g.misc)
         if (misc && !misc.tiles.some(t => t.id === tile.id))
-            items.push({ label: "Прибрати в «Інше»", icon: "move_down", run: () => Menu.toMisc(tile.id) })
+            items.push({ label: "Move to Other", icon: "move_down", run: () => Menu.toMisc(tile.id) })
         openMenu(items, p)
     }
     function folderMenu(g, p) {
-        const items = [{ label: "Перейменувати", icon: "edit", run: () => { const f = folderItems().find(f => f.group.id === g.id); if (f) f.startEdit() } },
-                       { label: "Вище", icon: "arrow_upward", run: () => Menu.moveFolder(g.id, -1) },
-                       { label: "Нижче", icon: "arrow_downward", run: () => Menu.moveFolder(g.id, 1) }]
-        if (root.ncols === 2) items.push({ label: "В іншу колонку", icon: "swap_horiz", run: () => Menu.moveFolder(g.id, "other") })
-        if (!g.misc) items.push({ label: g.tiles.length ? "Видалити (плитки — в «Інше»)" : "Видалити папку", icon: "delete", run: () => Menu.deleteFolder(g.id) })
+        const items = [{ label: "Rename", icon: "edit", run: () => { const f = folderItems().find(f => f.group.id === g.id); if (f) f.startEdit() } },
+                       { label: "Move Up", icon: "arrow_upward", run: () => Menu.moveFolder(g.id, -1) },
+                       { label: "Move Down", icon: "arrow_downward", run: () => Menu.moveFolder(g.id, 1) }]
+        if (root.ncols === 2) items.push({ label: "To the Other Column", icon: "swap_horiz", run: () => Menu.moveFolder(g.id, "other") })
+        if (!g.misc) items.push({ label: g.tiles.length ? "Delete (Tiles Go to Other)" : "Delete Folder", icon: "delete", run: () => Menu.deleteFolder(g.id) })
         openMenu(items, p)
     }
     function folderItems() { return folders.map(g => g ? g.parent : null).filter(f => f && f.group) }
@@ -171,7 +171,7 @@ Glass {
         view = "tiles"
         search.text = ""
         const id = Menu.addFolder()
-        // папка з'явиться після перемальовування — тоді й відкриваємо поле назви
+        // the folder appears after a repaint; open its name field then
         Qt.callLater(() => {
             const f = folderItems().find(f => f.group.id === id)
             if (!f) return
@@ -182,7 +182,7 @@ Glass {
     }
     function favItem(app) {
         const on = Menu.data.favs.includes(app)
-        return { label: on ? "Прибрати з доку" : "Додати до доку", icon: "star", run: () => { if (!Menu.toggleFav(app)) toast.show("У доці вже п'ять програм — спершу прибери одну") } }
+        return { label: on ? "Remove from Dock" : "Add to Dock", icon: "star", run: () => { if (!Menu.toggleFav(app)) toast.show("The dock already holds five apps. Remove one first.") } }
     }
     function openMenu(items, p) {
         menuItems = items
@@ -193,13 +193,13 @@ Glass {
 
     Component.onCompleted: search.forceActiveFocus()
 
-    // ---------- пошук ----------
+    // ---------- search ----------
     TextField {
         id: search
         x: 24; y: 18
         width: parent.width - 48
         height: 44
-        placeholderText: "Пошук програм…"
+        placeholderText: "Search apps..."
         font.family: Theme.font
         font.pixelSize: 15
         color: Theme.ink
@@ -226,7 +226,7 @@ Glass {
         width: parent.width - 48
         height: parent.height - y - 60
 
-        // плитки
+        // tiles
         Flickable {
             id: tilesView
             anchors.fill: parent
@@ -240,7 +240,7 @@ Glass {
                 x: 12
                 spacing: 32
                 Repeater {
-                    // на вузькому екрані друга колонка стає під першою
+                    // on a narrow screen the second column goes under the first
                     model: root.ncols === 2 ? Menu.data.columns : [Menu.all()]
                     Column {
                         id: column
@@ -260,7 +260,7 @@ Glass {
                     }
                 }
             }
-            // зони «нова папка» під кожною колонкою (видно лише під час перетягування)
+            // "new folder" zones under each column (visible only while dragging)
             Repeater {
                 id: newZones
                 model: root.ncols
@@ -276,12 +276,12 @@ Glass {
                     border.width: 2
                     border.color: Theme.accent
                     opacity: 0.8
-                    Label { anchors.centerIn: parent; text: "+ Нова папка"; weight: Font.Bold; color: Theme.accent; shadow: false }
+                    Label { anchors.centerIn: parent; text: "+ New Folder"; weight: Font.Bold; color: Theme.accent; shadow: false }
                 }
             }
         }
 
-        // усі програми (за абеткою)
+        // all apps (alphabetical)
         ListView {
             id: allApps
             anchors.fill: parent
@@ -294,7 +294,7 @@ Glass {
                 required property int index
                 readonly property string letter: modelData.name.charAt(0).toUpperCase()
                 width: ListView.view.width
-                Label {   // літера над першою програмою на неї
+                Label {   // the letter above the first app starting with it
                     visible: index === 0 || Apps.list[index - 1].name.charAt(0).toUpperCase() !== parent.letter
                     text: parent.letter
                     size: 12; weight: Font.Bold; color: Theme.accent
@@ -304,7 +304,7 @@ Glass {
             }
         }
 
-        // результати пошуку
+        // search results
         ListView {
             id: results
             anchors.fill: parent
@@ -314,7 +314,7 @@ Glass {
             model: Apps.search(root.query)
             currentIndex: 0
             delegate: AppRow { required property var modelData; required property int index; entry: modelData; width: ListView.view.width; current: index === results.currentIndex }
-            Label { visible: results.count === 0; anchors.centerIn: parent; text: "Нічого не знайдено"; muted: true }
+            Label { visible: results.count === 0; anchors.centerIn: parent; text: "Nothing found"; muted: true }
         }
     }
 
@@ -347,7 +347,7 @@ Glass {
         }
     }
 
-    // ---------- низ: скинути розкладку, Плитки / Усі програми ----------
+    // ---------- bottom: reset layout, Tiles / All Apps ----------
     Item {
         x: 24
         width: parent.width - 48
@@ -367,7 +367,7 @@ Glass {
                 anchors.centerIn: parent
                 spacing: 6
                 Icon { name: "create_new_folder"; color: Theme.inkMuted; font.pixelSize: 18; anchors.verticalCenter: parent.verticalCenter }
-                Label { text: "Нова папка"; size: 13; anchors.verticalCenter: parent.verticalCenter }
+                Label { text: "New Folder"; size: 13; anchors.verticalCenter: parent.verticalCenter }
             }
             MouseArea { id: newArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.newFolder() }
         }
@@ -385,7 +385,7 @@ Glass {
                 anchors.centerIn: parent
                 spacing: 6
                 Icon { name: "restart_alt"; color: Theme.inkMuted; font.pixelSize: 18; anchors.verticalCenter: parent.verticalCenter }
-                Label { text: root.resetArmed ? "Точно скинути?" : "Скинути розкладку"; size: 13; anchors.verticalCenter: parent.verticalCenter }
+                Label { text: root.resetArmed ? "Reset for Sure?" : "Reset Layout"; size: 13; anchors.verticalCenter: parent.verticalCenter }
             }
             Timer { id: unarm; interval: 3000; onTriggered: root.resetArmed = false }
             MouseArea {
@@ -409,7 +409,7 @@ Glass {
                 id: seg
                 x: 4; y: 4
                 Repeater {
-                    model: [{ v: "tiles", l: "Плитки" }, { v: "apps", l: "Усі програми" }]
+                    model: [{ v: "tiles", l: "Tiles" }, { v: "apps", l: "All Apps" }]
                     Rectangle {
                         required property var modelData
                         readonly property bool on: root.view === modelData.v
@@ -425,7 +425,7 @@ Glass {
         }
     }
 
-    // лінія, куди стане папка, і «привид» з її назвою
+    // the line where the folder goes, and a ghost with its name
     Rectangle {
         visible: root.dragFolder !== "" && !!root.folderDrop
         z: 49
@@ -454,7 +454,7 @@ Glass {
         }
     }
 
-    // привид плитки під курсором під час перетягування
+    // the tile's ghost under the cursor while dragging
     Rectangle {
         id: ghost
         visible: root.dragTile !== ""
@@ -470,7 +470,7 @@ Glass {
         AppIcon { anchors.centerIn: parent; app: root.dragData ? root.dragData.app : ""; implicitSize: 36 }
     }
 
-    // контекстне меню
+    // context menu
     MouseArea {
         anchors.fill: parent
         visible: ctx.visible
@@ -482,7 +482,7 @@ Glass {
         id: ctx
         visible: false
         z: 60
-        color: Theme.tint(Qt.rgba(8 / 255, 30 / 255, 25 / 255, 0.94))    // під меню — плитки тієї ж панелі, розмиття тут не допоможе
+        color: Theme.tint(Qt.rgba(8 / 255, 30 / 255, 25 / 255, 0.94))    // under the menu are tiles of the same panel; blur would not help here
         radius: 16
         width: 232
         implicitHeight: ctxCol.implicitHeight + 12
@@ -512,7 +512,7 @@ Glass {
         }
     }
 
-    // коротке повідомлення внизу панелі
+    // a short message at the bottom of the panel
     Glass {
         id: toast
         z: 70

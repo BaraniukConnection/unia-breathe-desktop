@@ -3,7 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Bluetooth
 
-// Bluetooth: увімкнено, підключені й спарені пристрої.
+// Bluetooth: power, connected and paired devices.
 Singleton {
     readonly property var adapter: Bluetooth.defaultAdapter
     readonly property bool enabled: !!adapter && adapter.enabled

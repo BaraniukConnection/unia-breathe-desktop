@@ -5,15 +5,15 @@ import Quickshell.Hyprland
 import "../theme"
 import "../services"
 
-// Екран знімка на одному моніторі: заморожений кадр, затемнення поза вибраним, а на моніторі,
-// де натиснули Print, — панель керування (режими, знімок/відео, курсор, кнопка «зняти»).
+// The screenshot picker on one monitor: the frozen frame, dimming outside the selection and, on the monitor
+// where Print was pressed, the controls (modes, shot/video, pointer, the capture button).
 PanelWindow {
     id: win
     required property var modelData
     screen: modelData
     readonly property string name: modelData.name
-    readonly property bool here: Shot.monitor === name                 // вибране — на цьому моніторі
-    readonly property bool ui: Shot.uiMonitor === name                 // тут показуємо панель
+    readonly property bool here: Shot.monitor === name                 // the selection is on this monitor
+    readonly property bool ui: Shot.uiMonitor === name                 // the controls are shown here
     visible: Shot.active
 
     WlrLayershell.namespace: "unia-shot"
@@ -33,20 +33,20 @@ PanelWindow {
         smooth: false
     }
 
-    // ---------- виділення ----------
+    // ---------- selection ----------
     Item {
         id: areaLayer
         anchors.fill: parent
         visible: Shot.mode === "area"
         readonly property rect r: win.here ? Shot.area : Qt.rect(0, 0, 0, 0)
 
-        // затемнення навколо виділення
+        // dimming around the selection
         Rectangle { color: "#80000000"; x: 0; y: 0; width: parent.width; height: areaLayer.r.y }
         Rectangle { color: "#80000000"; x: 0; y: areaLayer.r.y + areaLayer.r.height; width: parent.width; height: parent.height - y }
         Rectangle { color: "#80000000"; x: 0; y: areaLayer.r.y; width: areaLayer.r.x; height: areaLayer.r.height }
         Rectangle { color: "#80000000"; x: areaLayer.r.x + areaLayer.r.width; y: areaLayer.r.y; width: parent.width - x; height: areaLayer.r.height }
 
-        // нове виділення / перетягування наявного
+        // a new selection / dragging the current one
         MouseArea {
             anchors.fill: parent
             cursorShape: Qt.CrossCursor
@@ -74,7 +74,7 @@ PanelWindow {
             onDoubleClicked: if (moving) Shot.capture()
         }
 
-        // рамка і ручки
+        // frame and handles
         Rectangle {
             visible: win.here
             x: areaLayer.r.x - 1; y: areaLayer.r.y - 1
@@ -84,7 +84,7 @@ PanelWindow {
             border.color: Theme.accent
         }
         Repeater {
-            // ручки: [x-частка, y-частка, які краї тягне: left, top, right, bottom]
+            // handles: [x fraction, y fraction, edges it drags: left, top, right, bottom]
             model: win.here ? [[0, 0, 1, 1, 0, 0], [0.5, 0, 0, 1, 0, 0], [1, 0, 0, 1, 1, 0], [1, 0.5, 0, 0, 1, 0],
                                [1, 1, 0, 0, 1, 1], [0.5, 1, 0, 0, 0, 1], [0, 1, 1, 0, 0, 1], [0, 0.5, 1, 0, 0, 0]] : []
             Rectangle {
@@ -116,7 +116,7 @@ PanelWindow {
                 }
             }
         }
-        // розмір виділення
+        // selection size
         Glass {
             visible: win.here && areaLayer.r.width > 0
             strong: true
@@ -129,7 +129,7 @@ PanelWindow {
         }
     }
 
-    // ---------- екран ----------
+    // ---------- screen ----------
     Rectangle {
         anchors.fill: parent
         visible: Shot.mode === "screen"
@@ -139,12 +139,12 @@ PanelWindow {
         MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: Shot.monitor = win.name; onDoubleClicked: Shot.capture() }
     }
 
-    // ---------- вікно ----------
+    // ---------- window ----------
     Item {
         anchors.fill: parent
         visible: Shot.mode === "window"
         Rectangle { anchors.fill: parent; color: "#80000000" }
-        MouseArea { anchors.fill: parent }        // клік повз вікна нічого не робить
+        MouseArea { anchors.fill: parent }        // a click outside windows does nothing
         Repeater {
             model: Shot.windows.filter(w => w.monitor === win.name)
             Rectangle {
@@ -159,7 +159,7 @@ PanelWindow {
                 color: "transparent"
                 border.width: sel ? 4 : wa.containsMouse ? 2 : 0
                 border.color: Theme.accent
-                // вибране вікно — без затемнення: показуємо шматок кадру поверх затемнення
+                // the chosen window is not dimmed: its piece of the frame is shown over the dimming
                 Image {
                     visible: wr.sel || wa.containsMouse
                     anchors.fill: parent
@@ -181,7 +181,7 @@ PanelWindow {
         }
     }
 
-    // ---------- панель керування ----------
+    // ---------- controls ----------
     Item {
         anchors.fill: parent
         visible: win.ui
@@ -236,11 +236,11 @@ PanelWindow {
                 Row {
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 4
-                    Seg { icon: "screenshot_region"; label: "Виділення"; on: Shot.mode === "area"; onPicked: Shot.mode = "area" }
-                    Seg { icon: "desktop_windows"; label: "Екран"; on: Shot.mode === "screen"; onPicked: Shot.mode = "screen" }
-                    Seg { icon: "web_asset"; label: "Вікно"; on: Shot.mode === "window"; onPicked: Shot.mode = "window" }
+                    Seg { icon: "screenshot_region"; label: "Area"; on: Shot.mode === "area"; onPicked: Shot.mode = "area" }
+                    Seg { icon: "desktop_windows"; label: "Screen"; on: Shot.mode === "screen"; onPicked: Shot.mode = "screen" }
+                    Seg { icon: "web_asset"; label: "Window"; on: Shot.mode === "window"; onPicked: Shot.mode = "window" }
                 }
-                // кнопка «зняти»: біле кільце, всередині — коло (червоне для відео)
+                // the capture button: a white ring around a circle (red for video)
                 Rectangle {
                     anchors.verticalCenter: parent.verticalCenter
                     width: 56; height: 56; radius: 28
@@ -276,7 +276,7 @@ PanelWindow {
             Label {
                 id: hint
                 anchors.centerIn: parent
-                text: "Enter — зняти · Esc — скасувати · S / C / W — режим · P — курсор" + (Shot.canRecord ? " · V — відео" : "")
+                text: "Enter: capture · Esc: cancel · S / C / W: mode · P: pointer" + (Shot.canRecord ? " · V: video" : "")
                 size: 12
             }
         }

@@ -7,10 +7,10 @@ import Quickshell.Widgets
 import Quickshell.Hyprland
 import "../../theme"
 
-// WindowDrop одного монітора: прозорий шар над вікнами. Курсор він ловить лише на «гачках» —
-// смугах посередині верхньої рамки видимих вікон. Там із рамки виростає виїмка (Notch): чим ближче курсор,
-// тим глибша, на повну — з крапкою всередині. Затиснути й тягнути (чи Super+ЛКМ у вікні) — вікно стає квадратом
-// і їде за курсором, а місце, куди стане, вже видно (DropPlace); клік — меню (DropMenu).
+// WindowDrop for one monitor: a transparent layer over the windows. It takes the cursor only on "hooks":
+// strips in the middle of the top border of visible windows. There the notch (Notch) grows out of the border, the
+// closer the cursor the deeper, with a dot inside at full depth. Press and drag (or Super+LMB in the window) and the window
+// becomes a square following the cursor, with its landing spot already shown (DropPlace); a click opens the menu (DropMenu).
 PanelWindow {
     id: win
     required property var modelData
@@ -26,9 +26,9 @@ PanelWindow {
     anchors { top: true; bottom: true; left: true; right: true }
     color: "transparent"
 
-    // ---------- гачки: { address, x, y, w, h, cx, cy } у координатах монітора ----------
-    // смуга навколо середини верхньої рамки: 14 px над нею (проміжок між вікнами) і 12 px у вікні.
-    // Присвоюємо лише коли справді змінились — інакше маска смикається й наведення скидається
+    // ---------- hooks: { address, x, y, w, h, cx, cy } in monitor coordinates ----------
+    // a strip around the middle of the top border: 14 px above it (the gap between windows) and 12 px inside the window.
+    // Assigned only when they really changed; otherwise the mask twitches and hover resets
     property var zones: []
     property string zonesKey: ""
     function updateZones() {
@@ -36,10 +36,10 @@ PanelWindow {
         const z = []
         wins.forEach((c, i) => {
             const cx = c.at[0] + c.size[0] / 2, top = c.at[1]
-            // середину рамки перекриває вікно вище — гачка немає
+            // a window above covers the middle of the border: no hook
             if (wins.slice(i + 1).some(o => cx >= o.at[0] && cx <= o.at[0] + o.size[0] && top >= o.at[1] - 8 && top <= o.at[1] + o.size[1])) return
             const w = Math.round(Math.min(200, c.size[0] * 0.5))
-            // біля верхнього краю екрана (повноекранне вікно) смуга лише всередині вікна
+            // at the top edge of the screen (a fullscreen window) the strip is only inside the window
             const y0 = Math.max(0, Math.round(top - oy - 14)), y1 = Math.round(top - oy + 12)
             z.push({ address: c.address, x: Math.round(cx - ox - w / 2), y: y0, w: w, h: y1 - y0,
                      cx: cx - ox, cy: top - oy - Drops.bandOf(c) / 2 })
@@ -64,11 +64,11 @@ PanelWindow {
     }
     Region { id: notchRegion; item: holder }
 
-    // ---------- вікно з виїмкою ----------
+    // ---------- the window with the notch ----------
     readonly property var dc: Drops.client(Drops.current)
     readonly property bool here: !!dc && !!mon && (Drops.drag ? Drops.drag.mon === mon.id : dc.monitor === mon.id)
-    // точка на рамці: посередині верхнього краю, зовнішній край рамки; коли вікна вже немає
-    // (меню закривається, виїмка ховається), лишається остання — анімація не стрибає в кут
+    // the point on the border: the middle of the top edge, the outer edge of the border; when the window is gone
+    // (the menu closes, the notch hides) the last one stays, so the animation does not jump to a corner
     property real ax: 0
     property real ay: 0
     property real band: 3
@@ -80,11 +80,11 @@ PanelWindow {
     }
     Binding { when: !!win.dc && !Drops.drag; win.band: Drops.bandOf(win.dc); restoreMode: Binding.RestoreNone }
 
-    // ---------- наближення: чим ближче курсор до середини рамки, тим глибша виїмка ----------
-    property real near: 0                         // 0…1, куди тягнеться глибина
+    // ---------- proximity: the closer the cursor to the middle of the border, the deeper the notch ----------
+    property real near: 0                         // 0…1, where the depth is heading
     property real depth: here && !Drops.drag ? (Drops.menuFor ? 1 : near) : 0
     Behavior on depth { SmoothedAnimation { velocity: 5 } }
-    property string mine: ""                      // наведення, яке поставив цей монітор
+    property string mine: ""                      // the hover this monitor set
     function proximity(x, y) {
         if (holder.visible && x >= holder.x && x < holder.x + holder.width && y >= holder.y && y < holder.y + holder.height)
             return { address: Drops.hovered, near: 1 }
@@ -94,7 +94,7 @@ PanelWindow {
         return { address: z.address, near: Math.max(0, Math.min(1, (1 - Math.hypot(dx, dy)) / 0.65)) }
     }
 
-    // увесь ввід шару: наведення, натиск/перетягування, клік повз меню
+    // all of the layer's input: hover, press/drag, a click outside the menu
     MouseArea {
         id: base
         anchors.fill: parent
@@ -104,7 +104,7 @@ PanelWindow {
             : win.resizeHere && win.quad ? (win.quad === "lt" || win.quad === "rb" ? Qt.SizeFDiagCursor : Qt.SizeBDiagCursor)
             : win.near > 0.5 ? Qt.OpenHandCursor : Qt.ArrowCursor
         property point press
-        property string pressed_: ""              // вікно, виїмку якого натиснули
+        property string pressed_: ""              // the window whose notch was pressed
         property bool menuWasOpen: false
         onPositionChanged: m => {
             if (Drops.resizing) {
@@ -113,7 +113,7 @@ PanelWindow {
                 return
             }
             if (pressed_ && (pressedButtons & Qt.LeftButton)) {
-                // далі курсор і відпускання веде Drops (сокет Hyprland)
+                // from here Drops follows the cursor and the release (Hyprland's socket)
                 if (!Drops.drag && Math.hypot(m.x - press.x, m.y - press.y) > 6) Drops.startDrag(pressed_, m.x + win.ox, m.y + win.oy)
                 return
             }
@@ -125,7 +125,7 @@ PanelWindow {
         onContainsMouseChanged: if (!containsMouse && !Drops.busy) { win.near = 0; leave.restart() }
         onPressed: m => {
             if (Drops.resizing) {
-                // у вікні — тягнути з цієї чверті; поза ним чи права кнопка — режим завершено
+                // inside the window: drag from this quarter; outside it or a right-click: the mode ends
                 const q = win.resizeHere && m.button === Qt.LeftButton ? win.quadAt(m.x, m.y) : ""
                 if (!q) { Drops.stopResize(); return }
                 win.quad = q
@@ -135,7 +135,7 @@ PanelWindow {
             }
             menuWasOpen = !!Drops.menuFor
             if (m.button === Qt.RightButton) { if (Drops.drag) Drops.cancelDrag(); return }
-            // запасний шлях: перетягування не закінчилось відпусканням (Hyprland його не передав) — ставимо кліком
+            // fallback: the drag did not end with a release (Hyprland did not pass it on), so a click drops
             if (Drops.drag) { Drops.endDrag(); return }
             pressed_ = !menuWasOpen && Drops.hovered && win.near > 0 ? Drops.hovered : ""
             press = Qt.point(m.x, m.y)
@@ -144,15 +144,15 @@ PanelWindow {
         onReleased: m => {
             if (Drops.resizing) { resizeTick.stop(); Drops.moveResize(m.x - press.x, m.y - press.y); Drops.endResize(); return }
             if (m.button !== Qt.LeftButton) return
-            // кінець перетягування ловить Hyprland (drop release); тут лише клік — меню
+            // Hyprland catches the end of a drag (drop release); here a click only opens the menu
             if (!Drops.drag && pressed_) Drops.openMenu(pressed_)
             pressed_ = ""
         }
-        onClicked: if (menuWasOpen) Drops.closeMenu()     // клік повз меню — закрити
+        onClicked: if (menuWasOpen) Drops.closeMenu()     // a click outside the menu closes it
         Keys.onEscapePressed: { if (Drops.drag) Drops.cancelDrag(); else if (Drops.resizing) Drops.stopResize() }
         Keys.onReturnPressed: if (Drops.resizing) Drops.stopResize()
     }
-    // зміну розміру шлемо не частіше ніж раз на кадр
+    // resize at most once per frame
     Timer {
         id: resizeTick
         property real dx: 0
@@ -170,7 +170,7 @@ PanelWindow {
         }
     }
 
-    // ---------- виїмка ----------
+    // ---------- notch ----------
     Item {
         id: holder
         visible: win.depth > 0.01 || (!!Drops.drag && win.here)
@@ -195,8 +195,8 @@ PanelWindow {
         band: win.band
         client: win.dc
         open: win.here && Drops.menuFor !== "" && Drops.menuFor === Drops.current
-        // не вилізти за край екрана
-        // «Стіл» стоїть у правій половині під панеллю й розкривається праворуч
+        // stay on screen
+        // Desk sits in the right half under the panel and expands to the right
         shift: {
             const l = w1 / 2 + 12
             const r = Math.max(w1 / 2, gap2 / 2 + deskOpenW) + 12
@@ -204,16 +204,16 @@ PanelWindow {
         }
     }
 
-    // ---------- вікно, яке тягнемо: квадрат із заокругленими кутами під курсором ----------
-    // кадр вікна знімаємо ще при наведенні: поки тягнемо, саме вікно сховане
+    // ---------- the dragged window: a rounded square under the cursor ----------
+    // the window's frame is captured already on hover: while dragging, the window itself is hidden
     readonly property string shotAddress: Drops.drag ? Drops.drag.address : Drops.hovered
     readonly property var toplevel: Hyprland.toplevels.values.find(t => "0x" + t.address.replace(/^0x/, "") === shotAddress) ?? null
     onToplevelChanged: if (toplevel && !Drops.drag) Qt.callLater(() => shot.captureFrame())
 
-    // ---------- режим зміни розміру: вікно трохи розмите, пунктирний хрест ділить його на чверті ----------
+    // ---------- resize mode: the window slightly blurred, a dashed cross splits it into quarters ----------
     readonly property var rc: Drops.resizing ? Drops.client(Drops.resizing.address) : null
     readonly property bool resizeHere: !!rc && !!mon && rc.monitor === mon.id
-    property string quad: ""                  // чверть під курсором: "lt", "rt", "lb", "rb"
+    property string quad: ""                  // quarter under the cursor: "lt", "rt", "lb", "rb"
     function quadAt(x, y) {
         if (!rc) return ""
         const rx = rc.at[0] - ox, ry = rc.at[1] - oy
@@ -231,7 +231,7 @@ PanelWindow {
         width: win.rc ? win.rc.size[0] : 0
         height: win.rc ? win.rc.size[1] : 0
 
-        // жива копія вікна, розмита не повністю
+        // a live copy of the window, partly blurred
         ClippingRectangle {
             anchors.fill: parent
             radius: 14
@@ -246,7 +246,7 @@ PanelWindow {
             }
             Rectangle { anchors.fill: parent; color: Qt.rgba(Theme.base.r, Theme.base.g, Theme.base.b, 0.15) }
         }
-        // чверть під курсором
+        // quarter under the cursor
         Rectangle {
             visible: win.quad !== ""
             x: win.quad[0] === "r" ? parent.width / 2 : 0
@@ -255,7 +255,7 @@ PanelWindow {
             height: parent.height / 2
             color: Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.12)
         }
-        // пунктир: хрест і рамка
+        // dashes: cross and frame
         Shape {
             anchors.fill: parent
             preferredRendererType: Shape.CurveRenderer
@@ -283,7 +283,7 @@ PanelWindow {
                 PathLine { x: 1; y: 1 }
             }
         }
-        // стрілки: куди рухаються сторони з кожної чверті
+        // arrows: where the sides move from each quarter
         Repeater {
             model: [{ q: "lt", icon: "north_west" }, { q: "rt", icon: "north_east" }, { q: "lb", icon: "south_west" }, { q: "rb", icon: "south_east" }]
             Rectangle {
@@ -299,7 +299,7 @@ PanelWindow {
                 Icon { anchors.centerIn: parent; name: parent.modelData.icon; font.pixelSize: 26; color: parent.on ? Theme.accentInk : Theme.ink }
             }
         }
-        // підказка посередині
+        // hint in the middle
         Rectangle {
             anchors.centerIn: parent
             width: hint.implicitWidth + 28
@@ -308,11 +308,11 @@ PanelWindow {
             color: Theme.glassStrong
             border.width: 1
             border.color: Theme.paneLine
-            Label { id: hint; anchors.centerIn: parent; text: "Тягніть із чверті — зміниться розмір · Esc — готово"; size: 12 }
+            Label { id: hint; anchors.centerIn: parent; text: "Drag from a quarter to resize · Esc: done"; size: 12 }
         }
     }
 
-    // плаваюче вікно нікого не розсуває — його місце малюємо самі: напівпрозоре порожнє вікно там, де стане
+    // a floating window pushes nothing aside, so we draw its place ourselves: a translucent empty window where it will land
     Rectangle {
         readonly property var d: Drops.drag
         visible: !!d && d.floating
@@ -330,7 +330,7 @@ PanelWindow {
         id: ghost
         property var r0: ({ x: 0, y: 0, w: 1, h: 1 })
         property real t: 0
-        // де тримаємо: та сама точка квадрата, що й вікна (за виїмку — верх посередині)
+        // where it is held: the same point of the square as of the window (by the notch: top middle)
         property real fx: 0.5
         property real fy: 0
         readonly property real side: Math.max(150, Math.min(260, Math.min(r0.w, r0.h) * 0.45))
@@ -350,7 +350,7 @@ PanelWindow {
                 id: shot
                 captureSource: win.toplevel ? win.toplevel.wayland : null
                 live: false
-                // заповнити квадрат, зберігши пропорції (обрізаючи зайве)
+                // fill the square keeping the aspect ratio (cropping the rest)
                 readonly property real k: sourceSize.width > 0 ? Math.max(ghost.width / sourceSize.width, ghost.height / sourceSize.height) : 1
                 width: sourceSize.width * k
                 height: sourceSize.height * k
@@ -370,7 +370,7 @@ PanelWindow {
             border.width: 2
             border.color: Theme.accent
         }
-        Notch {                                     // виїмка, за яку тримаємо
+        Notch {                                     // the notch it is held by
             anchors.horizontalCenter: parent.horizontalCenter
             y: 0
             band: 2

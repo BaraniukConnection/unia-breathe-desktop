@@ -1,6 +1,6 @@
 import QtQuick
 
-// Текст на склі: шрифт Manrope, м'яка тінь (як text-shadow у макеті).
+// Text on glass: Manrope with a soft shadow (like text-shadow in the mockup).
 Text {
     property int size: Theme.fontSize
     property int weight: Font.DemiBold

@@ -3,7 +3,7 @@ import QtQuick.Controls
 import "../../theme"
 import "../../services"
 
-// Папка: назва (клік — перейменувати) і сітка плиток 8 клітинок завширшки.
+// A folder: its name (click to rename) and a tile grid 8 cells wide.
 Column {
     id: root
     required property var group
@@ -30,7 +30,7 @@ Column {
         MouseArea {
             id: head
             anchors.fill: parent
-            anchors.rightMargin: 34                  // не заходимо на кнопку ⋯
+            anchors.rightMargin: 34                  // keep clear of the ⋯ button
             visible: !edit.visible
             hoverEnabled: true
             preventStealing: true
@@ -48,7 +48,7 @@ Column {
             onCanceled: if (dragging) { root.panel.cancelFolderDrag(); dragging = false }
             onClicked: if (!dragging) root.startEdit()
         }
-        Icon {   // підказка, що за заголовок можна тягнути
+        Icon {   // a hint that the header can be dragged
             visible: head.containsMouse && !edit.visible
             x: title.implicitWidth + 8
             anchors.verticalCenter: parent.verticalCenter
@@ -56,7 +56,7 @@ Column {
             font.pixelSize: 16
             color: Theme.inkMuted
         }
-        // меню папки: ⋯ праворуч у заголовку
+        // folder menu: ⋯ on the right of the header
         IconButton {
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
@@ -89,7 +89,7 @@ Column {
         width: Menu.cols * 48 + (Menu.cols - 1) * 8
         height: Math.max(1, Menu.rowsOf(root.group.tiles)) * 56 - 8
 
-        // порожня папка: підказка й рамка, куди класти плитки
+        // an empty folder: a hint and a frame to drop tiles into
         Rectangle {
             visible: root.empty
             anchors.fill: parent
@@ -97,10 +97,10 @@ Column {
             color: "transparent"
             border.width: 1
             border.color: Theme.paneLine
-            Label { anchors.centerIn: parent; text: "Перетягни сюди плитки"; size: 12; muted: true }
+            Label { anchors.centerIn: parent; text: "Drag tiles here"; size: 12; muted: true }
         }
 
-        // місце, куди впаде плитка, яку тягнуть
+        // where the dragged tile will land
         Rectangle {
             readonly property var s: root.panel.dropSlot
             visible: !!s && !!s.size && s.group === root.group.id

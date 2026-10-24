@@ -4,7 +4,7 @@ import Quickshell.Widgets
 import "../theme"
 import "../services"
 
-// Обкладинка, назва бігучим рядком і ⏮ ⏸ ⏭. Клік по обкладинці/назві — медіацентр.
+// Cover, a scrolling title and ⏮ ⏸ ⏭. A click on the cover or title opens the media centre.
 Bubble {
     id: root
     required property var screen

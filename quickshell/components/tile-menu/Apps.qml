@@ -5,19 +5,19 @@ import Quickshell.Hyprland
 import "../settings-box"
 import "../../services"
 
-// Встановлені програми (з .desktop-файлів), пошук і запуск. «Налаштування» оболонки — теж програма.
+// Installed apps (from .desktop files), search and launching. The shell's Settings is an app too.
 Singleton {
     id: root
-    readonly property var settingsEntry: ({ id: "unia-settings", name: "Налаштування", genericName: "Unia Breathe",
-                                            icon: "preferences-system", categories: ["Settings"], keywords: ["settings", "параметри"] })
+    readonly property var settingsEntry: ({ id: "unia-settings", name: "Settings", genericName: "Unia Breathe Desktop",
+                                            icon: "preferences-system", categories: ["Settings"], keywords: ["settings", "preferences"] })
     readonly property var list: [settingsEntry, ...DesktopEntries.applications.values.filter(e => !e.noDisplay)]
-        .sort((a, b) => a.name.localeCompare(b.name, "uk"))
+        .sort((a, b) => a.name.localeCompare(b.name))
     readonly property var ids: list.map(e => e.id)
 
     function byId(id) { return id === "unia-settings" ? settingsEntry : list.find(e => e.id === id) ?? null }
     function icon(e) { return e ? Quickshell.iconPath(e.icon, "application-x-executable") : "" }
 
-    // програми, що тримають одне головне вікно: якщо вже відкриті — одразу переходимо до них
+    // apps that keep one main window: if already open, go straight to it
     readonly property var singleKeys: ["claude", "steam", "telegram", "discord", "spotify", "heroic", "lutris", "obsidian", "slack", "signal"]
     function single(e) { return singleKeys.some(k => e.id.toLowerCase().includes(k)) }
 
@@ -28,7 +28,7 @@ Singleton {
         const open = Windows.ofEntry(e)
         if (open.length && single(e)) { Windows.focus(open[0]); return }
         e.execute()
-        // решта: якщо за 2,5 с нового вікна не з'явилось (програма лише «прокинулась») — показуємо наявне
+        // the rest: if no new window shows up within 2.5 s (the app only woke up), show the existing one
         if (open.length) { pending = { e: e, before: open.map(w => w.address) }; noNewWindow.restart() }
     }
     property var pending: null
@@ -44,7 +44,7 @@ Singleton {
         }
     }
 
-    // пошук: збіг з початку назви важить найбільше, далі — з початку слова, далі — будь-де (назва, опис, ключові слова)
+    // search: a match at the start of the name weighs most, then at the start of a word, then anywhere (name, description, keywords)
     function search(q) {
         q = q.trim().toLowerCase()
         if (!q) return []
@@ -56,10 +56,10 @@ Singleton {
                   : name.includes(q) ? 1.5 : extra.includes(q) ? 1 : 0
             if (s > 0) scored.push({ e: e, s: s })
         }
-        return scored.sort((a, b) => b.s - a.s || a.e.name.localeCompare(b.e.name, "uk")).map(x => x.e)
+        return scored.sort((a, b) => b.s - a.s || a.e.name.localeCompare(b.e.name)).map(x => x.e)
     }
 
-    // «жива» плитка: що показувати замість іконки
+    // a live tile: what to show instead of the icon
     function liveKind(e) {
         if (!e || !e.categories) return ""
         const c = e.categories

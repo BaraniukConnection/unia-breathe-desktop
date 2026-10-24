@@ -2,10 +2,10 @@ import QtQuick
 import QtQuick.Shapes
 import "../../theme"
 
-// Виїмка, що виростає з рамки донизу — як «крапля» під фронтальну камеру.
-// y = 0 — зовнішній край рамки (band px завтовшки), посередині ширини; від y = band — вікно.
-// depth — глибина (0…1, ближче курсор — глибше); на повну всередині з'являється крапка.
-// dotFall — на скільки px крапка опустилась (відриваючись у меню).
+// A notch growing down out of the border, like a front-camera drop.
+// y = 0 is the outer edge of the border (band px thick), in the middle of the width; from y = band down is the window.
+// depth: 0…1, deeper as the cursor gets closer; at full depth a dot appears inside.
+// dotFall: how many px the dot has dropped (as it breaks off into the menu).
 Item {
     id: root
     property real depth: 1
@@ -13,9 +13,9 @@ Item {
     property real dotFall: 0
     property real dotOpacity: Math.max(0, Math.min(1, (depth - 0.75) / 0.25))
     property color color: Theme.accent
-    readonly property real notchW: 28 + 24 * depth                 // ширина біля рамки (з плечима)
-    readonly property real notchD: 18 * depth                      // глибина під рамкою
-    readonly property real dotY: band + 18 * 0.5 + dotFall           // центр крапки
+    readonly property real notchW: 28 + 24 * depth                 // width at the border (with shoulders)
+    readonly property real notchD: 18 * depth                      // depth below the border
+    readonly property real dotY: band + 18 * 0.5 + dotFall           // centre of the dot
     implicitWidth: 60
     implicitHeight: band + 18 + 4
 
@@ -32,9 +32,9 @@ Item {
             fillColor: root.color
             strokeColor: "transparent"
             strokeWidth: 0
-            // від рамки — пологе плече, круті боки, кругле дно (і дзеркально назад)
-            // починаємо від внутрішнього краю рамки (з напуском 2 px у її товщу): вертикальні стінки в товщі рамки
-            // дали б помітні шви — колір рамки градієнтний
+            // from the border: a gentle shoulder, steep sides, a round bottom (and mirrored back)
+            // start at the inner edge of the border (overlapping 2 px into it): vertical walls inside the border
+            // would leave visible seams, since the border colour is a gradient
             startX: shape.cx - shape.hw; startY: Math.max(0, shape.b - 2)
             PathCubic {
                 x: shape.cx; y: shape.d
@@ -48,7 +48,7 @@ Item {
             }
         }
     }
-    // крапка у виїмці — біла, без відблиску
+    // the dot in the notch: white, no highlight
     Rectangle {
         width: 7; height: 7; radius: 3.5
         x: root.width / 2 - 3.5

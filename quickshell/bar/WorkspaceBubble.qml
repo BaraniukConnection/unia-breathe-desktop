@@ -4,13 +4,13 @@ import Quickshell.Hyprland
 import "../theme"
 import "../services"
 
-// «Стіл · ①» — номер столу цього монітора. Колесо — сусідній стіл, клік — список столів.
+// "Desk · ①": this monitor's desk number. The wheel goes to the next desk, a click opens the desk list.
 Bubble {
     id: root
     required property var screen
     readonly property var monitor: Hyprland.monitorFor(screen)
     readonly property var ws: monitor ? monitor.activeWorkspace : null
-    // звичайний стіл — номер; іменований (id < 0) — його назва
+    // a regular desk shows its number; a named one (id < 0) its name
     readonly property string number: !ws ? "" : ws.id > 0 ? String(ws.id) : ws.name
     popup: "ws"
     popupScreen: screen
@@ -24,7 +24,7 @@ Bubble {
     Row {
         height: parent.height
         spacing: 10
-        Label { text: "Стіл"; size: 13; muted: true; anchors.verticalCenter: parent.verticalCenter }
+        Label { text: "Desk"; size: 13; muted: true; anchors.verticalCenter: parent.verticalCenter }
         Pill {
             width: Math.max(32, numLabel.implicitWidth + 20)
             on: root.active

@@ -5,14 +5,14 @@ import Quickshell.Io
 import Quickshell.Hyprland
 import "../../services"
 
-// Сценарії: список (unia-scenario list), який відкрито на якому столі, запуск/збереження/видалення.
+// Scenarios: the list (unia-scenario list), which one is open on which desk, open / save / delete.
 Singleton {
     id: root
     readonly property string home: Quickshell.env("HOME")
     readonly property string bin: home + "/.local/bin/unia-scenario"
     property var list: []              // [{ name, windows: [{ class, workspace, monitor, floating, at, size }] }]
     property var state: ({})           // "1" → "OxygenDev"
-    property string loading: ""        // сценарій, що зараз відкривається
+    property string loading: ""        // the scenario being opened right now
 
     function refresh() { lister.running = true }
     function nameFor(wsId) { return state[String(wsId)] ?? "" }
@@ -25,8 +25,8 @@ Singleton {
     function save(name) { runner.command = [bin, "save", name]; runner.running = true }
     function remove(name) { runner.command = [bin, "delete", name]; runner.running = true }
 
-    // чи змінився набір програм на столі відносно сценарію (класи вікон; розташування не важить,
-    // згорнуте вікно вважається на своєму столі)
+    // whether the desk's set of apps differs from the scenario (window classes; positions do not matter,
+    // a minimized window counts as on its desk)
     function modified(wsId) {
         const sc = find(nameFor(wsId))
         if (!sc) return false
@@ -37,9 +37,9 @@ Singleton {
         return want.join() !== have.join()
     }
 
-    // змінилась програма на столі — сценарій там більше не діє («Порожній»)
+    // an app on the desk changed: the scenario no longer applies there ("Empty")
     function dropChanged() {
-        // поки вікно тягнуть (WindowDrop), набір програм столу лише тимчасово інший
+        // while a window is dragged (WindowDrop) the desk's apps differ only for a moment
         if (loading !== "" || !settled || Windows.list.length === 0 || Windows.moving) return
         const s = Object.assign({}, state)
         let changed = false
@@ -49,7 +49,7 @@ Singleton {
         }
         if (changed) { state = s; stateFile.setText(JSON.stringify(s)) }
     }
-    // перші секунди після старту список вікон ще неповний — не чіпаємо стан, щоб не скинути помилково
+    // in the first seconds after start the window list is incomplete: leave the state alone so it is not reset by mistake
     property bool settled: false
     Timer { running: true; interval: 4000; onTriggered: { root.settled = true; root.dropChanged() } }
     Connections { target: Windows; function onListChanged() { dropCheck.restart() } function onMovingChanged() { dropCheck.restart() } }

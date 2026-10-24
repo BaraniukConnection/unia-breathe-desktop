@@ -2,7 +2,7 @@ import QtQuick
 import Quickshell.Widgets
 import "../../services"
 
-// Іконка програми з теми іконок (за id .desktop-файлу).
+// An app icon from the icon theme (by .desktop file id).
 IconImage {
     property string app
     readonly property var entry: Apps.byId(app)
