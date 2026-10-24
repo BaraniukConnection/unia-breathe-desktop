@@ -10,7 +10,7 @@ ApplicationWindow {
     minimumWidth: 640
     minimumHeight: 420
     visible: true
-    title: (native.isAdmin ? qsTr("[Administrator] ") : "") + "Loaf - " + (activeView === "settings"
+    title: (native.isAdmin ? qsTr("[Administrator] ") : "") + "Oxygen Files - " + (activeView === "settings"
         ? qsTr("Settings")
         : activeView === "pc" ? (core.hostname || qsTr("This PC"))
         : (engine.is_searching_everywhere ? qsTr("Search") : engine.current_dir_name))
@@ -773,7 +773,7 @@ ApplicationWindow {
 
     function settingsTabName() {
         var names = [qsTr("Interface"), qsTr("Behavior"), qsTr("Accessibility"),
-                     qsTr("Experimental"), qsTr("About Loaf")];
+                     qsTr("Experimental"), qsTr("About")];
         return names[settingsView.activeTab] || names[0];
     }
 

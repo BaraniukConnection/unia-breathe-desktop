@@ -14,6 +14,7 @@
 #include <QMimeDatabase>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QQuickWindow>
 #include <QTranslator>
 #include <QUrl>
 
@@ -268,8 +269,10 @@ void set_application_identity(rust::Str version)
     QCoreApplication::setApplicationVersion(toQString(version));
     QCoreApplication::setApplicationName(QStringLiteral("loaf"));
     QCoreApplication::setOrganizationName(QStringLiteral("loaf"));
-    QGuiApplication::setApplicationDisplayName(QStringLiteral("Loaf"));
-    QGuiApplication::setDesktopFileName(QStringLiteral("loaf"));
+    QGuiApplication::setApplicationDisplayName(QStringLiteral("Oxygen Files"));
+    QGuiApplication::setDesktopFileName(QStringLiteral("oxygen-files"));
+    // Translucent windows (Theme.glassOpacity): the compositor blurs what is behind them.
+    QQuickWindow::setDefaultAlphaBuffer(true);
 }
 
 } // namespace loaf

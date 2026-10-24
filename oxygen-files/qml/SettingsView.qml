@@ -23,7 +23,8 @@ Item {
     }
 
     readonly property bool card1Match: matchesQuery("theme appearance light dark auto mode color scheme")
-    readonly property bool card2Match: matchesQuery("theme palette accent colors wallpaper catppuccin nord tokyonight gruvbox rosepine amber lavender violet ricing")
+    readonly property bool card2Match: matchesQuery("theme palette accent colors unia emerald wallpaper catppuccin nord tokyonight gruvbox rosepine amber lavender violet ricing")
+    readonly property bool card19Match: matchesQuery("transparency opacity glass blur frosted background panels unia")
     readonly property bool card4Match: matchesQuery("icon style vector phosphor system adwaita desktop theme")
     readonly property bool card5Match: matchesQuery("phosphor weight variant thin light regular bold fill duotone stroke thickness")
 
@@ -33,7 +34,7 @@ Item {
     readonly property bool card9Match: matchesQuery("disambiguate duplicate names parent folder prefix search")
 
     readonly property bool card10Match: matchesQuery("experimental icon styles adwaita advanced archives compress cpio tar formats")
-    readonly property bool card11Match: matchesQuery("about loaf version musa orbitos author credits")
+    readonly property bool card11Match: matchesQuery("about oxygen files loaf version musa orbitos author credits")
     readonly property bool card12Match: matchesQuery("experimental pc customization dashboard layout sections this pc")
     readonly property bool card13Match: matchesQuery("performance low power mode battery old slow computer animations effects gpu")
     readonly property bool card14Match: matchesQuery("reduce motion animations accessibility")
@@ -43,6 +44,7 @@ Item {
     readonly property bool card18Match: matchesQuery("search file contents text inside")
 
     readonly property int interfaceMatches: (card1Match ? 1 : 0) + (card2Match ? 1 : 0) + (card4Match ? 1 : 0) + (card5Match ? 1 : 0)
+        + (card19Match ? 1 : 0)
     readonly property int behaviorMatches: (card6Match ? 1 : 0) + (card7Match ? 1 : 0) + (card8Match ? 1 : 0) + (card9Match ? 1 : 0)
         + (card16Match ? 1 : 0) + (card17Match ? 1 : 0) + (card18Match ? 1 : 0)
     readonly property int accessibilityMatches: (card13Match ? 1 : 0) + (card14Match ? 1 : 0) + (card15Match ? 1 : 0)
@@ -123,7 +125,7 @@ Item {
                             { name: "Behavior", iconName: "gear" },
                             { name: "Accessibility", iconName: "person-arms-spread" },
                             { name: "Experimental", iconName: "sparkle" },
-                            { name: "About Loaf", iconName: "bread" }
+                            { name: "About", iconName: "info" }
                         ]
 
                         delegate: Item {
@@ -210,7 +212,7 @@ Item {
                     Text {
                         text: settingsView.searchQuery.length > 0
                             ? "Settings"
-                            : (settingsView.activeTab === 0 ? "Interface" : (settingsView.activeTab === 1 ? "Behavior" : (settingsView.activeTab === 2 ? "Accessibility" : (settingsView.activeTab === 3 ? "Experimental" : "About Loaf"))))
+                            : (settingsView.activeTab === 0 ? "Interface" : (settingsView.activeTab === 1 ? "Behavior" : (settingsView.activeTab === 2 ? "Accessibility" : (settingsView.activeTab === 3 ? "Experimental" : "About"))))
                         color: theme.textMain
                         font.pixelSize: theme.fs(26)
                         font.bold: true
@@ -459,6 +461,7 @@ Item {
 
                                     Repeater {
                                         model: [
+                                            { id: "unia", label: qsTr("Unia") },
                                             { id: "wallpaper", label: qsTr("Wallpaper") },
                                             { id: "lavender", label: qsTr("Loaf Violet") },
                                             { id: "amber", label: qsTr("Loaf Amber") },
@@ -472,7 +475,7 @@ Item {
                                         delegate: Item {
                                             width: 126; height: 38
 
-                                            readonly property var swatch: theme.palettes[modelData.id] ? theme.palettes[modelData.id] : theme.palettes["lavender"]
+                                            readonly property var swatch: theme.palettes[modelData.id] ? theme.palettes[modelData.id] : theme.palettes["unia"]
 
                                             Rectangle {
                                                 anchors.fill: parent
@@ -516,6 +519,19 @@ Item {
                                         }
                                     }
                                 }
+                            }
+                        }
+
+                        // 3. Transparency of the window ground and panels (Hyprland blurs behind them)
+                        SettingCard {
+                            visible: settingsView.searchQuery.length === 0 || settingsView.card19Match
+                            title: qsTr("Transparency")
+                            subtitle: qsTr("Frosted glass for the window and its panels; menus and dialogs stay solid")
+                            LoafSegmented {
+                                Layout.preferredWidth: 300
+                                options: [{ value: 1.0, label: qsTr("Off") }, { value: 0.75, label: qsTr("Low") }, { value: 0.55, label: qsTr("Medium") }, { value: 0.35, label: qsTr("Unia") }]
+                                value: theme.glassOpacity
+                                onSelected: function(v) { theme.glassOpacity = v; }
                             }
                         }
 
@@ -1192,13 +1208,13 @@ Item {
                                 Rectangle {
                                     width: 52; height: 52; radius: theme.radiusM
                                     color: theme.primaryContainer
-                                    LoafIcon { anchors.centerIn: parent; name: "bread"; size: 28; color: theme.primaryContainerFg }
+                                    Image { anchors.centerIn: parent; source: "qrc:/loaf/oxygen-files.svg"; width: 30; height: 30; sourceSize.width: 60; sourceSize.height: 60 }
                                 }
 
                                 ColumnLayout {
                                     spacing: 4
-                                    Text { text: qsTr("Loaf v") + Qt.application.version; color: theme.textMain; font.pixelSize: theme.fs(16); font.bold: true }
-                                    Text { text: qsTr("A beautiful and fast Rust-based Material 3 Expressive file manager for Linux."); color: theme.textMuted; font.pixelSize: theme.fs(12) }
+                                    Text { text: qsTr("Oxygen Files v") + Qt.application.version; color: theme.textMain; font.pixelSize: theme.fs(16); font.bold: true }
+                                    Text { text: qsTr("The Oxygen Theme file manager: a fork of Loaf, the Rust-based Material 3 Expressive file manager for Linux."); color: theme.textMuted; font.pixelSize: theme.fs(12) }
                                     RowLayout {
                                         spacing: 6
                                         LoafIcon { name: "github-logo"; size: 14; color: theme.primary }

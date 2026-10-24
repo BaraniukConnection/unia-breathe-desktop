@@ -153,7 +153,7 @@ Rectangle {
                     height: 44
 
                     // Two marks that hand over to each other: no spinning, the
-                    // sidebar glyph fades out while the Loaf mark fades in.
+                    // sidebar glyph fades out while the Oxygen Files mark fades in.
                     LoafIcon {
                         anchors.centerIn: parent
                         name: "sidebar-simple"
@@ -167,10 +167,23 @@ Rectangle {
 
                     LoafIcon {
                         anchors.centerIn: parent
-                        name: headerToggleItem.isHovered ? "sidebar" : "bread"
+                        name: "sidebar"
                         size: 20
                         color: theme.primary
-                        opacity: rail.expanded ? 1.0 : 0.0
+                        opacity: rail.expanded && headerToggleItem.isHovered ? 1.0 : 0.0
+                        scale: rail.expanded ? (headerToggleItem.isHovered ? 1.10 : 1.0) : 0.65
+                        Behavior on opacity { enabled: theme.animate; NumberAnimation { duration: 170; easing.type: Easing.OutCubic } }
+                        Behavior on scale { enabled: theme.animate; SpringAnimation { spring: 4.0; damping: 0.3 } }
+                    }
+
+                    Image {
+                        anchors.centerIn: parent
+                        source: "qrc:/loaf/oxygen-files.svg"
+                        width: 22
+                        height: 22
+                        sourceSize.width: 44
+                        sourceSize.height: 44
+                        opacity: rail.expanded && !headerToggleItem.isHovered ? 1.0 : 0.0
                         scale: rail.expanded ? (headerToggleItem.isHovered ? 1.10 : 1.0) : 0.65
                         Behavior on opacity { enabled: theme.animate; NumberAnimation { duration: 170; easing.type: Easing.OutCubic } }
                         Behavior on scale { enabled: theme.animate; SpringAnimation { spring: 4.0; damping: 0.3 } }
@@ -186,7 +199,7 @@ Rectangle {
                         x: rail.expanded ? 0 : -10
                         Behavior on x { enabled: theme.animate; SpringAnimation { spring: 3.5; damping: 0.35 } }
                     }
-                    text: headerToggleItem.isHovered ? qsTr("Collapse") : "Loaf"
+                    text: headerToggleItem.isHovered ? qsTr("Collapse") : "Oxygen Files"
                     color: headerToggleItem.isHovered ? theme.primary : theme.textMain
                     font.pixelSize: theme.fs(14)
                     font.bold: !headerToggleItem.isHovered

@@ -5,7 +5,7 @@ Item {
     visible: false
 
     property string themeMode: "auto" // "auto", "light", "dark"
-    property string accentName: "wallpaper" // "wallpaper", "lavender", "amber", "catppuccin", "nord", "tokyonight", "gruvbox", "rosepine"
+    property string accentName: "unia" // "unia", "wallpaper", "lavender", "amber", "catppuccin", "nord", "tokyonight", "gruvbox", "rosepine"
     property string iconSource: "phosphor" // "phosphor" or "system"
     property string phosphorWeight: "regular" // "regular", "bold", "fill", "duotone", "light", "thin"
     property string dragAction: "select" // "select" (selection box) or "scroll" (pan view)
@@ -90,6 +90,45 @@ Item {
     }
 
     readonly property var palettes: ({
+        // Unia Breathe (Oxygen Theme family): deep emerald ground, emerald accent.
+        // Dark follows the shell (quickshell/theme/Theme.qml), light follows Vision DesignSystem.
+        "unia": {
+            darkBg: "#0b2a26",
+            darkSurfaceLowest: "#082320",
+            darkSurfaceLow: "#0e302b",
+            darkSurface: "#113631",
+            darkSurfaceHigh: "#173f39",
+            darkSurfaceHighest: "#1e4a43",
+            darkPrimary: "#10b981",
+            darkFg: "#04231a",
+            darkContainer: "#11573f",
+            darkContainerFg: "#c8f5e3",
+            darkSecondaryContainer: "#1a463e",
+            darkSecondaryContainerFg: "#eaf6f0",
+            darkTertiaryContainer: "#23453f",
+            darkTextMain: "#eaf6f0",
+            darkTextMuted: "#bfe3d5",
+            darkOutline: "#6f9488",
+            darkOutlineVariant: "#2b524a",
+
+            lightBg: "#f2f8f5",
+            lightSurfaceLowest: "#ffffff",
+            lightSurfaceLow: "#ebf4f0",
+            lightSurface: "#e3eee9",
+            lightSurfaceHigh: "#d9e7e1",
+            lightSurfaceHighest: "#cfe0d9",
+            lightPrimary: "#35775f",
+            lightFg: "#ffffff",
+            lightContainer: "#c9efe0",
+            lightContainerFg: "#10221c",
+            lightSecondaryContainer: "#d6ebe2",
+            lightSecondaryContainerFg: "#10221c",
+            lightTertiaryContainer: "#e0eedf",
+            lightTextMain: "#10221c",
+            lightTextMuted: "#46605a",
+            lightOutline: "#6f8a82",
+            lightOutlineVariant: "#bfd3cb"
+        },
         "wallpaper": {
             darkBg: (wallpaperData && wallpaperData.background) ? wallpaperData.background : "#121214",
             darkSurfaceLowest: (wallpaperData && wallpaperData.surface_container_lowest) ? wallpaperData.surface_container_lowest : ((wallpaperData && wallpaperData.background) ? wallpaperData.background : "#0d0e0f"),
@@ -1911,16 +1950,23 @@ Item {
         "": "\uee82"
     })
 
-    readonly property var activePalette: palettes[accentName] || palettes["lavender"]
+    readonly property var activePalette: palettes[accentName] || palettes["unia"]
+
+    // Frosted glass: the window ground and the panels resting on it are translucent and
+    // Hyprland blurs what is behind the window. 1.0 is opaque; Unia's standard glass is 0.35.
+    // Light grounds stay denser so dark text keeps its contrast.
+    property real glassOpacity: 0.35
+    readonly property real glassAlpha: isDark ? glassOpacity : glassOpacity + (1 - glassOpacity) * 0.4
+    function glass(c) { return Qt.alpha(c, glassAlpha) }
 
     // Background & Surfaces
-    readonly property color background: isDark ? activePalette.darkBg : activePalette.lightBg
+    readonly property color background: glass(isDark ? activePalette.darkBg : activePalette.lightBg)
     readonly property color surfaceDim: isDark ? activePalette.darkBg : activePalette.lightSurfaceLow
     readonly property color surface: isDark ? activePalette.darkBg : activePalette.lightBg
     readonly property color surfaceBright: isDark ? activePalette.darkSurfaceHighest : activePalette.lightSurfaceLowest
-    readonly property color surfaceContainerLowest: isDark ? activePalette.darkSurfaceLowest : activePalette.lightSurfaceLowest
-    readonly property color surfaceContainerLow: isDark ? activePalette.darkSurfaceLow : activePalette.lightSurfaceLow
-    readonly property color surfaceContainer: isDark ? activePalette.darkSurface : activePalette.lightSurface
+    readonly property color surfaceContainerLowest: glass(isDark ? activePalette.darkSurfaceLowest : activePalette.lightSurfaceLowest)
+    readonly property color surfaceContainerLow: glass(isDark ? activePalette.darkSurfaceLow : activePalette.lightSurfaceLow)
+    readonly property color surfaceContainer: glass(isDark ? activePalette.darkSurface : activePalette.lightSurface)
     readonly property color surfaceContainerHigh: isDark ? activePalette.darkSurfaceHigh : activePalette.lightSurfaceHigh
     readonly property color surfaceContainerHighest: isDark ? activePalette.darkSurfaceHighest : activePalette.lightSurfaceHighest
 
@@ -2022,6 +2068,8 @@ Item {
         }
         value = readSetting("hideTrashWhenEmpty");
         if (value.length > 0) hideTrashWhenEmpty = (value === "true");
+        value = readSetting("glassOpacity");
+        if (value.length > 0) glassOpacity = parseFloat(value) || 1.0;
         loaded = true;
     }
 
@@ -2052,4 +2100,5 @@ Item {
     onContextMenuModeChanged: writeSetting("contextMenuMode", contextMenuMode)
     onDisabledMenuItemsChanged: writeSetting("disabledMenuItems", JSON.stringify(disabledMenuItems))
     onHideTrashWhenEmptyChanged: writeSetting("hideTrashWhenEmpty", hideTrashWhenEmpty)
+    onGlassOpacityChanged: writeSetting("glassOpacity", glassOpacity)
 }

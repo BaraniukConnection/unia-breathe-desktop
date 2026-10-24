@@ -2134,6 +2134,8 @@ impl cxx_qt::Initialize for qobject::LoafCore {
         self.as_mut().load_places();
         self.as_mut().refresh_frequent_dirs();
         self.as_mut().update_trash_empty();
+        // The device watcher only fires on changes, so list the drives once at start.
+        self.as_mut().load_drives();
         // Warm the application cache off the UI thread.
         std::thread::spawn(|| {
             let _ = apps::all();

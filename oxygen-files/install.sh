@@ -7,8 +7,9 @@ DIR="$(cd "$(dirname "$0")" && pwd)"
 
 [ -x "$DIR/target/release/loaf" ] || "$DIR/build.sh"
 
-# прибрати попередню назву (Loaf Breathe - FM)
+# прибрати попередню назву (Loaf Breathe - FM) і значки Loaf
 rm -f ~/.local/bin/loaf-breathe ~/.local/share/applications/loaf-breathe-fm.desktop
+rm -f ~/.local/share/icons/hicolor/*/apps/loaf.png ~/.local/share/icons/hicolor/scalable/apps/loaf.svg
 
 mkdir -p ~/.local/bin ~/.local/share/applications ~/.local/share/icons/hicolor
 ln -sfn "$DIR/target/release/loaf" ~/.local/bin/oxygen-files

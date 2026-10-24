@@ -4,8 +4,9 @@ import QtQuick.Layouts
 import app.loaf
 
 // PC Dashboard: hostname header with device type icon, plus reorderable /
-// customizable sections (places, frequent, internal storage summary + drives,
-// external drives). Drive rows are rendered with the shared DriveCard; all
+// customizable sections (places, disks, frequent, internal storage summary +
+// drives, external drives). Disks lists every drive as a DiskCard to pick one
+// to open; the internal/external storage sections start hidden. Drive rows are rendered with the shared DriveCard; all
 // controls come from the shared component library (SectionHeader, LoafButton,
 // LoafCard, UsageBar, LoafMenu, LoafTextPrompt).
 Item {
@@ -13,9 +14,9 @@ Item {
 
     // ---- customization model -----------------------------------------------
 
-    readonly property var knownSections: ["places", "frequent", "internal", "external"]
+    readonly property var knownSections: ["places", "disks", "frequent", "internal", "external"]
 
-    property var sectionOrder: ["places", "frequent", "internal", "external"]
+    property var sectionOrder: ["places", "disks", "frequent", "internal", "external"]
     property var sectionConfig: pcView.defaultConfig()
     property bool isCustomizing: false
 
@@ -30,9 +31,10 @@ Item {
     function defaultConfig() {
         return {
             "places": { visible: true, view: "grid" },
+            "disks": { visible: true, view: "cards" },
             "frequent": { visible: true, view: "carousel" },
-            "internal": { visible: true, view: "cards" },
-            "external": { visible: true, view: "cards" }
+            "internal": { visible: false, view: "cards" },
+            "external": { visible: false, view: "cards" }
         };
     }
 
@@ -44,9 +46,12 @@ Item {
                     out.push(saved[i]);
             }
         }
+        // A section missing from a saved order goes right after its default predecessor.
         for (var j = 0; j < pcView.knownSections.length; j++) {
-            if (out.indexOf(pcView.knownSections[j]) === -1)
-                out.push(pcView.knownSections[j]);
+            if (out.indexOf(pcView.knownSections[j]) === -1) {
+                var after = j > 0 ? out.indexOf(pcView.knownSections[j - 1]) : -1;
+                out.splice(after + 1, 0, pcView.knownSections[j]);
+            }
         }
         return out;
     }
@@ -83,6 +88,8 @@ Item {
             return pcView.externalDrives.length > 0;
         if (secKey === "internal")
             return pcView.internalDrives.length > 0;
+        if (secKey === "disks")
+            return pcView.allDrives.length > 0;
         return true;
     }
 
@@ -389,9 +396,11 @@ Item {
                     SectionHeader {
                         Layout.fillWidth: true
                         icon: sectionDelegate.secKey === "places" ? "folder"
+                              : sectionDelegate.secKey === "disks" ? "hard-drives"
                               : (sectionDelegate.secKey === "frequent" ? "clock"
                               : (sectionDelegate.secKey === "internal" ? "hard-drives" : "usb"))
                         title: sectionDelegate.secKey === "places" ? qsTr("Places")
+                               : sectionDelegate.secKey === "disks" ? qsTr("Disks")
                                : (sectionDelegate.secKey === "frequent" ? qsTr("Frequent")
                                : (sectionDelegate.secKey === "internal" ? qsTr("Internal Storage") : qsTr("External Storage")))
                         subtitle: sectionDelegate.secKey === "external"
@@ -555,6 +564,31 @@ Item {
                                         window.showFiles();
                                         engine.set_path(modelData.path);
                                     }
+                                }
+                            }
+                        }
+                    }
+
+                    // ==========================================
+                    // SECTION: DISKS
+                    // ==========================================
+                    GridLayout {
+                        Layout.fillWidth: true
+                        visible: sectionDelegate.secVisible && sectionDelegate.secKey === "disks"
+                        columns: pcView.columnCount(340)
+                        columnSpacing: 12
+                        rowSpacing: 12
+
+                        Repeater {
+                            model: pcView.allDrives
+
+                            delegate: DiskCard {
+                                id: diskCard
+                                drive: modelData
+                                onActivated: pcView.openDrive(diskCard.drive)
+                                onContextRequested: function (mx, my) {
+                                    var p = diskCard.mapToItem(null, mx - diskCard.x, my - diskCard.y);
+                                    pcView.openDriveMenu(diskCard.drive, p.x, p.y);
                                 }
                             }
                         }

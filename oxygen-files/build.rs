@@ -31,7 +31,8 @@ fn main() {
             .qml_file("qml/components/LoafDialog.qml")
             .qml_file("qml/components/LoafTextPrompt.qml")
             .qml_file("qml/components/UsageBar.qml")
-            .qml_file("qml/components/DriveCard.qml"),
+            .qml_file("qml/components/DriveCard.qml")
+            .qml_file("qml/components/DiskCard.qml"),
     )
     .qt_module("DBus")
     .qt_module("Quick")

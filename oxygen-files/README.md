@@ -23,6 +23,20 @@ sudo dnf install cargo rust cmake ninja-build gcc-c++ pkgconf-pkg-config qt6-qtb
 
 ## Зміни під Unia Breathe
 
+- **Палітра «Unia»** (типова): темна — з оболонки (`quickshell/theme/Theme.qml`: тло `#0b2a26`, акцент `#10b981`),
+  світла — з Vision DesignSystem. `qml/Theme.qml`, палітра `unia`.
+- **Скло**: тло вікна й панелі напівпрозорі, Hyprland розмиває те, що за вікном. Налаштування → Interface →
+  Transparency (Off · Low · Medium · Unia = 0.35, як у оболонки). Меню й діалоги лишаються щільними: розмиття діє
+  лише на те, що за вікном, а не на вміст під меню. Прозорий буфер вмикає `cpp/native.cpp`.
+- **Значок Oxygen Files** з Vision DesignSystem (`assets/oxygen-files.svg`): шапка бічної панелі, «About», пункт меню.
+  `app_id` вікна — `oxygen-files`.
+- **Disks** на сторінці «This PC», між Places і Frequent: картка на кожен диск (`qml/components/DiskCard.qml`) —
+  велика іконка, назва, вільно, зайнято / всього, шкала. Клік відкриває диск (або монтує), права кнопка — меню диска.
+  Старі секції Internal / External Storage типово сховані.
+- Диски тепер зчитуються одразу при запуску (`src/core.rs`); в оригіналі — лише після зміни пристроїв,
+  тож «This PC» після старту був без дисків.
+
+
 Інтерфейс — QML у `qml/` (`Theme.qml` — кольори й токени, `main.qml` — вікно, `Sidebar.qml`, `FilePane.qml`,
 `components/` — кнопки, меню, діалоги), логіка — `src/` (Rust) і `cpp/`. QML вкомпільовано в бінарник,
 тож після змін треба перезібрати:
