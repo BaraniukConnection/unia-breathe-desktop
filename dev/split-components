@@ -16,3 +16,36 @@ for d in tile-menu settings-box window-drop scenarios; do
     git -C "$dest" pull -q --ff-only "$TMP/$d" main
     echo "unia-$d: $(git -C "$dest" log --oneline -1)"
 done
+
+# Oxygen Files: its history is replayed on top of the Loaf commit named in oxygen-files/UPSTREAM, so the fork on
+# GitHub shows only our changes against Loaf. A commit that moves UPSTREAM to a newer Loaf commit becomes a merge
+# of that commit. <target>/oxygen-files must be a clone of the fork that has Loaf's history (git fetch upstream).
+dest="$TARGET/oxygen-files"
+if [ ! -d "$dest/.git" ]; then
+    echo "oxygen-files: clone it first: git clone https://github.com/BaraniukConnection/oxygen-files $dest" >&2
+    exit 1
+fi
+git clone -q --single-branch -b main "$REPO" "$TMP/oxygen-files"
+FILTER_BRANCH_SQUELCH_WARNING=1 git -C "$TMP/oxygen-files" filter-branch -f --subdirectory-filter oxygen-files -- main >/dev/null
+git -C "$dest" fetch -q "$TMP/oxygen-files" main:refs/split/oxygen-files
+prev="" ; base=""
+for c in $(git -C "$dest" rev-list --reverse refs/split/oxygen-files); do
+    b=$(git -C "$dest" show "$c:UPSTREAM" | sed -n 2p | cut -d' ' -f1)
+    git -C "$dest" cat-file -e "$b^{commit}" 2>/dev/null || { echo "oxygen-files: Loaf commit $b is missing; run git fetch upstream in $dest" >&2; exit 1; }
+    parents=()
+    if [ -z "$prev" ]; then parents=(-p "$b")
+    else parents=(-p "$prev"); [ "$b" != "$base" ] && parents+=(-p "$b"); fi
+    base=$b
+    meta() { git -C "$dest" log -1 --date=raw --format="$1" "$c"; }
+    export GIT_AUTHOR_NAME="$(meta %an)" GIT_AUTHOR_EMAIL="$(meta %ae)" GIT_AUTHOR_DATE="$(meta %ad)"
+    export GIT_COMMITTER_NAME="$(meta %cn)" GIT_COMMITTER_EMAIL="$(meta %ce)" GIT_COMMITTER_DATE="$(meta %cd)"
+    prev=$(git -C "$dest" log -1 --format=%B "$c" | git -C "$dest" commit-tree "$c^{tree}" "${parents[@]}")
+done
+unset GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_AUTHOR_DATE GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL GIT_COMMITTER_DATE
+cur=$(git -C "$dest" rev-parse -q --verify refs/heads/main || true)
+if [ -n "$cur" ] && ! git -C "$dest" merge-base --is-ancestor "$cur" "$prev"; then
+    echo "oxygen-files: main has commits that are not in the main repository; not overwriting it" >&2; exit 1
+fi
+git -C "$dest" update-ref refs/heads/main "$prev"
+[ "$(git -C "$dest" symbolic-ref --short HEAD)" = main ] && git -C "$dest" reset -q --hard main
+echo "oxygen-files: $(git -C "$dest" log --oneline -1)"

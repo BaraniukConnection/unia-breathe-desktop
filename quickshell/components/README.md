@@ -23,3 +23,6 @@ To publish changes to the component repositories, run from the repository root:
 dev/split-components          # updates ~/unia-components/unia-<component>, fast-forward
 cd ~/unia-components/unia-window-drop && git push
 ```
+
+The same script replays `oxygen-files/` on top of the Loaf commit named in `oxygen-files/UPSTREAM` and updates
+`~/unia-components/oxygen-files`, a clone of the [Oxygen Files fork](https://github.com/BaraniukConnection/oxygen-files).
