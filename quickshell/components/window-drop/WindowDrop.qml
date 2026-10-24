@@ -199,7 +199,7 @@ PanelWindow {
         // «Стіл» розкривається праворуч від «Розміру»
         shift: {
             const l = Math.max(w1, resizeOpenW) / 2 + 12
-            const r = Math.max(w1 / 2, resizeOpenW / 2 + gap2 + deskOpenW + gap2 + h2) + 12
+            const r = Math.max(w1 / 2, resizeOpenW / 2 + gap2 + deskOpenW) + 12
             return Math.max(l - win.ax, Math.min(0, win.width - r - win.ax))
         }
     }

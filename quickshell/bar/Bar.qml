@@ -7,7 +7,8 @@ import "../services"
 import "../components/scenarios"
 
 // Верхня смуга одного монітора: прозора, лише окремі бульбашки. Кліки між ними проходять наскрізь.
-// Режим фокусу (Theme.focusMode): смуга нижча й суцільна — скло на всю ширину з акцентним відтінком.
+// Режим фокусу (Theme.focusMode, кругла кнопка зліва від столу): смуга нижча й суцільна — скло на всю ширину
+// з акцентним відтінком.
 PanelWindow {
     id: bar
     required property var modelData
@@ -62,6 +63,13 @@ PanelWindow {
         y: Theme.top
         spacing: Theme.gap
         ScenarioBubble { screen: bar.screen }
+        // режим фокусу: смуга нижча й суцільна (зберігається в налаштуваннях)
+        RoundBubble {
+            icon: "center_focus_strong"
+            filled: Theme.focusMode
+            active: Theme.focusMode
+            onClicked: Prefs.set("focusMode", !Theme.focusMode)
+        }
         WorkspaceBubble { id: ws; screen: bar.screen }
     }
 
