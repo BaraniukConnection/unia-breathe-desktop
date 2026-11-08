@@ -5,7 +5,7 @@ import Quickshell.Io
 import "../../services"
 
 // Hyprland options for the shell's own pages: reads current values (hyprctl getoption),
-// changes them live (hyprctl keyword) and stores them in Prefs so they survive a restart.
+// changes them live (hyprctl eval, see Hypr) and stores them in Prefs so they survive a restart.
 Singleton {
     id: root
     readonly property var keys: [
@@ -23,7 +23,7 @@ Singleton {
         const v = Object.assign({}, values)
         v[key] = value
         values = v
-        Quickshell.execDetached(["hyprctl", "keyword", key, String(value)])
+        Hypr.config({ [key]: value })
         Prefs.setHypr(key, value)
     }
 
@@ -39,8 +39,10 @@ Singleton {
                 for (const line of text.split("\n")) {
                     try {
                         const o = JSON.parse(line)
-                        v[o.option] = "int" in o ? o.int : "float" in o ? o.float
-                            : "custom" in o ? parseFloat(o.custom) : o.str === "[[EMPTY]]" ? "" : o.str
+                        // booleans come as "bool" since Hyprland 0.57; the pages keep them as 0 / 1
+                        v[o.option] = "int" in o ? o.int : "float" in o ? o.float : "bool" in o ? (o.bool ? 1 : 0)
+                            : "css" in o ? parseFloat(o.css) : "custom" in o ? parseFloat(o.custom)
+                            : o.str === "[[EMPTY]]" ? "" : o.str
                     } catch (e) {}
                 }
                 root.values = v

@@ -20,7 +20,7 @@ ui = UInput({e.EV_KEY: [e.BTN_LEFT, e.BTN_RIGHT, e.BTN_MIDDLE], e.EV_REL: [e.REL
 
 
 def warp(x, y):
-    subprocess.run(["hyprctl", "dispatch", "movecursor", str(x), str(y)], capture_output=True)
+    subprocess.run(["hyprctl", "dispatch", f"hl.dsp.cursor.move({{ x = {int(x)}, y = {int(y)} }})"], capture_output=True)
 
 
 def nudge():

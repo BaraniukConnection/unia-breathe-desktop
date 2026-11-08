@@ -71,7 +71,9 @@ Singleton {
                     root.monitors = m
                     root.border = b.int ?? 1
                     // these options are swapped while dragging: remember only the real ones
-                    if (!root.drag && !restore.running) root.opts = { ua: ua.int, ss: ss.int, nw: nw.int }
+                    // (booleans come as "bool" since Hyprland 0.57)
+                    const on = o => "bool" in o ? o.bool : !!o.int
+                    if (!root.drag && !restore.running) root.opts = { ua: on(ua), ss: on(ss), nw: on(nw) }
                 } catch (e) {}
                 if (root.menuFor && !root.client(root.menuFor)) root.closeMenu()
                 // the window closed or left the visible desk: resize mode has nothing left to act on
@@ -101,8 +103,8 @@ Singleton {
     // with a 0 (or 1 px) border the notch has nothing to grow from: while it is shown the border is 3 px
     property string thick: ""
     onCurrentChanged: {
-        if (thick && thick !== current) { Hyprland.dispatch(`setprop address:${thick} border_size unset`); thick = "" }
-        if (current && border < 2 && client(current) && !client(current).fullscreen) { Hyprland.dispatch(`setprop address:${current} border_size 3`); thick = current }
+        if (thick && thick !== current) { Hypr.setProp(`address:${thick}`, "border_size", "unset"); thick = "" }
+        if (current && border < 2 && client(current) && !client(current).fullscreen) { Hypr.setProp(`address:${current}`, "border_size", "3"); thick = current }
     }
 
     // ---------- menu ----------
@@ -114,20 +116,20 @@ Singleton {
         if (!c) return
         const a = c.address
         if (what === "minimize")
-            Windows.minimize({ address: a, wsId: c.workspace.id, wsName: c.workspace.name })
+            Windows.minimize({ address: a, wsId: c.workspace.id ?? 0, wsName: c.workspace.name })
         else if (what === "fullscreen") {
-            Hyprland.dispatch(`focuswindow address:${a}`)
-            Hyprland.dispatch("fullscreen 0")
+            Hypr.focusWindow(`address:${a}`)
+            Hypr.fullscreen(`address:${a}`, "toggle")
         } else if (what === "float")
-            Hyprland.dispatch(`togglefloating address:${a}`)
+            Hypr.float(`address:${a}`, "toggle")
         else if (what === "close")
-            Hyprland.dispatch(`closewindow address:${a}`)
+            Hypr.close(`address:${a}`)
         soon.restart()
     }
     function moveTo(wsId) {
         const c = client(menuFor)
         closeMenu()
-        if (c) Hyprland.dispatch(`movetoworkspacesilent ${wsId},address:${c.address}`)
+        if (c) Hypr.moveToWorkspace(`address:${c.address}`, wsId)
         soon.restart()
     }
 
@@ -150,7 +152,7 @@ Singleton {
         const L = c.at[0], T = c.at[1], R = L + c.size[0], B = T + c.size[1], tol = 40
         const across = (a0, a1, b0, b1) => Math.min(a1, b1) - Math.max(a0, b0) > 0
         const near = clients.filter(o => o.address !== c.address && !o.floating && o.mapped && !o.hidden
-                                         && o.workspace.id === c.workspace.id).filter(o => {
+                                         && o.workspace.name === c.workspace.name).filter(o => {
             const oL = o.at[0], oT = o.at[1], oR = oL + o.size[0], oB = oT + o.size[1]
             if (side === "l") return oR <= L + 2 && L - oR <= tol && across(T, B, oT, oB)
             if (side === "r") return oL >= R - 2 && oL - R <= tol && across(T, B, oT, oB)
@@ -182,8 +184,8 @@ Singleton {
         if (r.floating) {
             const w = Math.max(160, r.rect.w + (left ? -dx : dx)), h = Math.max(120, r.rect.h + (top ? -dy : dy))
             const x = left ? r.rect.x + r.rect.w - w : r.rect.x, y = top ? r.rect.y + r.rect.h - h : r.rect.y
-            Hyprland.dispatch(`resizewindowpixel exact ${Math.round(w)} ${Math.round(h)},address:${r.address}`)
-            Hyprland.dispatch(`movewindowpixel exact ${Math.round(x)} ${Math.round(y)},address:${r.address}`)
+            Hypr.resize(`address:${r.address}`, w, h)
+            Hypr.move(`address:${r.address}`, x, y)
             soon.restart()
             return
         }
@@ -196,10 +198,10 @@ Singleton {
         // the left/top edge is the neighbour's right/bottom edge; the right/bottom one is the window's own
         const tx = left ? (r.nx ? r.nx.address : null) : r.address
         const ty = top ? (r.ny ? r.ny.address : null) : r.address
-        if (sx && sy && tx === ty) Hyprland.dispatch(`resizewindowpixel ${sx} ${sy},address:${tx}`)
+        if (sx && sy && tx === ty) Hypr.resize(`address:${tx}`, sx, sy, true)
         else {
-            if (sx && tx) Hyprland.dispatch(`resizewindowpixel ${sx} 0,address:${tx}`)
-            if (sy && ty) Hyprland.dispatch(`resizewindowpixel 0 ${sy},address:${ty}`)
+            if (sx && tx) Hypr.resize(`address:${tx}`, sx, 0, true)
+            if (sy && ty) Hypr.resize(`address:${ty}`, 0, sy, true)
         }
         soon.restart()
     }
@@ -216,13 +218,13 @@ Singleton {
     // "remove the place" command would not find it and would hit the active window instead)
     readonly property bool placeWanted: !!drag && !drag.floating || placeHold.running
     property string placeKey: ""              // where the place is now: "address:side" or "ws:N"
-    property var opts: ({ ua: 1, ss: 0, nw: 0 })   // the real dwindle:use_active_for_splits, smart_split, cursor:no_warps
+    property var opts: ({ ua: true, ss: false, nw: false })   // the real dwindle:use_active_for_splits, smart_split, cursor:no_warps
 
-    function hypr(cmds) { Quickshell.execDetached(["hyprctl", "--batch", cmds.join(" ; ")]) }
-    function restoreOpts() {
-        return [`keyword dwindle:use_active_for_splits ${opts.ua}`, `keyword dwindle:smart_split ${opts.ss}`,
-                `keyword cursor:no_warps ${opts.nw}`]
-    }
+    // steps run in one go, in order (see Hypr.run): dispatchers and hl.config / hl.bind statements
+    function hypr(steps) { Hypr.run(steps) }
+    function setOpts(ua, ss, nw) { return Hypr.configLua({ "dwindle:use_active_for_splits": ua, "dwindle:smart_split": ss, "cursor:no_warps": nw }) }
+    function restoreOpts() { return [setOpts(opts.ua, opts.ss, opts.nw)] }
+    function at(a) { return `address:${a}` }
     Timer { id: restore; interval: 400 }      // options were just restored: a poll may still have read the swapped ones
     Timer { id: placeHold; interval: 500 }
 
@@ -232,20 +234,21 @@ Singleton {
         dragX = x; dragY = y
         const cmds = []
         // a fullscreen window goes back to normal first: it is dragged as a square and dropped as a normal window
-        if (c.fullscreen) cmds.push(`dispatch focuswindow address:${a}`, "dispatch fullscreen 0")
-        drag = { address: a, floating: c.floating, wsId: c.workspace.id, mon: c.monitor, grab: !!grab,
+        if (c.fullscreen) cmds.push(Hypr.fullscreenDsp(at(a), "unset"))
+        // special desks have no id since Hyprland 0.57: keep their name instead
+        drag = { address: a, floating: c.floating, wsId: c.workspace.id ?? c.workspace.name, mon: c.monitor, grab: !!grab,
                  rect: { x: c.at[0], y: c.at[1], w: c.size[0], h: c.size[1] },
                  // where exactly the window is held (so a floating one lands the same way under the cursor)
                  offX: Math.max(0, Math.min(c.size[0], x - c.at[0])), offY: Math.max(0, Math.min(c.size[1], y - c.at[1])) }
         placeKey = ""
-        Windows.remember(a, c.workspace.id)
+        Windows.remember(a, c.workspace.id ?? c.workspace.name)
         Windows.moving = true
-        if (!c.floating) cmds.push("keyword dwindle:use_active_for_splits 0", "keyword dwindle:smart_split 1", "keyword cursor:no_warps 1")
+        if (!c.floating) cmds.push(setOpts(false, true, true))
         // Hyprland catches the button release (not our layer: while windows jump around, the layer can lose the cursor)
-        cmds.push("keyword bindrn ,mouse:272,exec,qs -c unia ipc call drop release")
+        cmds.push(`hl.bind("mouse:272", hl.dsp.exec_cmd("qs -c unia ipc call drop release"), { release = true, non_consuming = true })`)
         // while dragging, the window itself waits on a hidden desk (on the bar it shows as minimized; the scenario keeps it).
         // It must not get focus: focusing a window on a hidden desk reveals the whole desk
-        cmds.push(`dispatch setprop address:${a} no_focus 1`, `dispatch movetoworkspacesilent ${dragWs},address:${a}`)
+        cmds.push(Hypr.setPropDsp(at(a), "no_focus", "1"), Hypr.moveToWorkspaceDsp(at(a), dragWs))
         hypr(cmds)
     }
     function moveDrag(x, y) {
@@ -272,8 +275,7 @@ Singleton {
     function relocate() {
         const m = monitorAt(dragX, dragY)
         if (!placeAddr || !m || !placeWanted) return
-        hypr([`dispatch movetoworkspacesilent ${dragWs},address:${placeAddr}`,
-              `dispatch movetoworkspacesilent ${m.activeWorkspace.id},address:${placeAddr}`])
+        hypr([Hypr.moveToWorkspaceDsp(at(placeAddr), dragWs), Hypr.moveToWorkspaceDsp(at(placeAddr), m.activeWorkspace.id)])
         soon.restart()
     }
 
@@ -283,7 +285,7 @@ Singleton {
         const m = monitorAt(dragX, dragY) ?? monitors.find(m => m.id === d.mon)
         if (!m) { cancelDrag(); return }
         const a = d.address, ws = m.activeWorkspace.id
-        const back = `dispatch setprop address:${a} no_focus unset`
+        const back = Hypr.setPropDsp(at(a), "no_focus", "unset")
         const p = client(placeAddr)
         let cmds
         if (d.floating) {
@@ -291,18 +293,17 @@ Singleton {
             const mw = m.width / m.scale, mh = m.height / m.scale
             const x = Math.round(Math.max(m.x, Math.min(dragX - d.offX, m.x + mw - d.rect.w)))
             const y = Math.round(Math.max(m.y, Math.min(dragY - d.offY, m.y + mh - d.rect.h)))
-            cmds = [`dispatch movetoworkspacesilent ${ws},address:${a}`, `dispatch movewindowpixel exact ${x} ${y},address:${a}`,
-                    back, `dispatch focuswindow address:${a}`]
+            cmds = [Hypr.moveToWorkspaceDsp(at(a), ws), Hypr.moveDsp(at(a), x, y), back, Hypr.focusWindowDsp(at(a))]
         } else if (p && p.workspace.id === ws) {
             // tiled: exactly onto the place: it splits the place (which has focus), then the place goes and the window takes its whole space
-            cmds = [`dispatch setprop address:${placeAddr} no_focus 0`, `dispatch focuswindow address:${placeAddr}`,
-                    "keyword dwindle:use_active_for_splits 1",
-                    `dispatch movetoworkspacesilent ${ws},address:${a}`,
-                    `dispatch movetoworkspacesilent ${dragWs},address:${placeAddr}`,
-                    back, `dispatch focuswindow address:${a}`, ...restoreOpts()]
+            cmds = [Hypr.setPropDsp(at(placeAddr), "no_focus", "0"), Hypr.focusWindowDsp(at(placeAddr)),
+                    Hypr.configLua({ "dwindle:use_active_for_splits": true }),
+                    Hypr.moveToWorkspaceDsp(at(a), ws),
+                    Hypr.moveToWorkspaceDsp(at(placeAddr), dragWs),
+                    back, Hypr.focusWindowDsp(at(a)), ...restoreOpts()]
         } else {
-            cmds = [...(p ? [`dispatch movetoworkspacesilent ${dragWs},address:${placeAddr}`] : []),
-                    `dispatch movetoworkspacesilent ${ws},address:${a}`, back, `dispatch focuswindow address:${a}`, ...restoreOpts()]
+            cmds = [...(p ? [Hypr.moveToWorkspaceDsp(at(placeAddr), dragWs)] : []),
+                    Hypr.moveToWorkspaceDsp(at(a), ws), back, Hypr.focusWindowDsp(at(a)), ...restoreOpts()]
         }
         finish(cmds)
     }
@@ -310,16 +311,16 @@ Singleton {
         const d = drag
         if (!d) return
         const cmds = []
-        if (client(placeAddr)) cmds.push(`dispatch movetoworkspacesilent ${dragWs},address:${placeAddr}`)
-        cmds.push(`dispatch movetoworkspacesilent ${d.wsId},address:${d.address}`, `dispatch setprop address:${d.address} no_focus unset`)
-        if (d.floating) cmds.push(`dispatch movewindowpixel exact ${d.rect.x} ${d.rect.y},address:${d.address}`)
+        if (client(placeAddr)) cmds.push(Hypr.moveToWorkspaceDsp(at(placeAddr), dragWs))
+        cmds.push(Hypr.moveToWorkspaceDsp(at(d.address), d.wsId), Hypr.setPropDsp(at(d.address), "no_focus", "unset"))
+        if (d.floating) cmds.push(Hypr.moveDsp(at(d.address), d.rect.x, d.rect.y))
         else cmds.push(...restoreOpts())
         finish(cmds)
     }
     function finish(cmds) {
         if (!drag.floating) { restore.restart(); placeHold.restart() }
         drag = null                           // the place (DropPlace) goes away by itself once placeHold passes
-        hypr([...cmds, "keyword unbind ,mouse:272"])
+        hypr([...cmds, `hl.unbind("mouse:272")`])
         Windows.moving = false
         hovered = ""
         placeKey = ""

@@ -168,7 +168,7 @@ Section {
                     if (m.button === Qt.RightButton) { if (!card.empty) { root.deleting = card.modelData.name; undel.restart() } return }
                     if (card.del) { Scenarios.remove(card.modelData.name); root.deleting = ""; return }
                     Popups.close()
-                    if (card.empty) { Hyprland.dispatch(`focusmonitor ${root.monitor.name}`); Hyprland.dispatch("workspace empty") }
+                    if (card.empty) { Hypr.focusMonitor(root.monitor.name); Hypr.workspace("empty") }
                     else Scenarios.load(card.modelData.name)
                 }
             }

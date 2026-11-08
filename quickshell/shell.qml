@@ -22,7 +22,7 @@ ShellRoot {
         function toggle(): void { Settings.toggle() }
         function open(id: string): void { Settings.open(id) }
         // Super+Tab: in Settings, give the keyboard back to the panel; elsewhere, the next window
-        function back(): void { if (Settings.shown) Settings.focusPanel(); else Hyprland.dispatch("cyclenext") }
+        function back(): void { if (Settings.shown) Settings.focusPanel(); else Hypr.cycleNext() }
     }
 
     // qs -c unia ipc call apps launch <.desktop id>: like a click in the menu (an open single-window app is focused instead)

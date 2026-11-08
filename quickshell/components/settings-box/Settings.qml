@@ -50,7 +50,7 @@ Singleton {
     // ---------- open / close ----------
     function toggle() {
         if (!shown && panelGone) { restorePanel(); return }
-        Hyprland.dispatch("togglespecialworkspace settings")
+        Hypr.toggleSpecial("settings")
     }
     function open(id) {
         if (id) select(id)
@@ -67,7 +67,7 @@ Singleton {
         panelRestoreRequested()
         ensureShown.restart()
     }
-    Timer { id: ensureShown; interval: 400; onTriggered: if (!root.shown) Hyprland.dispatch("togglespecialworkspace settings") }
+    Timer { id: ensureShown; interval: 400; onTriggered: if (!root.shown) Hypr.toggleSpecial("settings") }
 
     // ---------- geometry: the panel is 304 px on the left, the app takes the rest ----------
     readonly property int panelW: 304
@@ -79,7 +79,7 @@ Singleton {
         return { x: m.x + side, y: m.y + top, h: h - top - bottom,
                  toolX: m.x + side + panelW + 10, toolW: w - 2 * side - panelW - 10 }
     }
-    // whether a window matches the selector: for a missing window Hyprland applies movetoworkspace/setfloating
+    // whether a window matches the selector: up to 0.56, Hyprland applied a dispatcher for a missing window
     // to the ACTIVE window, which once pulled the browser into Settings
     function exists(sel) {
         const ts = Hyprland.toplevels.values
@@ -92,14 +92,14 @@ Singleton {
     }
     function place(sel, x, y, w, h) {
         if (!exists(sel)) return
-        Hyprland.dispatch(`movetoworkspacesilent special:settings,${sel}`)
-        Hyprland.dispatch(`setfloating ${sel}`)
-        Hyprland.dispatch(`resizewindowpixel exact ${Math.round(w)} ${Math.round(h)},${sel}`)
-        Hyprland.dispatch(`movewindowpixel exact ${Math.round(x)} ${Math.round(y)},${sel}`)
+        Hypr.moveToWorkspace(sel, "special:settings")
+        Hypr.float(sel, "enable")
+        Hypr.resize(sel, w, h)
+        Hypr.move(sel, x, y)
     }
-    // refocus: give the keyboard back to the panel (on opening, on choosing a category); not on a plain relayout
+    // withFocus: give the keyboard back to the panel (on opening, on choosing a category); not on a plain relayout
     // (Hyprland reloaded its config): focuswindow also warps the cursor to the middle of the panel
-    function layout(refocus) {
+    function layout(withFocus) {
         const a = area()
         if (!a) return
         place("title:^(Unia · Settings)$", a.x, a.y, panelW, a.h)
@@ -109,7 +109,7 @@ Singleton {
         else if (addrs[it.id]) place(`address:${addrs[it.id]}`, a.toolX, a.y, a.toolW, a.h)
         // focus only while Settings is open: focusing a window on a hidden special workspace reveals it
         // (that is how Settings used to pop up on every shell start, when the panel window appeared)
-        if (!shown || refocus === false) return
+        if (!shown || withFocus === false) return
         focusPanel()        // the keyboard stays in the panel: Tab goes to the app
         refocus.restart()   // a freshly opened app window takes focus: give it back to the panel
     }
@@ -117,12 +117,12 @@ Singleton {
 
     // ---------- keyboard focus: panel ↔ the app on the right ----------
     signal pageFocusRequested()        // tells a built-in page to focus its first control
-    function focusPanel() { Hyprland.dispatch("focuswindow title:^(Unia · Settings)$") }
+    function focusPanel() { Hypr.focusWindow("title:^(Unia · Settings)$") }
     function focusTool() {
         const it = current
         if (!it) return
-        if (it.kind === "own") { Hyprland.dispatch("focuswindow title:^(Unia · Page)$"); pageFocusRequested() }
-        else if (addrs[it.id]) Hyprland.dispatch(`focuswindow address:${addrs[it.id]}`)
+        if (it.kind === "own") { Hypr.focusWindow("title:^(Unia · Page)$"); pageFocusRequested() }
+        else if (addrs[it.id]) Hypr.focusWindow(`address:${addrs[it.id]}`)
     }
 
     // ---------- choosing a category ----------
@@ -131,7 +131,7 @@ Singleton {
         if (!it) return
         const prev = current
         if (prev && prev.id !== id && prev.kind === "app" && addrs[prev.id] && exists(`address:${addrs[prev.id]}`))
-            Hyprland.dispatch(`movetoworkspacesilent special:unia-stash,address:${addrs[prev.id]}`)
+            Hypr.moveToWorkspace(`address:${addrs[prev.id]}`, "special:unia-stash")
         sel = id
         tab = it.tab
         if (it.kind === "app" && !addrs[id]) adoptOrLaunch(it)
@@ -187,7 +187,7 @@ Singleton {
                     root.pending = null
                     root.setAddr(p.id, addr)
                     if (root.sel === p.id) root.layout()
-                    else Hyprland.dispatch(`movetoworkspacesilent special:unia-stash,address:0x${addr}`)
+                    else Hypr.moveToWorkspace(`address:0x${addr}`, "special:unia-stash")
                 }
             } else if (ev.name === "closewindow") {
                 const a = "0x" + ev.data

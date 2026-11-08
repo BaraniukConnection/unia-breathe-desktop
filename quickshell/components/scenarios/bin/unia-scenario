@@ -34,11 +34,29 @@ def hj(what):
 
 def ws_ref(ws):
     """A desk reference for dispatch: a number or name:<name>."""
-    return str(ws["id"]) if ws["id"] > 0 else f"name:{ws['name']}"
+    # special desks have no "id" since Hyprland 0.57; named ones keep their name
+    return str(ws["id"]) if ws.get("id", 0) > 0 else f"name:{ws['name']}"
 
 
-def dispatch(*args):
-    return hypr("dispatch", *args)
+# Hyprland 0.57+ takes Lua: `hyprctl dispatch` gets a dispatcher expression, options change through `hyprctl eval`
+def lua(v):
+    """A Lua literal: numbers as they are, a desk reference "3" as a number, anything else as a string."""
+    if isinstance(v, (int, float)) and not isinstance(v, bool):
+        return str(v)
+    s = str(v)
+    return s if s.lstrip("-").isdigit() else json.dumps(s)
+
+
+def dispatch(expr):
+    return hypr("dispatch", expr)
+
+
+def win(addr):
+    return lua(f"address:{addr}")
+
+
+def config(lua_table):
+    return hypr("eval", f"hl.config({lua_table})")
 
 
 def notify(text):
@@ -97,10 +115,10 @@ def proc_cmd(pid):
 
 def save(name):
     mons = hj("monitors")
-    visible = {m["activeWorkspace"]["id"]: (ws_ref(m["activeWorkspace"]), m["name"]) for m in mons}
+    visible = {m["activeWorkspace"]["name"]: (ws_ref(m["activeWorkspace"]), m["name"]) for m in mons}
     wins = []
     for c in hj("clients"):
-        ws = c["workspace"]["id"]
+        ws = c["workspace"]["name"]
         if ws not in visible or not c["mapped"] or c["hidden"]:
             continue
         wins.append({
@@ -154,14 +172,14 @@ class Opener:
         if existing:
             addr = existing[0]["address"]
             if existing[0]["floating"] and tiled:
-                dispatch("settiled", f"address:{addr}")
-            dispatch("movetoworkspace", f"{ws_ref(hj('activeworkspace'))},address:{addr}")
+                dispatch(f'hl.dsp.window.float({{ window = {win(addr)}, action = "disable" }})')
+            dispatch(f"hl.dsp.window.move({{ window = {win(addr)}, workspace = {lua(ws_ref(hj('activeworkspace')))}, follow = true }})")
         else:
             before = {c["address"] for c in hj("clients")}
             if not w.get("cmd"):
                 notify(f"Don't know how to launch {w['class']}")
                 return None
-            dispatch("exec", w["cmd"])
+            dispatch(f"hl.dsp.exec_cmd({lua(w['cmd'])})")
             addr, end = None, time.time() + TIMEOUT
             while time.time() < end and not addr:
                 time.sleep(0.3)
@@ -179,11 +197,12 @@ class Opener:
         """anchor: a window already open that now fills the whole area of tree t."""
         if "class" in t:
             return
-        dispatch("focuswindow", f"address:{anchor}")
-        dispatch("layoutmsg", "preselect", t["dir"])
+        dispatch(f"hl.dsp.focus({{ window = {win(anchor)} }})")
+        dispatch(f"hl.dsp.layout({lua('preselect ' + t['dir'])})")
         b = self.open(first_leaf(t["b"]), tiled=True)
         if b:
-            dispatch("layoutmsg", "splitratio", f"{t['ratio']:.3f}", "exact")
+            ratio = f"splitratio {t['ratio']:.3f} exact"
+            dispatch(f"hl.dsp.layout({lua(ratio)})")
             self.build(t["b"], b)
         self.build(t["a"], anchor)
 
@@ -192,7 +211,7 @@ def load(name):
     wins = json.loads((DIR / f"{name}.json").read_text())["windows"]
     follow = hypr("getoption", "input:follow_mouse", "-j")
     follow = json.loads(follow).get("int", 1) if follow else 1
-    hypr("keyword", "input:follow_mouse", "0")  # so mouse movement does not steal focus
+    config("{ input = { follow_mouse = 0 } }")  # so mouse movement does not steal focus
     notify(f"Opening \"{name}\"…")
     op = Opener()
     try:
@@ -200,9 +219,9 @@ def load(name):
         for w in wins:
             by_ws.setdefault((w["workspace"], w["monitor"]), []).append(w)
         for (ws, mon), group in by_ws.items():
-            dispatch("focusmonitor", mon)
-            dispatch("workspace", ws)
-            dispatch("moveworkspacetomonitor", ws, mon)
+            dispatch(f"hl.dsp.focus({{ monitor = {lua(mon)} }})")
+            dispatch(f"hl.dsp.focus({{ workspace = {lua(ws)} }})")
+            dispatch(f"hl.dsp.workspace.move({{ workspace = {lua(ws)}, monitor = {lua(mon)} }})")
             tiled = [w for w in group if not w["floating"]]
             if tiled:
                 tree = split_tree(tiled)
@@ -212,11 +231,11 @@ def load(name):
             for w in (w for w in group if w["floating"]):
                 addr = op.open(w, tiled=False)
                 if addr:
-                    dispatch("setfloating", f"address:{addr}")
-                    dispatch("resizewindowpixel", f"exact {w['size'][0]} {w['size'][1]},address:{addr}")
-                    dispatch("movewindowpixel", f"exact {w['at'][0]} {w['at'][1]},address:{addr}")
+                    dispatch(f'hl.dsp.window.float({{ window = {win(addr)}, action = "enable" }})')
+                    dispatch(f"hl.dsp.window.resize({{ window = {win(addr)}, x = {w['size'][0]}, y = {w['size'][1]}, relative = false }})")
+                    dispatch(f"hl.dsp.window.move({{ window = {win(addr)}, x = {w['at'][0]}, y = {w['at'][1]}, relative = false }})")
     finally:
-        hypr("keyword", "input:follow_mouse", str(follow))
+        config(f"{{ input = {{ follow_mouse = {int(follow)} }} }}")
     mark({w["workspace"] for w in wins}, name)
     notify(f"\"{name}\" is ready")
 

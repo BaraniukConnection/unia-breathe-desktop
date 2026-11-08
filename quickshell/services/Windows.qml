@@ -21,7 +21,7 @@ Singleton {
             if (root.hiddenWs.includes(ws)) return null
             return {
                 address: o.address, cls: o.class, title: o.title,
-                wsId: o.workspace.id, wsName: ws,
+                wsId: o.workspace.id ?? 0, wsName: ws,          // special desks have no id since Hyprland 0.57
                 minimized: ws === root.minimizedWs || ws === root.dragWs,
                 active: t.activated,
                 entry: DesktopEntries.heuristicLookup(o.class),
@@ -46,9 +46,9 @@ Singleton {
         if (w.minimized) {
             const m = Hyprland.focusedMonitor
             const ws = origin[w.address] ?? (m && m.activeWorkspace ? m.activeWorkspace.id : 1)
-            Hyprland.dispatch(`movetoworkspacesilent ${ws},address:${w.address}`)
+            Hypr.moveToWorkspace(`address:${w.address}`, ws)
         }
-        Hyprland.dispatch(`focuswindow address:${w.address}`)
+        Hypr.focusWindow(`address:${w.address}`)
     }
     function remember(address, ws) {
         const o = Object.assign({}, origin)
@@ -57,9 +57,9 @@ Singleton {
     }
     function minimize(w) {
         remember(w.address, w.wsId > 0 ? w.wsId : w.wsName)
-        Hyprland.dispatch(`movetoworkspacesilent ${minimizedWs},address:${w.address}`)
+        Hypr.moveToWorkspace(`address:${w.address}`, minimizedWs)
     }
-    function close(w) { Hyprland.dispatch(`closewindow address:${w.address}`) }
+    function close(w) { Hypr.close(`address:${w.address}`) }
 
     // an app's windows from its .desktop entry (by StartupWMClass, id or Quickshell's heuristics)
     function ofEntry(e) {

@@ -17,8 +17,8 @@ Bubble {
     active: Popups.isOpen("ws", screen)
     onWheel: w => {
         if (Math.abs(w.angleDelta.y) < 60) return
-        Hyprland.dispatch(`focusmonitor ${monitor.name}`)
-        Hyprland.dispatch(w.angleDelta.y < 0 ? "workspace m+1" : "workspace m-1")
+        Hypr.focusMonitor(monitor.name)
+        Hypr.workspace(w.angleDelta.y < 0 ? "m+1" : "m-1")
     }
 
     Row {

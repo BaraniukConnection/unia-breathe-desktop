@@ -13,7 +13,7 @@ Settings for a Hyprland desktop, in their own space. A Quickshell component from
 
 It ships with Unia Breathe Desktop in `quickshell/components/settings-box`.
 
-To use it in your own Quickshell config, put this folder at `components/settings-box` and take `theme/` and `services/Prefs.qml` from Unia Breathe Desktop. Then in `shell.qml`:
+To use it in your own Quickshell config, put this folder at `components/settings-box` and take `theme/`, `services/Prefs.qml` and `services/Hypr.qml` from Unia Breathe Desktop. Then in `shell.qml`:
 
 ```qml
 import "components/settings-box"
@@ -28,16 +28,16 @@ IpcHandler {
 }
 ```
 
-Hyprland needs the rules for its windows (the `Unia · …` block in [`hypr/unia.conf`](https://github.com/BaraniukConnection/unia-breathe-desktop/blob/main/hypr/unia.conf)), a line that sources the generated options last:
+Hyprland needs the rules for its windows (the `unia-settings` rule in [`hypr/unia.lua`](https://github.com/BaraniukConnection/unia-breathe-desktop/blob/main/hypr/unia.lua)), a line at the end of `hyprland.lua` that loads the generated options:
 
-```ini
-source = ~/.config/unia-breathe/hyprland.conf
+```lua
+dofile(os.getenv("HOME") .. "/.config/unia-breathe/hyprland.lua")
 ```
 
 and a key to open it (`unia` is the config name; use yours):
 
-```ini
-bind = SUPER, I, exec, qs -c unia ipc call settings toggle
+```lua
+hl.bind("SUPER + I", hl.dsp.exec_cmd("qs -c unia ipc call settings toggle"))
 ```
 
 The categories and the apps behind them are listed at the top of `Settings.qml`; edit that list to fit your system.
@@ -52,4 +52,4 @@ The categories and the apps behind them are listed at the top of `Settings.qml`;
 | `SettingsPage.qml` | The window that holds the built-in pages |
 | `pages/` | The built-in pages and their controls |
 
-Requires Hyprland 0.56+ and Quickshell 0.2.1+. Licensed under the [Mozilla Public License 2.0](LICENSE).
+Requires Hyprland 0.57+ (Lua config) and Quickshell 0.3.2+. It talks to Hyprland through `services/Hypr.qml`. Licensed under the [Mozilla Public License 2.0](LICENSE).

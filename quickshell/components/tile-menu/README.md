@@ -14,7 +14,7 @@ An app menu of tiles in folders for Quickshell. A component from [Unia Breathe D
 
 It ships with Unia Breathe Desktop in `quickshell/components/tile-menu`, where the menu opens from the dock or with `qs -c unia ipc call popups toggle menu`.
 
-To use it in your own Quickshell config, put this folder at `components/tile-menu` and take `theme/` and these from Unia Breathe Desktop: `services/` (Popups, Media, Events, Prefs, Windows) and `components/settings-box` (the Settings tile opens it). Then place a `MenuPanel` in a layer-shell window of your own:
+To use it in your own Quickshell config, put this folder at `components/tile-menu` and take `theme/` and these from Unia Breathe Desktop: `services/` (Popups, Media, Events, Prefs, Windows, Hypr) and `components/settings-box` (the Settings tile opens it). Then place a `MenuPanel` in a layer-shell window of your own:
 
 ```qml
 import "components/tile-menu"
@@ -33,4 +33,4 @@ MenuPanel { screen: myScreen; maxWidth: 1200; maxHeight: 700 }
 | `MenuPanel.qml` | The panel: search, folders, All Apps, the context menu |
 | `Folder.qml`, `Tile.qml`, `AppIcon.qml` | A folder, a tile, an app icon |
 
-Requires Quickshell 0.2.1+. Licensed under the [Mozilla Public License 2.0](LICENSE).
+Requires Quickshell 0.3.2+. Licensed under the [Mozilla Public License 2.0](LICENSE).

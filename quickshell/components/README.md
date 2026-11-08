@@ -10,10 +10,10 @@ splits each folder, with its history, into its own repository:
 
 | Component | What it is | Scripts | Takes from the shell |
 |---|---|---|---|
-| `tile-menu/` | **TileMenu**: the app menu with search, folders of tiles, All Apps and favourites (`Apps`, `Menu`) | none | `theme/`, `services/` (Popups, Media, Events, Prefs, Windows), `settings-box` |
-| `settings-box/` | **SettingsBox**: settings with a category panel, apps on the right and built-in pages (`Settings`, `HyprOpts`) | none | `theme/`, `services/` (Prefs) |
-| `window-drop/` | **WindowDrop**: a drop notch in the middle of a window's top border that grows as the cursor nears. Drag it or use Super+LMB (the window becomes a square, neighbours make room, and a translucent place shows where it will land); its menu minimizes, goes fullscreen, floats, closes, resizes or moves the window to another desk (`Drops`) | none | `theme/`, `services/` (Windows) |
-| `scenarios/` | **Scenarios**: desk scenarios that save and reopen window layouts (`Scenarios`) | `bin/unia-scenario` | `theme/`, `services/` (Popups, Windows), `popups/Section.qml` |
+| `tile-menu/` | **TileMenu**: the app menu with search, folders of tiles, All Apps and favourites (`Apps`, `Menu`) | none | `theme/`, `services/` (Popups, Media, Events, Prefs, Windows, Hypr), `settings-box` |
+| `settings-box/` | **SettingsBox**: settings with a category panel, apps on the right and built-in pages (`Settings`, `HyprOpts`) | none | `theme/`, `services/` (Prefs, Hypr) |
+| `window-drop/` | **WindowDrop**: a drop notch in the middle of a window's top border that grows as the cursor nears. Drag it or use Super+LMB (the window becomes a square, neighbours make room, and a translucent place shows where it will land); its menu minimizes, goes fullscreen, floats, closes, resizes or moves the window to another desk (`Drops`) | none | `theme/`, `services/` (Windows, Hypr) |
+| `scenarios/` | **Scenarios**: desk scenarios that save and reopen window layouts (`Scenarios`) | `bin/unia-scenario` | `theme/`, `services/` (Popups, Windows, Hypr), `popups/Section.qml` |
 
 To take a component out on its own, it only needs what the right-hand column lists.
 

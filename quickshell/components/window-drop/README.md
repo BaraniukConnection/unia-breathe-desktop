@@ -10,7 +10,7 @@ Pick up Hyprland windows by a drop in their border. A Quickshell component from 
 
 ## Use it
 
-It ships with Unia Breathe Desktop in `quickshell/components/window-drop`. To use it in your own Quickshell config, put this folder at `components/window-drop` and take `theme/` and `services/Windows.qml` from Unia Breathe Desktop. Then in `shell.qml`:
+It ships with Unia Breathe Desktop in `quickshell/components/window-drop`. To use it in your own Quickshell config, put this folder at `components/window-drop` and take `theme/`, `services/Windows.qml` and `services/Hypr.qml` from Unia Breathe Desktop. Then in `shell.qml`:
 
 ```qml
 import "components/window-drop"
@@ -26,11 +26,11 @@ IpcHandler {
 }
 ```
 
-Hyprland needs the placeholder rules (the `unia-drop-place` block in [`hypr/unia.conf`](https://github.com/BaraniukConnection/unia-breathe-desktop/blob/main/hypr/unia.conf)) and, for Super+drag (`unia` is the config name; use yours):
+Hyprland needs the placeholder rules (the `unia-drop-place` rule in [`hypr/unia.lua`](https://github.com/BaraniukConnection/unia-breathe-desktop/blob/main/hypr/unia.lua)) and, for Super+drag (`unia` is the config name; use yours):
 
-```ini
-bind = SUPER, mouse:272, exec, qs -c unia ipc call drop grab
-bindr = SUPER, mouse:272, exec, qs -c unia ipc call drop release
+```lua
+hl.bind("SUPER + mouse:272", hl.dsp.exec_cmd("qs -c unia ipc call drop grab"))
+hl.bind("SUPER + mouse:272", hl.dsp.exec_cmd("qs -c unia ipc call drop release"), { release = true })
 ```
 
 ## Files
@@ -43,4 +43,4 @@ bindr = SUPER, mouse:272, exec, qs -c unia ipc call drop release
 | `DropMenu.qml` | The menu |
 | `DropPlace.qml` | The placeholder window Hyprland tiles while dragging |
 
-Requires Hyprland 0.56+ and Quickshell 0.2.1+. Licensed under the [Mozilla Public License 2.0](LICENSE).
+Requires Hyprland 0.57+ (Lua config) and Quickshell 0.3.2+. It talks to Hyprland through `services/Hypr.qml`. Licensed under the [Mozilla Public License 2.0](LICENSE).

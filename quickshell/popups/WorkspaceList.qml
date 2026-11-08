@@ -65,7 +65,7 @@ Glass {
                                     anchors.fill: parent
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
-                                    onClicked: Hyprland.dispatch(`workspace ${modelData.id}`)
+                                    onClicked: Hypr.workspace(modelData.id)
                                 }
                             }
                         }
@@ -80,7 +80,7 @@ Glass {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: { Hyprland.dispatch(`focusmonitor ${mon.modelData.name}`); Hyprland.dispatch("workspace empty"); Popups.close() }
+                                onClicked: { Hypr.focusMonitor(mon.modelData.name); Hypr.workspace("empty"); Popups.close() }
                             }
                         }
                     }

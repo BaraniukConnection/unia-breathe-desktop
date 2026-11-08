@@ -41,7 +41,7 @@ Item {
         return [...ids.map(id => ({ id: id, label: String(id) })), { id: free, label: "", fresh: true }]
     }
     // the next desk to the right (a click on the Desk pill)
-    readonly property int nextDesk: client ? Math.max(1, client.workspace.id + 1) : 1
+    readonly property int nextDesk: client ? Math.max(1, (client.workspace.id ?? 0) + 1) : 1
 
     // pill sizes: collapsed is just the icon, expanded adds the label / the desks
     readonly property real pillW: 48

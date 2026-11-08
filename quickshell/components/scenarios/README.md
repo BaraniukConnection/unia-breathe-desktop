@@ -24,7 +24,7 @@ unia-scenario delete Dev
 
 Scenarios are stored in `~/.config/hypr/scenarios/<name>.json`. Edit a scenario's `cmd` field by hand if an app needs to be launched differently.
 
-To use the QML part in your own Quickshell config, put this folder at `components/scenarios`, link `bin/unia-scenario` into your `PATH`, and take `theme/`, `popups/Section.qml` and `services/` (Popups, Windows) from Unia Breathe Desktop. Then put `ScenarioBubble { screen: … }` on your bar and `ScenarioSection { screen: … }` in a popup.
+To use the QML part in your own Quickshell config, put this folder at `components/scenarios`, link `bin/unia-scenario` into your `PATH`, and take `theme/`, `popups/Section.qml` and `services/` (Popups, Windows, Hypr) from Unia Breathe Desktop. Then put `ScenarioBubble { screen: … }` on your bar and `ScenarioSection { screen: … }` in a popup.
 
 ## Files
 
@@ -35,4 +35,4 @@ To use the QML part in your own Quickshell config, put this folder at `component
 | `ScenarioSection.qml` | The cards with thumbnails |
 | `bin/unia-scenario` | Saving and restoring layouts |
 
-Requires Hyprland 0.56+ and Quickshell 0.2.1+. Licensed under the [Mozilla Public License 2.0](LICENSE).
+Requires Hyprland 0.57+ (Lua config) and Quickshell 0.3.2+. Licensed under the [Mozilla Public License 2.0](LICENSE).

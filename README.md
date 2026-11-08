@@ -14,7 +14,7 @@
   <img src="docs/banner.png" alt="Unia Breathe Desktop: glass bubbles on top, the tile menu, the control centre and the WindowDrop menu">
 </p>
 
-**Built with:** Quickshell (QML) · **Runs on:** Hyprland 0.56+ · **Language:** English · **License:** MPL 2.0
+**Built with:** Quickshell (QML) · **Runs on:** Hyprland 0.57+ (Lua config) · **Language:** English · **License:** MPL 2.0
 
 ---
 
@@ -89,16 +89,18 @@ The interactive mockup the shell grew from is [`design/unia-breathe.html`](desig
 
 | | |
 |---|---|
-| **Required** | Hyprland 0.56 or newer, Quickshell 0.2.1 or newer, PipeWire, NetworkManager, the **Manrope** and **Material Symbols Outlined** fonts |
+| **Required** | Hyprland 0.57 or newer, Quickshell 0.3.2 or newer, PipeWire, NetworkManager, the **Manrope** and **Material Symbols Outlined** fonts |
 | **Screenshots** | grim, ImageMagick (`magick`), wl-clipboard, libnotify; wf-recorder for video |
 | **Calendar** | Python 3 with `icalendar` and `python-dateutil` |
 | **Lock and sleep** | hyprlock, hypridle |
 | **Settings apps** | nm-connection-editor, pavucontrol, nwg-displays, nwg-look, waypaper, system-config-printer; optional Overskride, OpenRGB, OpenTabletDriver |
 | **Theme** | adw-gtk3 for GTK 3 apps |
 
-On Fedora:
+On Fedora (Fedora's own Quickshell is 0.2.1, too old for Hyprland 0.57; the
+[Quickshell Copr](https://copr.fedorainfracloud.org/coprs/errornointernet/quickshell/) has current builds):
 
 ```bash
+sudo dnf copr enable errornointernet/quickshell
 sudo dnf install hyprland quickshell hyprlock hypridle grim ImageMagick wl-clipboard libnotify wf-recorder \
   python3-icalendar python3-dateutil nm-connection-editor pavucontrol nwg-displays nwg-look waypaper adw-gtk3-theme
 ```
@@ -121,9 +123,9 @@ cd ~/unia-breathe
 - links the shell to `~/.config/quickshell/unia` (it runs as `qs -c unia`) and the scripts to `~/.local/bin`;
 - links the lock screen to `~/.config/hypr/hyprlock.conf`;
 - sets up the GTK 3/4 palette on top of adw-gtk3-dark and the kitty palette;
-- adds `source = ~/unia-breathe/hypr/unia.conf` to `~/.config/hypr/hyprland.conf`. That file starts the shell, adds the blur and window rules, and sources the settings you change in the shell.
+- adds `dofile("~/unia-breathe/hypr/unia.lua")` (with the full path) to `~/.config/hypr/hyprland.lua`. That file starts the shell, adds the blur and window rules, and loads the settings you change in the shell.
 
-Then pick key bindings from [`hypr/binds.example.conf`](hypr/binds.example.conf) (or source it whole), copy [`hypr/hypridle.example.conf`](hypr/hypridle.example.conf) to `~/.config/hypr/hypridle.conf` if you want idle locking and sleep, and log in to Hyprland again.
+Then pick key bindings from [`hypr/binds.example.lua`](hypr/binds.example.lua) (or load it whole with `dofile`), copy [`hypr/hypridle.example.conf`](hypr/hypridle.example.conf) to `~/.config/hypr/hypridle.conf` if you want idle locking and sleep, and log in to Hyprland again.
 
 ### Google Calendar (optional)
 
@@ -131,7 +133,7 @@ In Google Calendar open **Settings for my calendars → Integrate calendar** and
 
 ## Key bindings
 
-These come from `hypr/binds.example.conf`.
+These come from `hypr/binds.example.lua`.
 
 | Keys | Action |
 |---|---|
@@ -150,7 +152,7 @@ These come from `hypr/binds.example.conf`.
 | File | What |
 |---|---|
 | `~/.config/unia-breathe/settings.json` | Shell settings: theme colours, focus mode, pinned settings, clock format |
-| `~/.config/unia-breathe/hyprland.conf` | Hyprland options changed from Settings, generated from `settings.json` |
+| `~/.config/unia-breathe/hyprland.lua` | Hyprland options changed from Settings, generated from `settings.json` |
 | `~/.config/unia-breathe/menu.json` | The dock favourites and the tile layout |
 | `~/.config/unia-breathe/calendar.url` | Your secret iCal addresses (never in git) |
 | `~/.config/hypr/scenarios/` | Saved scenarios, one JSON file each |
@@ -158,7 +160,7 @@ These come from `hypr/binds.example.conf`.
 ## Under the hood
 
 - **Quickshell** (QML on Qt 6) draws everything: the bar is a set of layer-shell surfaces, popups share one layer under the bar, and Hyprland blurs every `unia-*` surface through a layer rule
-- **Hyprland IPC** for windows, desks and options; options changed in Settings are applied live with `hyprctl keyword` and written to a config Hyprland sources last
+- **Hyprland IPC** for windows, desks and options; options changed in Settings are applied live with `hyprctl eval` and written to a Lua file Hyprland loads last; dispatchers are Lua expressions too (`services/Hypr.qml` builds them)
 - **WindowDrop** reads the cursor straight from Hyprland's socket while dragging and lets Hyprland's dwindle layout place the placeholder, so the preview matches where the window really lands
 - **Scenarios** are saved by a small Python script that rebuilds the split tree of the windows
 
